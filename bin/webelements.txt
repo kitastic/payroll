@@ -1,0 +1,25 @@
+# startDate input 
+XPATH
+//div/div/div[2]/div/main/div/div/div/div[3]/div[1]/div/div[1]/div/div/div/div[2]/span/span/span/span/input
+By.NAME
+startDate
+
+# endDate input
+By.NAME
+endDate
+
+# employee list
+By.CLASS_NAME
+k-dropdown-wrap
+
+# load payroll button
+XPATH
+//*[@id="root"]/div/div[2]/div/main/div/div/div/div[3]/div[1]/div/div[4]/button
+
+# report button
+By.XPATH
+//div/div/div[2]/div/main/div/div/div/div[3]/div[2]/div/div/div/div/div/div/div[2]/div/div/div[1]/div[2]/button
+
+# payroll report text
+By.XPATH
+//div/div/div[2]/div/main/div/div/div/div[3]/div[2]/div/div/div/div/div/div/div[1]/div/div/div/pre
