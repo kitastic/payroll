@@ -12,6 +12,7 @@ import time
 import re
 import glob                     # check if file exists with wildcard
 import datetime
+import logging
 
 # local files
 import helper
@@ -51,7 +52,7 @@ class WebBot:
         loginBtn = self.driver.find_element(By.CLASS_NAME, "btn-login")
         loginBtn.click()
         # once logged in, wait for page to load (when avatar is located)
-        helper.waitLoadingPresence('avatar', 5, self.driver)
+        helper.waitLoadingPresence('avatar', 10, self.driver)
 
     def getPayroll(self, startDay, endDay):
         # save sheet name for when exporting to xlsx
@@ -167,14 +168,14 @@ class WebBot:
             tempParsed.clear()
             tempIncome.clear()
 
-    def dlEmpSales(self, startDate, endDate, prefix, weeklyBook):
+    def dlEmpSales(self, startDate, endDate, salonName, tName):
+        logging.info("Thread %s: starting", tName)
 
         self.startDate = startDate
-        self.workBook = weeklyBook
-        saveAsName = prefix + '.' + startDate.replace('/', '.') + '.xlsx'
+        saveAsName = salonName[0] + '.' + startDate.replace('/', '.') + '.xlsx'
         self.driver.get('https://pos2.zota.us/#/reports/employee-reports')
         sDateXpath = '//div/div/div[2]/div/main/div/div/div[3]/div[2]/span/span/span/span/input'
-        helper.waitLoadingClick(sDateXpath, 6, 'By.XPATH: startDate', self.driver)
+        helper.waitLoadingClick(sDateXpath, 10, 'By.XPATH: startDate', self.driver)
 
         sDateElement = self.driver.find_element(By.NAME, 'startDate')
         defaultStart = helper.parseDate(sDateElement.get_attribute('value'))
@@ -190,7 +191,7 @@ class WebBot:
 
         runReportBtn = self.driver.find_element(By.XPATH, '//*[@id="root"]/div/div[2]/div/main/div/div/div[2]/div[5]/button')
         runReportBtn.click()
-        helper.waitLoadingClick(sDateXpath, 6, 'By.XPATH: startDate', self.driver)
+        helper.waitLoadingClick(sDateXpath, 10, 'By.XPATH: startDate', self.driver)
 
         # locate and click the excel download button
         excelxpath = '//div/div/div[2]/div/main/div/div/div[4]/div/div/div/div/div/div/div/div[2]/span[2]'
@@ -209,21 +210,51 @@ class WebBot:
 
         helper.renameFile(saveAsName, '../tmp')
         tempPathAndFname = '../tmp/' + saveAsName
+        sheetName = saveAsName.replace('.xlsx', '')
+
         # import new workbook sheet to existing book and delete new book
         wb_target = openpyxl.load_workbook(self.workBook)
-        sheetName = saveAsName.replace('.xlsx', '')
+
+        # before copying new temp sheet into weeklyDB, delete existing match
+        if sheetName in wb_target.sheetnames:  # remove default sheet
+            wb_target.remove(wb_target[sheetName])
+
         target_sheet = wb_target.create_sheet(sheetName)
-        wb_source = openpyxl.load_workbook(tempPathAndFname, data_only=True)
+        wb_source = openpyxl.load_workbook(tempPathAndFname)
         source_sheet = wb_source['Sales Summary']
         xlHelper.copy_sheet(source_sheet, target_sheet)
-        if 'Sheet' in wb_target.sheetnames:  # remove default sheet
-            wb_target.remove(wb_target['Sheet'])
         wb_target.save(self.workBook)
-
         # remove temporary downloaded file from zota after extracting info
         os.remove(tempPathAndFname)
+        logging.info("Thread %s: finishing", tName)
 
-    def parseXlToData(self, sheetName):
+    def exportParToXlsx(self, fname):
+        # hard-coded date for now and changed / to . because of xlsx error
+        self.sheet = self.parsedData[0][1][3].replace('/', '.')
+        # check to see if .xlsx exists or create one
+        if os.path.isfile(fname):
+            # if book exists, now check for sheet exists
+            book = openpyxl.load_workbook(fname,)  # load book
+            if self.sheet in book.sheetnames:
+                print('Sheet name already exists: OVERWRITING')
+
+            # create a new one by setting sheet name as active, this deletes existing sheet
+            self.sheet = book.active
+            for employee in self.parsedData:
+                for lines in employee:
+                    self.sheet.append(lines)
+            book.save(fname)
+        else:
+            book = openpyxl.Workbook()  # create book
+            worksheet = book.create_sheet(self.sheet)
+            for employee in self.parsedData:
+                for lines in employee:
+                    worksheet.append(lines)
+            book.save(fname)
+
+
+    def parseXlToData(self, sheetName, tName):
+        logging.info("Thread %s: starting", tName)
         workBook = openpyxl.load_workbook(self.workBook)
         workSheet = workBook[sheetName]
         firstLine = ['======', '======', '======', '======']
@@ -264,7 +295,6 @@ class WebBot:
                     except Exception as e:
                         print('Cannot interate to find tech')
 
-
             techTable.append(['Total Sale', '', '', totalSale])
             techTable.append(['', '', '', '', ])
             techTable.append(['Commission', '', '', commission])
@@ -284,12 +314,7 @@ class WebBot:
             self.parsedData.append(techTable.copy())
             tempIncome.clear()
             techTable.clear()
-
-
-
-
-
-
+        logging.info("Thread %s: finishing", tName)
 
     def printOriginalData(self):
         print(self.originalData)
@@ -322,32 +347,7 @@ class WebBot:
                 for lines in employee:
                     writer.writerows(lines)
 
-    def exportParToXlsx(self, fname):
-        # hard-coded date for now and changed / to . because of xlsx error
-        self.sheet = self.parsedData[0][1][3].replace('/', '.')
-        # check to see if .xlsx exists or create one
-        if os.path.isfile(fname):
-            # if book exists, now check for sheet exists
-            book = openpyxl.load_workbook(fname,)  # load book
-            if self.sheet in book.sheetnames:
-                print('Sheet name already exists: OVERWRITING')
-
-            # create a new one by setting sheet name as active, this deletes existing sheet
-            self.sheet = book.active
-            for employee in self.parsedData:
-                for lines in employee:
-                    self.sheet.append(lines)
-            book.save(fname)
-        else:
-            book = openpyxl.Workbook()  # create book
-            worksheet = book.create_sheet(self.sheet)
-            for employee in self.parsedData:
-                for lines in employee:
-                    worksheet.append(lines)
-            book.save(fname)
 
     def exportEmployee(self, name):
         index = self.activeEmp.index(name)
         return [self.parsedData[index][1:].copy(), self.income[index].copy()]
-
-

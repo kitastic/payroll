@@ -1,16 +1,19 @@
+import math
 
 class Employee():
 
-    def __init__(self, name, salon, data, pbase, rent):
+    def __init__(self, name, salon, data, base, rent):
         self.name = name
         self.salon = salon
         self.parsedData = data[0]
         self.income = data[1]
-        self.basePay = pbase
+        self.basePay = base
         self.rent = rent
         self.daysWorked = 0
         self.cleanUp = 0
         self.payroll = []
+        self.falseCheckPaid = 0        # for people who want to claim less income, but will file actual with irs
+        self.totalCash = 0              # for people who will deduct tax from check and convert to cash also
         self.calcFees()
         self.addCalculation()
 
@@ -20,7 +23,7 @@ class Employee():
             if i[2] > 0:
                 self.daysWorked = self.daysWorked + 1
 
-            if self.salon == 'upscale' and i[2] >= 170:
+            if self.salon == 'upscale' and i[1] >= 170:
                 # deduct $5 for every day that made total sale >= &170
                 self.cleanUp = self.cleanUp + 5
 
@@ -39,42 +42,82 @@ class Employee():
             updatedCheck = basePayCheck
             self.payroll.append(basePayCheck)
             self.payroll.append(tips)
-            self.payroll.append(updatedCheck+tips)
+            self.payroll.append(updatedCheck + tips)
             self.payroll.append(updatedCash)
         else:
             self.payroll.append(check)
             self.payroll.append(tips)
-            self.payroll.append(check+tips)
+            self.payroll.append(check + tips)
             self.payroll.append(cash)
 
     def exportPayroll(self):
-        # format each line to have each item padded 10 chars with alignment
         output = ''
+
+        def calAnna():
+            # use variable globally within exportPayroll method
+            nonlocal output
+            commission = self.parsedData[5][3]
+            tips = self.parsedData[6][3]
+            check = (commission * .5)               # check 50/50 instead of 60/40 like everyone else
+            cash = (commission * .5)
+            self.falseCheckPaid = check + tips      # check amount paid out, but will file actual more amount
+            output += '\n' + '*' * 40 + '\n'
+            output += 'Check + Tip: ' + "{:.2f}".format(check) + ' + ' \
+                      + "{:.2f}".format(tips) + ' = ' + "{:.2f}".format(math.ceil(check + tips)) + '\n'
+            fees = self.rent + self.cleanUp
+            output += 'Tien Mat - (nha/don dep): ' + "{:.2f}".format(cash) + ' - ' \
+                      + "{:.2f}".format(fees) + ' = ' + '{:.2f}'.format(math.ceil(cash - fees)) + '\n'
+
+        def calCindy():
+            # use variable globally within exportPayroll method
+            nonlocal output
+            commission = self.parsedData[5][3]
+            tips = self.parsedData[6][3]
+            check = (commission * .6) + tips
+            cashFromCheck = math.ceil(check * 0.83)
+            cash = (commission * .4)
+            output += '\n' + '*' * 40 + '\n'
+            output += 'Check Qua Tien Mat: ' + '{:.0f}'.format(cashFromCheck)+ '\n'
+            fees = self.rent + self.cleanUp
+            output += 'Tien Mat - (nha/don dep): ' + "{:.2f}".format(cash) + ' - ' \
+                      + "{:.2f}".format(fees) + ' = ' + '{:.2f}'.format(cash - fees) + '\n'
+            totalCash = cashFromCheck + cash - fees
+            self.totalCash = totalCash
+            output += 'Ca Hai Cong Loi: ' + '{:.2f}'.format(math.ceil(totalCash))
+
+        # format each line to have each item padded 10 chars with alignment
         for line in self.parsedData:
             temp = [line[0], line[1], line[2], line[3]]
             formatted = []
             for i in temp:
+                # TODO: add a condition where the first line of '=====' is included.
+                # can be fixed at webBot class > exportEmployee method
                 if isinstance(i, str):
                     formatted.append(i)
                 else:
-                    formatted.append(str("{:.2f}".format(i)))
+                    formatted.append("{:.2f}".format(i))
 
             output += formatted[0].ljust(10) + formatted[1].center(10) \
-                    + formatted[2].center(10) + formatted[3].rjust(10) + '\n'
+                      + formatted[2].center(10) + formatted[3].rjust(10) + '\n'
 
-        output += '-'*40 + '\n'
-        output += 'Check + Tip: ' + str(self.payroll[0]) + ' + ' \
-                  + str("{:.2f}".format(self.payroll[1])) + ' = ' + str(self.payroll[2]) + '\n'
+        output += '\n' + '=' * 40 + '\n'
+        output += 'Check + Tip: ' + "{:.2f}".format(self.payroll[0]) + ' + ' \
+                  + "{:.2f}".format(self.payroll[1]) + ' = ' + "{:.2f}".format(math.ceil(self.payroll[2])) + '\n'
         fees = self.rent + self.cleanUp
-        output += 'Tien Mat - (nha/don dep): ' + str(self.payroll[3]) + ' - ' \
-                + str(fees) + ' = ' + str(self.payroll[3] - fees) + '\n'
+        output += 'Tien Mat - (nha/don dep): ' + "{:.2f}".format(self.payroll[3]) + ' - ' \
+                  + "{:.2f}".format(fees) + ' = ' + '{:.2f}'.format(math.ceil(self.payroll[3] - fees)) + '\n'
 
+        if self.name == 'Anna':
+            calAnna()
+        if self.name == 'Cindy':
+            calCindy()
         print(output)
-        fname = self.parsedData[0][2].replace('/','.') + self.name + '.txt'
+
+        fname = self.salon[0] + '.' + self.parsedData[0][2].replace('/', '.') + self.name + '.txt'
         path = '../tmp/'
-        with open(path+fname, 'w+') as file:
+        with open(path + fname, 'w+') as file:
             file.writelines(output)
-        return path+fname
+        return path + fname
 
     def printAll(self):
         print('name: ' + self.name)
