@@ -6,6 +6,10 @@ import datetime
 import pandas as pd
 import openpyxl
 import re
+import tkinter as tk
+from tkinter import simpledialog
+import time
+import os
 
 
 def parseDate(date):
@@ -20,11 +24,10 @@ def parseDate(date):
     """
     # this function will extract the month, day, and year into three 
     # 
-    month = int(date[0:2])
-    day = int(date[3:5])
-    year = int(date[8:10])  # two digit format of year
+    month = int(re.search('^\d+', date).group(0))
+    day = int(re.search('/\d+/', date).group(0).replace('/',''))
+    year = int(re.search('\d+$', date).group(0))  # two digit format of year
     return [month, day, year]
-
 
 def enterDate(date, default, element):
     """
@@ -52,7 +55,9 @@ def enterDate(date, default, element):
     The following two left arrows are meant to make sure the highlighted
     area for editing is in the far left (sometimes year is selected when clicked)
     '''
-    element.send_keys(Keys.ARROW_LEFT * 2)
+    element.send_keys(Keys.ARROW_LEFT)
+    element.send_keys(Keys.ARROW_LEFT)
+    element.send_keys(Keys.ARROW_LEFT)
 
     # if wanted month is 01 and default month is 12, monDif = -11
     if monDif <= -1:
@@ -87,15 +92,14 @@ def enterDate(date, default, element):
         for i in range(0, yearDif):
             element.send_keys(Keys.ARROW_UP)
 
-
-def waitLoadingClick(xpath, sec, element, driver):
+def waitLoadingClick(xpath, sec, elementName, driver):
     """
     Waits for a specified time for a certain element to be clickable.
     This is to wait for the page to completely load.
     Args:
         xpath(str): html xpath of web element
         sec(int): number of seconds to wait
-        element(str): name of web element
+        elementName(str): name of web element
         driver(web element): browser driver
 
     Returns:
@@ -104,8 +108,7 @@ def waitLoadingClick(xpath, sec, element, driver):
     try:
         element = WebDriverWait(driver, sec).until(EC.element_to_be_clickable((By.XPATH, xpath)))
     except TimeoutError:
-        print('time out waiting for' + element + ' to be clickable')
-
+        print('time out waiting for' + elementName + ' to be clickable')
 
 def waitLoadingPresence(class_name, sec, driver):
     """
@@ -124,7 +127,6 @@ def waitLoadingPresence(class_name, sec, driver):
     except TimeoutError:
         print('time out waiting for' + class_name + ' to be located')
 
-
 def getDay(row):
     '''
     converts any number to floats and captures day if present
@@ -132,7 +134,7 @@ def getDay(row):
         row(str): row of data
 
     Returns:
-        [str, float]: list of day and value or just value only
+        [d(str), v(float)]: list of day and value or just value only
     '''
     v = re.findall('(?<=\$)\d?,?\d+\.\d+', row)
     # remove comma and convert strings to float for money price
@@ -144,7 +146,6 @@ def getDay(row):
     else:
         return v
 
-
 def dayToDate(rawDay, rawDate):
     year = re.search('\d+$', rawDate).group(0)
     month = re.search('^\d+', rawDate).group(0)
@@ -154,6 +155,16 @@ def dayToDate(rawDay, rawDate):
     dateObj = datetime.datetime.strptime(dateString, '%m/%d/%Y')
     return [dateObj, dayWord]  # can also return date obj
 
+def getDateGui():
+    ROOT = tk.Tk()
+    ROOT.withdraw()
+    # the input dialog
+    startStr = simpledialog.askstring(title="Dates",
+                                      prompt="Enter start day of week (mm/dd/yyyy): ")
+    startObj = datetime.datetime.strptime(startStr, '%m/%d/%Y')
+    endObj = startObj + datetime.timedelta(days=6)
+    endStr = endObj.strftime('%m/%d/%Y')
+    return [startStr, endStr]
 
 def getFloat(row):
     # searching at the end of string for dollar amount
@@ -165,10 +176,13 @@ def getFloat(row):
     else:
         return(float(v.group(0).replace(',','')))
 
-
-def parsedToXlsx(filename, data):
-    sheet = '01'
-    xlsx = 'weeklyPayroll.xlsx'
-    with pd.ExcelWriter(xlsx) as writer:
-        writer.book = openpyxl.load_workbook(xlsx)
-        data.to_excel(writer, sheet, index=False)
+def renameFile(newName, downloadPath, time_to_wait=60):
+    time_counter = 0
+    filename = max([f for f in os.listdir(downloadPath)], key=lambda xa :   os.path.getctime(os.path.join(downloadPath,xa)))
+    while '.crdownload' in filename:
+        time.sleep(1)
+        time_counter += 1
+        if time_counter > time_to_wait:
+            raise Exception('Waited too long for file to download')
+    filename = max([f for f in os.listdir(downloadPath)], key=lambda xa :   os.path.getctime(os.path.join(downloadPath,xa)))
+    os.rename(os.path.join(downloadPath, filename), os.path.join(downloadPath, newName))
