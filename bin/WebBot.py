@@ -257,14 +257,12 @@ class WebBot:
         logging.info("Thread %s: starting", tName)
         workBook = openpyxl.load_workbook(self.workBook)
         workSheet = workBook[sheetName]
-        firstLine = ['======', '======', '======', '======']
         dates = re.findall('\d+/\d+/\d+', workSheet['A3'].value)
-        secondLine = ['Date', '', dates[0], dates[1]]
+        firstLine = ['Date', '', dates[0], ' - ' + dates[1]]
 
         techTable = []
         for tech in self.activeEmp:
             techTable.append(firstLine)
-            techTable.append(secondLine)
             techTable.append(['Name', '', '', tech])
             techTable.append(['Pay', '-----', '-----', '-----'])
             totalSale = 0
@@ -293,7 +291,7 @@ class WebBot:
                                 tips = tips + row[10]
                                 tempDailies.append([day,row[4],row[11],row[10]])
                     except Exception as e:
-                        print('Cannot interate to find tech')
+                        print('Cannot iterate to find tech')
 
             techTable.append(['Total Sale', '', '', totalSale])
             techTable.append(['', '', '', '', ])
@@ -350,4 +348,4 @@ class WebBot:
 
     def exportEmployee(self, name):
         index = self.activeEmp.index(name)
-        return [self.parsedData[index][1:].copy(), self.income[index].copy()]
+        return [self.parsedData[index].copy(), self.income[index].copy()]
