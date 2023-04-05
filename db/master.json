@@ -1,0 +1,99 @@
+{
+    "posh": {
+        "employees": {},
+        "login": {
+            "password": "Joeblack334$",
+            "username": "kit@posh"
+        },
+        "name": "posh",
+        "payments": "pPayments.xlsx",
+        "salesJson": "../db/pSales.json",
+        "salesXl": "pSales.xlsx"
+    },
+    "upscale": {
+        "employees": {
+            "Anna": {
+                "active": true,
+                "fees": 5,
+                "pay": 0,
+                "paygrade": {
+                    "regular": {
+                        "check": 0,
+                        "commission": 0
+                    },
+                    "special": {
+                        "checkdeal": 5,
+                        "checkreport": 6,
+                        "commissionspecial": 6
+                    },
+                    "type": "special"
+                },
+                "rent": 0
+            },
+            "Chau": {
+                "pay": 1100,
+                "rent": 60
+            },
+            "Cindy": {
+                "active": true,
+                "fees": 5,
+                "pay": 900,
+                "paygrade": {
+                    "regular": {
+                        "check": 0,
+                        "commission": 0
+                    },
+                    "special": {
+                        "checkdeal": 0,
+                        "checkreport": 0,
+                        "commissionspecial": 6
+                    },
+                    "type": "special"
+                },
+                "rent": 60
+            },
+            "Kayla": {
+                "active": true,
+                "fees": 5,
+                "pay": 1300,
+                "paygrade": {
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "checkdeal": 0,
+                        "checkreport": 0,
+                        "commissionspecial": 0
+                    },
+                    "type": "regular"
+                },
+                "rent": 70
+            },
+            "Kelly": {
+                "pay": 1300,
+                "rent": 0
+            },
+            "Lisa": {
+                "pay": 900,
+                "rent": 60
+            },
+            "Sammy": {
+                "pay": 1200,
+                "rent": 60
+            },
+            "Sumo": {
+                "pay": 1400,
+                "rent": 60
+            }
+        },
+        "login": {
+            "password": "Joeblack334$",
+            "username": "upscalemanager"
+        },
+        "name": "upscale",
+        "payments": "uPayments.xlsx",
+        "salesJson": "../db/uSales.json",
+        "salesXl": "uSales.xlsx"
+    }
+}

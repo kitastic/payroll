@@ -1,21 +1,38 @@
 import math
 
-class Employee():
 
-    def __init__(self, name, salon, data, base, rent):
-        self.name = name
-        self.salon = salon
-        self.parsedData = data[0]
-        self.income = data[1]
-        self.basePay = base
-        self.rent = rent
+class Employee:
+    def __init__(self, data):
+        """
+
+        Args:
+            data layout: {'paygrade': {'type': paygradetype,
+                                        'regular': {'commission': commission, 'check': check}
+                                        'special': {'commissionspecial': comspec, 'checkdeal': checkdeal, 'checkreport': checkreport}}
+                            'id': idNum, 'salonName': sname, 'name': name, 'rent': rent, 'fees': fees, 'pay': pay}
+        """
+        self.id = data['id']
+        self.name = data['name']
+        self.salonName = data['salonName']
+        # self.parsedData = data[0]
+        # self.income = data[1]
+        self.basePay = data['pay']
+        self.rent = data['rent']
+        self.fees = data['fees']
+        self.paygrade = data['paygrade']['type']
+        self.commission = data['paygrade']['regular']['commission']
+        self.check = data['paygrade']['regular']['check']
+        self.commissionspecial = data['paygrade']['special']['commissionspecial']
+        self.checkdeal = data['paygrade']['special']['checkdeal']
+        self.checkreport = data['paygrade']['special']['checkreport']
+
+
         self.daysWorked = 0
         self.cleanUp = 0
         self.payroll = []
         self.falseCheckPaid = 0        # for people who want to claim less income, but will file actual with irs
         self.totalCash = 0              # for people who will deduct tax from check and convert to cash also
-        self.calcFees()
-        self.addCalculation()
+
 
     def calcFees(self):
         # this function is the main salon differentiation
@@ -23,14 +40,14 @@ class Employee():
             if i[2] > 0:
                 self.daysWorked = self.daysWorked + 1
 
-            if self.salon == 'upscale' and i[1] >= 170:
+            if self.salonName == 'upscale' and i[2] >= 170:
                 # deduct $5 for every day that made total sale >= &170
                 self.cleanUp = self.cleanUp + 5
 
     def addCalculation(self):
-        tips = self.parsedData[6][3]
-        check = self.parsedData[9][3] - tips
-        cash = self.parsedData[10][3]
+        tips = self.parsedData[7][3]            #6, 9, 10
+        check = self.parsedData[10][3] - tips
+        cash = self.parsedData[11][3]
         # check if made enough
         basePayPerDay = self.basePay / 6
         basePayPerWeek = basePayPerDay * self.daysWorked
@@ -56,8 +73,8 @@ class Employee():
         def calAnna():
             # use variable globally within exportPayroll method
             nonlocal output
-            commission = self.parsedData[5][3]
-            tips = self.parsedData[6][3]
+            commission = self.parsedData[6][3]
+            tips = self.parsedData[7][3]
             check = (commission * .5)               # check 50/50 instead of 60/40 like everyone else
             cash = (commission * .5)
             self.falseCheckPaid = check + tips      # check amount paid out, but will file actual more amount
@@ -71,8 +88,8 @@ class Employee():
         def calCindy():
             # use variable globally within exportPayroll method
             nonlocal output
-            commission = self.parsedData[5][3]
-            tips = self.parsedData[6][3]
+            commission = self.parsedData[6][3]
+            tips = self.parsedData[7][3]
             check = (commission * .6) + tips
             cashFromCheck = math.ceil(check * 0.83)
             cash = (commission * .4)
@@ -101,8 +118,7 @@ class Employee():
                       + formatted[2].center(10) + formatted[3].rjust(10) + '\n'
 
         output += '\n' + '=' * 40 + '\n'
-        output += 'Check + Tip: ' + "{:.2f}".format(self.payroll[0]) + ' + ' \
-                  + "{:.2f}".format(self.payroll[1]) + ' = ' + "{:.2f}".format(math.ceil(self.payroll[2])) + '\n'
+        output += 'Check + Tip: ' + "{:.2f}".format(self.payroll[0]) + ' + ' + "{:.2f}".format(self.payroll[1]) + ' = ' + "{:.2f}".format(math.ceil(self.payroll[2])) + '\n'
         fees = self.rent + self.cleanUp
         output += 'Tien Mat - (nha/don dep): ' + "{:.2f}".format(self.payroll[3]) + ' - ' \
                   + "{:.2f}".format(fees) + ' = ' + '{:.2f}'.format(math.ceil(self.payroll[3] - fees)) + '\n'
@@ -113,7 +129,7 @@ class Employee():
             calCindy()
         print(output)
 
-        fname = self.salon[0] + '.' + self.parsedData[0][2].replace('/', '.') + self.name + '.txt'
+        fname = self.salonName[0] + '.' + self.parsedData[0][2].replace('/', '.') + self.name + '.txt'
         path = '../tmp/'
         with open(path + fname, 'w+') as file:
             file.writelines(output)
@@ -127,3 +143,37 @@ class Employee():
         print('clean up: ' + str(self.cleanUp))
         for i in self.parsedData: print(i)
         for i in self.income: print(i)
+
+    def getId(self):
+        return self.id
+
+
+class EmployeeCash(Employee):
+    def __init__(self, id, name, salon, data, base, rent):
+        super().__init__(id,  name, salon, data, base, rent)
+        self.salary = []
+
+
+class Employee50(Employee):
+    def __init__(self, id, name, salon, data, base, rent):
+        super().__init__(id,  name, salon, data, base, rent)
+
+
+class Employee60(Employee):
+    def __init__(self, id, name, salon, data, base, rent):
+        super().__init__(id,  name, salon, data, base, rent)
+
+
+class EmployeeManager(Employee):
+    def __init__(self, id, name, salon, data, base, rent):
+        super().__init__(id,  name, salon, data, base, rent)
+
+
+class EmployeeNoFees(Employee):
+    def __init__(self, id, name, salon, data, base, rent):
+        super().__init__(id,  name, salon, data, base, rent)
+
+
+class CashEmployee(Employee):
+    def __init__(self, id, name, salon, data, base, rent):
+        super().__init__(id,  name, salon, data, base, rent)
