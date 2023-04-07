@@ -61,7 +61,15 @@ class Salon(Bot.Bot):
             pass
 
         for emp, info in self.employees.items():
-            self.Emps[emp] = Employee.Employee(info)
+            if not info['paygrade']['regType']:
+                if info['paygrade']['special']['checkoriginal'] == 0:
+                    self.Emps[emp] = Employee.EmployeeCash(info)
+                else:
+                    self.Emps[emp] = Employee.EmployeeSpecial(info)
+            else:
+                self.Emps[emp] = Employee.Employee(info)
+            # self.Emps[emp] = Employee.Employee(info)
+
 
     def createEmpFromGui(self, name, empData):
         """

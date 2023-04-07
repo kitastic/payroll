@@ -158,7 +158,7 @@ class EmployeeSpecial(Employee):
         Nguoi nay can phai khai income thap cho nen ky check it ma khai so thiet
     """
     def __init__(self, data):
-        super().__init__( data)
+        super().__init__(data)
 
     def calculatePayroll(self,sales):
         tips,commissionSales,totalSales,cleaningFees,daysWorked = [0 for i in range(1,6)]
