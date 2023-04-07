@@ -6,66 +6,61 @@ class Employee:
         """
 
         Args:
-            data layout: {'paygrade': {'type': paygradetype,
+            data layout: {'paygrade': {'type': boolean,  True if regular, False if special
                                         'regular': {'commission': commission, 'check': check}
-                                        'special': {'commissionspecial': comspec, 'checkdeal': checkdeal, 'checkreport': checkreport}}
-                            'id': idNum, 'salonName': sname, 'name': name, 'rent': rent, 'fees': fees, 'pay': pay}
+                                        'special': {'commissionspecial': comspec, 'checkdeal': checkdeal, 'checkoriginal': checkoriginal}}
+                            'id': idNum, 'salonName': sname, 'name': name, 'rent': rent, 'fees': fees, 'pay': pay, 'active': bool}
         """
         self.id = data['id']
         self.name = data['name']
         self.salonName = data['salonName']
-        # self.parsedData = data[0]
-        # self.income = data[1]
         self.basePay = data['pay']
         self.rent = data['rent']
         self.fees = data['fees']
-        self.paygrade = data['paygrade']['type']
+        self.active = data['active']
+        self.paygrade = data['paygrade']['regType']
         self.commission = data['paygrade']['regular']['commission']
         self.check = data['paygrade']['regular']['check']
         self.commissionspecial = data['paygrade']['special']['commissionspecial']
         self.checkdeal = data['paygrade']['special']['checkdeal']
-        self.checkreport = data['paygrade']['special']['checkreport']
+        self.checkoriginal = data['paygrade']['special']['checkoriginal']
 
+        self.payroll = dict()
+    def calculatePayroll(self, sales):
+        tips, commissionSales, totalSales, cleaningFees, daysWorked = [0 for i in range(1,6)]
+        for days, amt in sales.items():
+            tips += amt[2]
+            commissionSales += amt[1]
+            totalSales += amt[0]
+            if amt[0] > 0:
+                daysWorked += 1
 
-        self.daysWorked = 0
-        self.cleanUp = 0
-        self.payroll = []
-        self.falseCheckPaid = 0        # for people who want to claim less income, but will file actual with irs
-        self.totalCash = 0              # for people who will deduct tax from check and convert to cash also
-
-
-    def calcFees(self):
-        # this function is the main salon differentiation
-        for i in self.income:
-            if i[2] > 0:
-                self.daysWorked = self.daysWorked + 1
-
-            if self.salonName == 'upscale' and i[2] >= 170:
-                # deduct $5 for every day that made total sale >= &170
-                self.cleanUp = self.cleanUp + 5
-
-    def addCalculation(self):
-        tips = self.parsedData[7][3]            #6, 9, 10
-        check = self.parsedData[10][3] - tips
-        cash = self.parsedData[11][3]
+        # self.commission is an integer 1-10 convert it to decimal percent
+        check = (commissionSales * (self.check / 10)) + tips
+        cash = commissionSales * ((10 - self.check) / 10)
         # check if made enough
         basePayPerDay = self.basePay / 6
-        basePayPerWeek = basePayPerDay * self.daysWorked
-        basePayCheck = basePayPerWeek * 0.6
-        basePayCash = basePayPerWeek * 0.4
+        basePayPerRange = basePayPerDay * daysWorked
+        basePayCheck = (basePayPerRange * (self.check / 10) ) + tips
+        basePayCash = basePayPerRange * ((10 - self.check) / 10)
 
-        if cash < basePayCash:
-            updatedCash = basePayCash
-            updatedCheck = basePayCheck
-            self.payroll.append(basePayCheck)
-            self.payroll.append(tips)
-            self.payroll.append(updatedCheck + tips)
-            self.payroll.append(updatedCash)
+        if commissionSales < basePayPerRange :
+            self.payroll = {
+                'check': basePayCheck,
+                'cash': basePayCash,
+                'tips': tips,
+                'fees': (daysWorked * self.fees) + self.rent
+            }
         else:
-            self.payroll.append(check)
-            self.payroll.append(tips)
-            self.payroll.append(check + tips)
-            self.payroll.append(cash)
+            self.payroll = {
+                'check': check,
+                'cash': cash,
+                'tips': tips,
+                'fees': (daysWorked * self.fees) + self.rent
+            }
+
+    def getPayroll(self):
+        return self.payroll
 
     def exportPayroll(self):
         output = ''
@@ -147,33 +142,112 @@ class Employee:
     def getId(self):
         return self.id
 
+    def getName(self):
+        return self.name
+
+    def getInfo(self):
+        return {'paygrade': {'regType': self.paygrade,
+                            'regular': {'commission': self.commission, 'check': self.check},
+                            'special': {'commissionspecial': self.commissionspecial, 'checkdeal': self.checkdeal, 'checkoriginal': self.checkoriginal}},
+                'id': self.id, 'active': self.active,'salonName': self.salonName, 'name': self.name,
+                'rent': self.rent, 'fees': self.fees, 'pay': self.basePay}
+
+
+class EmployeeSpecial(Employee):
+    """
+        Nguoi nay can phai khai income thap cho nen ky check it ma khai so thiet
+    """
+    def __init__(self, data):
+        super().__init__( data)
+
+    def calculatePayroll(self,sales):
+        tips,commissionSales,totalSales,cleaningFees,daysWorked = [0 for i in range(1,6)]
+        for days,amt in sales.items():
+            tips += amt[2]
+            commissionSales += amt[1]
+            totalSales += amt[0]
+            if amt[0] > 0:
+                daysWorked += 1
+
+        # self.commission is an integer 1-10 convert it to decimal percent
+        '''
+            the next three lines are what makes the difference because check is 
+            deducted 17% and converted to cash 
+        '''
+        check = commissionSales * (self.checkoriginal / 10) + tips
+        checkdeal = commissionSales * (self.checkdeal / 10) + tips
+        cash = commissionSales * ((10 - self.checkoriginal) / 10)
+        cashdeal = commissionSales * ((10 - self.checkdeal) / 10)
+        # check if made enough
+        basePayPerDay = self.basePay / 6
+        basePayPerRange = basePayPerDay * daysWorked
+        basePayCheck = basePayPerRange * (self.checkoriginal / 10) + tips
+        basePayCheckDeal = basePayPerRange * (self.checkdeal / 10) + tips
+        basePayCash = basePayPerRange * ((10 - self.checkoriginal) / 10)
+        basePayCashDeal = basePayPerRange * ((10 - self.checkdeal) / 10)
+
+        if commissionSales < basePayPerRange:
+            self.payroll = {
+                'check':basePayCheck,
+                'checkdeal': basePayCheckDeal,
+                'cash':basePayCash,
+                'cashdeal':basePayCashDeal,
+                'tips':tips,
+                'fees':(daysWorked * self.fees) + self.rent
+            }
+        else:
+            self.payroll = {
+                'check':check,
+                'checkdeal': checkdeal,
+                'cashdeal': cashdeal,
+                'cash':cash,
+                'tips':tips,
+                'fees':(daysWorked * self.fees) + self.rent
+            }
+
 
 class EmployeeCash(Employee):
-    def __init__(self, id, name, salon, data, base, rent):
-        super().__init__(id,  name, salon, data, base, rent)
-        self.salary = []
+    def __init__(self, data):
+        super().__init__(data)
 
+    def calculatePayroll(self,sales):
+        tips,commissionSales,totalSales,cleaningFees,daysWorked = [0 for i in range(1,6)]
+        for days,amt in sales.items():
+            tips += amt[2]
+            commissionSales += amt[1]
+            totalSales += amt[0]
+            if amt[0] > 0:
+                daysWorked += 1
 
-class Employee50(Employee):
-    def __init__(self, id, name, salon, data, base, rent):
-        super().__init__(id,  name, salon, data, base, rent)
+        # self.commission is an integer 1-10 convert it to decimal percent
+        '''
+            the next three lines are what makes the difference because check is 
+            deducted 17% and converted to cash 
+        '''
+        check = commissionSales * (self.checkoriginal / 10) + tips
+        convertedCheck = check * 0.83
+        cash = commissionSales * ((10 - self.checkoriginal) / 10)
+        # check if made enough
+        basePayPerDay = self.basePay / 6
+        basePayPerRange = basePayPerDay * daysWorked
+        basePayCheck = basePayPerRange * (self.checkoriginal / 10) + tips
+        basePayConvertedCheck = basePayCheck * 0.83
+        basePayCash = basePayPerRange * ((10 - self.checkoriginal) / 10)
 
+        if commissionSales < basePayPerRange:
+            self.payroll = {
+                'check':basePayCheck,
+                'checkdeal': basePayConvertedCheck,
+                'cash':basePayCash,
+                'tips':tips,
+                'fees':(daysWorked * self.fees) + self.rent
+            }
+        else:
+            self.payroll = {
+                'check':check,
+                'checkdeal': convertedCheck,
+                'cash':cash,
+                'tips':tips,
+                'fees':(daysWorked * self.fees) + self.rent
+            }
 
-class Employee60(Employee):
-    def __init__(self, id, name, salon, data, base, rent):
-        super().__init__(id,  name, salon, data, base, rent)
-
-
-class EmployeeManager(Employee):
-    def __init__(self, id, name, salon, data, base, rent):
-        super().__init__(id,  name, salon, data, base, rent)
-
-
-class EmployeeNoFees(Employee):
-    def __init__(self, id, name, salon, data, base, rent):
-        super().__init__(id,  name, salon, data, base, rent)
-
-
-class CashEmployee(Employee):
-    def __init__(self, id, name, salon, data, base, rent):
-        super().__init__(id,  name, salon, data, base, rent)

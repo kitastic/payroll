@@ -99,46 +99,39 @@ class Bot:
             helper.waitLoadingClick(excelxpath, 10, 'By.XPATH: excel link', self.driver)
             try:
                 self.driver.find_element(By.XPATH, excelxpath).click()
-                sg.easy_print('Successfuly clicked download link')
+                print('INFO: {}s out of 10s - Successfuly clicked download link'.format(counter))
                 linkFound = True
             except Exception as e:
-                sg.easy_print('Failed to click excel link')
+                print('WARNING: {}s out of 10s - Failed to click excel link: '.format(counter))
 
             if counter == 5:
+                print('WARNING: refreshing page')
                 self.driver.refresh()
             if counter == 10:
-                sg.Print('Cannot find link even after refreshing')
+                print('WARNING: {}s out of 10s - Cannot find link even after refreshing'.format(counter))
                 self.driver.quit()
+                return False
 
         fileFound = False
-        counter = 0
-
         time_counter = 0
         time_to_wait = 8
         filename = ''
         while not fileFound:
             time.sleep(1)
-            time_to_wait += 1
-            if time_to_wait == time_counter:
-                raise Exception('Never found anything in file folder')
-
-            if time_counter == 4:
-                self.driver.refresh()
-                helper.waitLoadingClick(excelxpath,10,'By.XPATH: excel link',self.driver)
+            time_counter += 1
+            if counter % 2 == 0:
                 try:
-                    self.driver.find_element(By.XPATH,excelxpath).click()
-                    sg.easy_print('Successfuly clicked download link')
-                except Exception as e:
-                    sg.easy_print('Failed to click excel link')
+                    # max() called on empty (in this case folder) will return error
+                    filename = max([f for f in os.listdir(dlDir)],
+                                   key=lambda xa: os.path.getctime(os.path.join(dlDir,xa)))
+                    fileFound = True
+                except ValueError as e:
+                    print('{}: waiting {} sec more'.format(e, time_counter))
 
-            try:
-                # max() called on empty (in this case folder) will return error
-                filename = max([f for f in os.listdir(dlDir)],
-                               key=lambda xa: os.path.getctime(os.path.join(dlDir,xa)))
-                fileFound = True
-            except ValueError as e:
-                sg.Print('{}: waiting {} sec more'.format(e, time_counter))
-
+            if time_counter == time_to_wait:
+                sg.Print('ERROR: file never found')
+                self.driver.quit()
+                return False
 
         self.driver.quit()
 
@@ -149,16 +142,15 @@ class Bot:
             time.sleep(1)
             time_counter += 1
             if time_counter > time_to_wait:
-                raise Exception('Waited too long for file to download')
+                print('Waited too long for file to download')
+                return False
 
         filename = max([f for f in os.listdir(dlDir)],
                        key=lambda xa: os.path.getctime(os.path.join(dlDir,xa)))
-
         try:
             os.rename(os.path.join(dlDir,filename),os.path.join(dlDir,salonName[0] + 'Sales.xlsx'))
         except FileExistsError:
             os.remove(dlDir + salonName[0] + 'Sales.xlsx')
             os.rename(os.path.join(dlDir,filename),os.path.join(dlDir,salonName[0] + 'Sales.xlsx'))
-
         return dlDir, salonName[0] + 'Sales.xlsx'  # returns path and filename
 

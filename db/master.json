@@ -1,12 +1,34 @@
 {
     "posh": {
-        "employees": {},
+        "employees": {
+            "kit": {
+                "active": true,
+                "fees": 0,
+                "id": 300,
+                "name": "kit",
+                "pay": 1000,
+                "paygrade": {
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "rent": 0,
+                "salonName": "posh"
+            }
+        },
         "login": {
             "password": "Joeblack334$",
             "username": "kit@posh"
         },
         "name": "posh",
-        "payments": "pPayments.xlsx",
+        "payments": "",
         "salesJson": "../db/pSales.json",
         "salesXl": "pSales.xlsx"
     },
@@ -15,76 +37,86 @@
             "Anna": {
                 "active": true,
                 "fees": 5,
+                "id": 103,
+                "name": "Anna",
                 "pay": 0,
                 "paygrade": {
+                    "regType": false,
                     "regular": {
                         "check": 0,
                         "commission": 0
                     },
                     "special": {
                         "checkdeal": 5,
-                        "checkreport": 6,
+                        "checkoriginal": 6,
                         "commissionspecial": 6
-                    },
-                    "type": "special"
+                    }
                 },
-                "rent": 0
-            },
-            "Chau": {
-                "pay": 1100,
-                "rent": 60
+                "rent": 0,
+                "salonName": "upscale"
             },
             "Cindy": {
                 "active": true,
                 "fees": 5,
+                "id": 104,
+                "name": "Cindy",
                 "pay": 900,
                 "paygrade": {
+                    "regType": false,
                     "regular": {
                         "check": 0,
                         "commission": 0
                     },
                     "special": {
                         "checkdeal": 0,
-                        "checkreport": 0,
+                        "checkoriginal": 0,
                         "commissionspecial": 6
-                    },
-                    "type": "special"
+                    }
                 },
-                "rent": 60
+                "rent": 60,
+                "salonName": "upscale"
             },
             "Kayla": {
                 "active": true,
                 "fees": 5,
+                "id": 102,
+                "name": "Kayla",
                 "pay": 1300,
                 "paygrade": {
+                    "regType": true,
                     "regular": {
                         "check": 6,
                         "commission": 6
                     },
                     "special": {
                         "checkdeal": 0,
-                        "checkreport": 0,
+                        "checkoriginal": 0,
                         "commissionspecial": 0
-                    },
-                    "type": "regular"
+                    }
                 },
-                "rent": 70
+                "rent": 70,
+                "salonName": "upscale"
             },
             "Kelly": {
+                "active": true,
+                "fees": 0,
+                "id": 100,
+                "name": "Kelly",
                 "pay": 1300,
-                "rent": 0
-            },
-            "Lisa": {
-                "pay": 900,
-                "rent": 60
-            },
-            "Sammy": {
-                "pay": 1200,
-                "rent": 60
-            },
-            "Sumo": {
-                "pay": 1400,
-                "rent": 60
+                "paygrade": {
+                    "regType": true,
+                    "regular": {
+                        "check": 5,
+                        "commission": 7
+                    },
+                    "special": {
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "rent": 0,
+                "salonName": "upscale"
             }
         },
         "login": {
@@ -92,7 +124,7 @@
             "username": "upscalemanager"
         },
         "name": "upscale",
-        "payments": "uPayments.xlsx",
+        "payments": "",
         "salesJson": "../db/uSales.json",
         "salesXl": "uSales.xlsx"
     }

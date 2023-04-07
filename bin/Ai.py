@@ -33,25 +33,8 @@ class Ai:
         self.loadedSettings = dict()
 
         '''
-            for each salon:
-            { 'salon name': { 'obj': Salon instance
-                              'settings': {'name': 'posh',
-                                             'login': {'username': 'kit@posh', 'password': 'Joeblack334$'},
-                                             'salesJson': 'pSales.json',
-                                             'salesXl': 'pSales.xlsx',
-                                             'payments': 'pPayments.xlsx'
-                                             'employees': {'empNames': {'pay': '',
-                                                                        'fees': '',
-                                                                        'rent': '',
-                                                                        'paygrade': {'regular': '',
-                                                                                        'commission': '',
-                                                                                        'check': '',
-                                                                                        'commissionspecial': '',
-                                                                                        'checkdeal': '',
-                                                                                        'checkreport': ''
-                                                                                        }
-                                             }
-                            }
+            salons dict:  {'salon name': salon obj
+                              'salon name2: salon obj }
         '''
         self.salons = dict()            # keys are salon names and values are salon class objects
         self.employees = dict()
@@ -69,9 +52,7 @@ class Ai:
             self.loadedSettings = json.load(reader)
 
         for name in self.loadedSettings.keys():     # dict keys are iterable BUT NOT subscriptable ie [0]
-            self.salons[name] = dict()
-            self.salons[name]['obj'] = Salon.Salon(self.loadedSettings[name])       # create salon objects
-            self.salons[name]['settings'] = self.loadedSettings[name]
+            self.salons[name] = Salon.Salon(self.loadedSettings[name])       # create salon objects
 
     def webscrapeSales(self, salons, sDate, eDate):
         """
@@ -83,17 +64,22 @@ class Ai:
             eDate: string format mm/dd/yyyy
 
         Returns:
-
         """
         for s in salons:
             # get salon object from dictionary
-            salon = self.salons[s]['obj']
-            path, fname = salon.dlEmpSales(s, salon.zotaUname, salon.zotaPass,
-                                           startDate=sDate,endDate=eDate
-                                           )
-            salon.readSalesXltoJson(path+fname)
-            salon.updateJsonFileDelXl(path)
-            time.sleep(5)
+            salon = self.salons[s]
+            # salon is using inherited method dlEmpSales from WebBot
+            try:
+                print('INFO: beginning to retrieve sales for {}'.format(s))
+                path, fname = salon.dlEmpSales(s, salon.zotaUname, salon.zotaPass,
+                                               startDate=sDate,endDate=eDate)
+                salon.readSalesXltoJson(path + fname)
+                salon.updateJsonFileDelXl(path)
+                time.sleep(5)
+            except Exception:
+                print('ERROR: Failed to get sales.\nPossible problems:\n-date range too long and '
+                      'browser took too long to load\n-maybe there is no sales data for the salon within'
+                      'date range (erased data by zota?)\n-or zota connection is slow and retry')
 
     def getJson(self, salons, sDate, eDate):
         """
@@ -109,51 +95,35 @@ class Ai:
         """
         tmp = dict()
         for s in self.salons.keys():
-            salon = self.salons[s]['obj']
+            salon = self.salons[s]
             tmp[s] = salon.getJsonRange(sDate, eDate)
         return tmp
 
-    def modEmp(self, salons, data, cmd):
-        # newEmp = dict()
-        newEmp = {data['-empName-']: {'id': data['-empId-'],
-                                      'salonName': data[''],
-                                      'pay': data['-basePay-'] if data['-basePay-'] else '0',
-                                      'fees': data['-fees-'] if data['-fees-'] else '0',
-                                      'rent': data['-rent-'] if data['-rent-'] else '0',
-                                      'paygrade': { 'regular': data['-regular-'],
-                                                    'commission': data['-commission-'] if data['-commission-'] else '0',
-                                                    'check': data['-check-'] if data['-check-'] else '0',
-                                                    'commissionspecial': data['-commissionspecial-'] if data[
-                                                        '-commissionspecial-'] else '0',
-                                                    'checkdeal': data['-checkdeal-'] if data['-checkdeal-'] else '0',
-                                                    'checkreport': data['-checkreport-'] if data['-checkreport-'] else
-                                                    '0'
-                                                    }
-                                      } }
-
-        # now newEmp will be added to corresponding salon's 'employees' dictionary
-        for s in salons:
-            if cmd == 'create':
-                self.salons[s]['settings']['employees'] = newEmp.copy()
-                self.loadedSettings[s]['employees'] = newEmp.copy()
-            elif cmd == 'update':
-                self.salons[s]['settings']['employees'] = newEmp.copy()
-                self.loadedSettings[s]['employees'] = newEmp.copy()
-            elif cmd == 'remove':
-                deletedValue = self.salons[s]['settings']['employees'].pop(data['-empName-'])
-                deletedValue = self.loadedSettings[s]['employees'].pop(data['-empName-'])
-            elif cmd == 'view':
-                return self.salons[s]['settings']['employees'][data['-empName-']]
-
+    def modEmp(self, cmd, employee, salon):
+        # employee has its name as the key so we get it from list(dict.keys()) and get the only value in the list
+        if cmd == 'save':
+            self.salons[salon].createEmpFromGui(name=list(employee.keys())[0],empData=employee)
+        elif cmd == 'update':
+            self.salons[salon].updateEmpFromGui(name=list(employee.keys())[0],empData=employee)
+        elif cmd == 'remove':
+            # if remove cmd was sent, employee is a string name
+            empName = employee['-empName-']
+            self.salons[salon].deleteEmp(name=empName)
+        else:
+            sg.Print('Warning: did not do anything because dont know command regarding Ai.modEmp()')
 
     def getPayrollFromSalon(self, salons, sDate, eDate):
         for s in self.salons:
             salon = self.salons[s]
 
     def saveNewSettings(self):
+        data = {}
+        for name,salonObj in self.salons.items():
+            data[name] = salonObj.getDataToSave()
+
         with open('../db/master.json','+w') as writer:
             # '|' means combine both dict but crops empty values, best is newDict = {**dict1, **dict2}
-            json.dump(self.loadedSettings, writer, indent=4, sort_keys=True)
+                json.dump(data, writer, indent=4, sort_keys=True)
 
     def populateEmpList(self, salons):
         """
@@ -166,7 +136,7 @@ class Ai:
         """
         emps = {}
         for s in salons:
-            emps[s] = self.salons[s]['settings']['employees'].copy()
+            emps[s] = self.salons[s].getEmps()
         return emps
 
     def discardNewSettings(self):

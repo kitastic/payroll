@@ -8,10 +8,10 @@ class Controller:
         self.ai = Ai.Ai()
         self.startDate = ''
         self.endDate = ''
-        self.data = dict()
+        self.guiData = dict()
 
-    def listen(self, command,data=None):
-        salons = self.determineSalon(data)
+    def listen(self, command, guiData=None, addOn=None):
+        salons = addOn
         if command == 'loadSettings':
             self.ai.loadSettings()
         elif command == 'viewSettings':
@@ -19,71 +19,59 @@ class Controller:
         elif command == 'viewSalonBundles':
             self.guiPrint(self.ai.getSalonBundles())
         elif command == 'Get Sales':
-            if self.validDates(data):
-                self.ai.webscrapeSales(salons, self.startDate, self.endDate)
+            if self.validDates(guiData=guiData):
+                self.ai.webscrapeSales(addOn, self.startDate, self.endDate)
         elif command == 'Json::view':
-            salons = self.determineSalon(data)
-            if self.validDates(data):
+            salons = self.determineSalon(guiData=guiData)
+            if self.validDates(guiData=guiData):
                 self.guiPrint(self.ai.getJson(salons, self.startDate, self.endDate))
         elif command == 'Payroll':
-            if self.validDates(data):
+            if self.validDates(guiData=guiData):
                 self.ai.getPayrollFromSalon(salons, self.startDate, self.endDate)
         elif command == 'save employee':
-            if salons:
-                self.ai.modEmp(salons, data, 'update')
-            else:
-                sg.Print('Error: no salon was selected')
+            self.ai.modEmp(cmd='save', employee=guiData, salon=addOn)
+        elif command == 'Update Employee':
+            self.ai.modEmp(cmd='update', employee=guiData, salon=addOn)
+        elif command == 'Remove Employee':
+            self.ai.modEmp(cmd='remove', employee=guiData, salon=addOn)
         elif command == 'populateEmpListSettings':
-            # force to perform for all because it does not matter
-            # TODO this bypass still hasnt worked, gui still crashes if no salon selected
-            # data['salonAll'] = True
-            # salons = self.determineSalon(data)
-            if salons:
-                return self.ai.populateEmpList(salons)
-            else:
-                sg.Print('Please choose 1 salon at a time')
-
+            return self.ai.populateEmpList(addOn)
         elif command == 'savedb':
             self.ai.saveNewSettings()
         else:
             sg.easy_print('Command not found')
 
-    def guiPrint(self, data):
+    def guiPrint(self, guiData):
         tmp = ''
-        if isinstance(data, dict):
-            for salon,bundle in data.items():
+        if isinstance(guiData, dict):
+            for salon,bundle in guiData.items():
                 tmp += '{}: {}\n'.format(salon,bundle)
             sg.Print(tmp)
-        elif isinstance(data, str):
-            sg.Print(data)
+        elif isinstance(guiData, str):
+            sg.Print(guiData)
         else:
-            sg.Print('Error: Controller.guiPrint cannot parse data to print')
+            sg.Print('Error: Controller.guiPrint cannot parse guiData to print')
 
-    def determineSalon(self, data):
+    def determineSalon(self, guiData):
         """
         *** IMPORTANT *** If adding or removing salon, modify this method accordingly.
         If processing anything, we need to know which salon do we want to access if not all.
         During development, sometimes only one salon needs to be tested to make sure the
         workflow and functions are proper. After that we can expand to multiple salon tests.
         Args:
-            data:
+            guiData:
 
         Returns:
 
         """
         try:
-            if data['salonUpscale']:
-                return ['upscale']
-            elif data['salonPosh']:
-                return ['posh']
-            elif data['salonAll']:
-                return ['posh', 'upscale']
+            return [guiData['-salon-'].lower()]
         except TypeError:
             print('TypeError: Cannot determine which salon ')
 
-    def validDates(self, data, gui=None):
-        self.startDate = data['-startDateInput-']
-        self.endDate = data['-endDateInput-']
+    def validDates(self, guiData, gui=None):
+        self.startDate = guiData['-startDateInput-']
+        self.endDate = guiData['-endDateInput-']
         try:
             sd = datetime.datetime.strptime(self.startDate, '%m/%d/%Y')
             ed = datetime.datetime.strptime(self.endDate, '%m/%d/%Y')

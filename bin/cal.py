@@ -170,11 +170,14 @@ def popup_get_date(start_mon=None,start_day=None,start_year=None,begin_at_sunday
                     break
     window.close()
     # return value modified for zota project
-    m = chosen_mon_day_year[0]
-    d = chosen_mon_day_year[1]
-    y = chosen_mon_day_year[2]
-    date = '{}/{}/{}'.format(str(m), str(d), str(y))
-    return date
+    if chosen_mon_day_year == None:
+        return False
+    else:
+        m = chosen_mon_day_year[0]
+        d = chosen_mon_day_year[1]
+        y = chosen_mon_day_year[2]
+        date = '{}/{}/{}'.format(str(m), str(d), str(y))
+        return date
     # return chosen_mon_day_year
 
 

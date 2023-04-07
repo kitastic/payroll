@@ -21,14 +21,14 @@ class Salon(Bot.Bot):
         Args:
             bundle: (dictionary) layout:
                     bundle =  { 'name': 'upscale',
-                                'id':   # this will be automatically generated if not provided
                                 'login': {'username': 'upscalemanager', 'password': 'Joeblack334$'},
                                 'salesJson': '../db/uSales.json',
                                 'salesXl': '../db/uSales.xlsx',      # might not need yet
                                 'payments': 'uPayments.xlsx',
-                                'employees': {'Name': { 'pay': 0, 'rent': 0, 'fees': 0,'active':bool,
-                                                        'paygrade':{ 'regular': {'commission':, 'check':, }
-                                                                    'special': {'commissionspecial', 'checkdeal':, 'checkreport':,}}},
+                                'employees': {'Name': { 'pay': 0, 'rent': 0, 'fees': 0,'active':bool, 'id': int, 'salonName': str, 'name': empname,
+                                                        'paygrade':{'regType': True for regular False for special
+                                                                    'regular': {'commission':, 'check':, }
+                                                                    'special': {'commissionspecial', 'checkdeal':, 'checkoriginal':,}}},
                                               'Name2': { ... }
                                              }},
         """
@@ -49,9 +49,9 @@ class Salon(Bot.Bot):
 
     def setupSalon(self):
         """
-        Retrieves all sales data from json and creates employee objects
+            Retrieves all sales data from json and creates employee objects
         Returns:
-
+            None
         """
         try:
             if os.path.getsize(self.jsonPfname) > 10:
@@ -60,54 +60,122 @@ class Salon(Bot.Bot):
         except FileNotFoundError:
             pass
 
+        for emp, info in self.employees.items():
+            self.Emps[emp] = Employee.Employee(info)
 
+    def createEmpFromGui(self, name, empData):
+        """
+
+        Args:
+            name:
+            empData:
+
+        Returns:
+
+        """
+        self.Emps[name] = Employee.Employee(empData[name])
+
+    def updateEmpFromGui(self, name, empData):
+        # easiest way is to remove existing dictionary and set new one
+        self.Emps.pop(name)
+        self.Emps[name] = Employee.Employee(empData[name])
+
+    def loadEmp(self, name, data):
+        """
+            mainly for setting up salon and parsing information from json da
+        Args:
+            name: (str) employee name
+            data: (dict) key is emp name
+
+        Returns:
+
+        """
         usedId = []
         # for emp in self.Emps:
         #     usedId.append(emp.getId())
         for e in self.Emps.keys():
             usedId.append(self.Emps[e].getId())
 
-        for name in self.employees.keys():
-            pay, fees, rent, commission, check, comspec, checkdeal, checkreport = (0 for i in range(1,9))
-            idNum = 0
-            searching = True
-            while searching:
-                if name == 'upscale':
-                    idNum = random.randint(100,299)
-                elif name == 'posh':
-                    idNum = random.randint(300,599)
-                if idNum not in usedId:
-                    searching = False
+        pay,fees,rent,commission,check,comspec,checkdeal,checkoriginal = (0 for i in range(1,9))
+        idNum = 0
+        active = True
+        searching = True
+        while searching:
+            if self.salonName == 'upscale':
+                idNum = random.randint(100,299)
+            elif self.salonName == 'posh':
+                idNum = random.randint(300,599)
+            if idNum not in usedId:
+                searching = False
 
-            paygradetype = 'regular'
+        paygradetype = True
 
-            try: id = self.employees[name]['id']
-            except KeyError: pass
-            try:    pay = self.employees[name]['pay']
-            except KeyError: pass
-            try: fees = self.employees[name]['fees']
-            except KeyError: pass
-            try: rent = self.employees[name]['rent']
-            except KeyError: pass
-            try: paygradetype = self.employees[name]['paygrade']['type']
-            except KeyError: pass
-            try: commission = self.employees[name]['paygrade']['regular']['commission']
-            except KeyError: pass
-            try: check = self.employees[name]['paygrade']['regular']['check']
-            except KeyError: pass
-            try: comspec = self.employees[name]['paygrade']['special']['commissionspecial']
-            except KeyError: pass
-            try: checkdeal = self.employees[name]['paygrade']['special']['checkdeal']
-            except KeyError: pass
-            try: checkreport = self.employees[name]['paygrade']['special']['checkreport']
-            except KeyError: pass
+        try:
+            idNum = data['empId']
+        except KeyError:
+            pass
+        try:
+            active = data['active']
+        except KeyError:
+            pass
+        try:
+            pay = data['pay']
+        except KeyError:
+            pass
+        try:
+            fees = data['fees']
+        except KeyError:
+            pass
+        try:
+            rent = data['rent']
+        except KeyError:
+            pass
+        try:
+            paygradetype = data['paygrade']['regType']
+        except KeyError:
+            pass
+        try:
+            commission = data['paygrade']['regular']['commission']
+        except KeyError:
+            pass
+        try:
+            check = data['paygrade']['regular']['check']
+        except KeyError:
+            pass
+        try:
+            comspec = data['paygrade']['special']['commissionspecial']
+        except KeyError:
+            pass
+        try:
+            checkdeal = data['paygrade']['special']['checkdeal']
+        except KeyError:
+            pass
+        try:
+            checkoriginal = data['paygrade']['special']['checkoriginal']
+        except KeyError:
+            pass
 
-            objBundle = {'paygrade': {'type': paygradetype,
-                                            'regular': {'commission': commission, 'check': check},
-                                            'special': {'commissionspecial': comspec, 'checkdeal': checkdeal, 'checkreport': checkdeal}},
-                               'id': idNum, 'name': name, 'salonName': self.salonName, 'rent': rent, 'fees': fees, 'pay': pay}
-            self.Emps[name] = Employee.Employee(objBundle)
+        # make sure id is unique
+        searching = True
+        while searching:
+            if self.salonName == 'upscale':
+                idNum = random.randint(100,299)
+            elif self.salonName == 'posh':
+                idNum = random.randint(300,599)
+            if idNum not in usedId:
+                searching = False
 
+        objBundle = {'paygrade':{'regType':paygradetype,
+                                 'regular':{'commission':commission,'check':check},
+                                 'special':{'commissionspecial':comspec,'checkdeal':checkdeal,
+                                            'checkoriginal':checkoriginal}},
+                     'id':idNum,'name':name,'salonName':self.salonName,
+                     'active': active, 'rent':rent,'fees':fees,'pay':pay}
+        self.Emps[name] = Employee.Employee(objBundle)
+
+    def deleteEmp(self, name):
+        deletedValue = self.Emps.pop(name)
+        print(deletedValue)
 
     def readSalesXltoJson(self, pfName):
         workBook = openpyxl.load_workbook(pfName)
@@ -208,6 +276,26 @@ class Salon(Bot.Bot):
     def getPayroll(self):
         # TODO start here
         pass
+
+    def getEmps(self, name=None):
+        emps = {}
+        for name, empObj in self.Emps.items():
+            emps[name] = empObj.getInfo()
+        return emps
+
+    def getDataToSave(self):
+        emps = {}
+        for empObjKeys, obj in self.Emps.items():
+            emps[empObjKeys] = obj.getInfo()
+        data = {'name': self.salonName,
+                'login': {'username': self.zotaUname, 'password': self.zotaPass},
+                'salesJson': self.jsonPfname,
+                'salesXl': self.salesXl,
+                'payments': self.paymentsXl,
+                'employees': emps
+                }
+
+        return data
 
     def mergeSheetToBook(self,fname,path,book):
         '''

@@ -205,6 +205,7 @@ class WebBot:
             print('Failed to click excel link')
 
 
+
     def exportParToXlsx(self, fname):
         # hard-coded date for now and changed / to . because of xlsx error
         self.sheet = self.parsedData[0][1][3].replace('/', '.')
