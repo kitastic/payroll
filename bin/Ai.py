@@ -54,32 +54,30 @@ class Ai:
         for name in self.loadedSettings.keys():     # dict keys are iterable BUT NOT subscriptable ie [0]
             self.salons[name] = Salon.Salon(self.loadedSettings[name])       # create salon objects
 
-    def webscrapeSales(self, salons, sDate, eDate):
+    def webscrapeSales(self, salon, sDate, eDate):
         """
         this function will grab each salon object required from
         list of salons and send to threads to process each salon one at a time
         Args:
-            salons: list of salon names
+            salon: (string) salon name
             sDate: string format mm/dd/yyyy
             eDate: string format mm/dd/yyyy
 
         Returns:
         """
-        for s in salons:
-            # get salon object from dictionary
-            salon = self.salons[s]
-            # salon is using inherited method dlEmpSales from WebBot
-            try:
-                print('INFO: beginning to retrieve sales for {}'.format(s))
-                path, fname = salon.dlEmpSales(s, salon.zotaUname, salon.zotaPass,
-                                               startDate=sDate,endDate=eDate)
-                salon.readSalesXltoJson(path + fname)
-                salon.updateJsonFileDelXl(path)
-                time.sleep(5)
-            except Exception:
-                print('ERROR: Failed to get sales.\nPossible problems:\n-date range too long and '
-                      'browser took too long to load\n-maybe there is no sales data for the salon within'
-                      'date range (erased data by zota?)\n-or zota connection is slow and retry')
+        salonObj = self.salons[salon]
+        # salon is using inherited method dlEmpSales from WebBot
+        try:
+            print('INFO: beginning to retrieve sales for {}'.format(salon))
+            path, fname = salonObj.dlEmpSales(salon, salonObj.zotaUname, salonObj.zotaPass,
+                                           startDate=sDate,endDate=eDate)
+            salonObj.readSalesXltoJson(path + fname)
+            salonObj.updateJsonFileDelXl(path)
+            time.sleep(5)
+        except Exception:
+            print('ERROR: Failed to get sales.\nPossible problems:\n-date range too long and '
+                  'browser took too long to load\n-maybe there is no sales data for the salon within'
+                  'date range (erased data by zota?)\n-or zota connection is slow and retry')
 
     def getJson(self, salons, sDate, eDate):
         """
@@ -99,7 +97,7 @@ class Ai:
             tmp[s] = salon.getJsonRange(sDate, eDate)
         return tmp
 
-    def modEmp(self, cmd, employee, salon):
+    def modEmp(self, cmd, salon, employee):
         # employee has its name as the key so we get it from list(dict.keys()) and get the only value in the list
         if cmd == 'save':
             self.salons[salon].createEmpFromGui(name=list(employee.keys())[0],empData=employee)
@@ -107,8 +105,7 @@ class Ai:
             self.salons[salon].updateEmpFromGui(name=list(employee.keys())[0],empData=employee)
         elif cmd == 'remove':
             # if remove cmd was sent, employee is a string name
-            empName = employee['-empName-']
-            self.salons[salon].deleteEmp(name=empName)
+            self.salons[salon].deleteEmp(name=employee)
         else:
             sg.Print('Warning: did not do anything because dont know command regarding Ai.modEmp()')
 
@@ -125,7 +122,7 @@ class Ai:
             # '|' means combine both dict but crops empty values, best is newDict = {**dict1, **dict2}
                 json.dump(data, writer, indent=4, sort_keys=True)
 
-    def populateEmpList(self, salons):
+    def populateEmpList(self, salon):
         """
 
         Args:
@@ -134,10 +131,8 @@ class Ai:
         Returns:
             list of employee dictionaries
         """
-        emps = {}
-        for s in salons:
-            emps[s] = self.salons[s].getEmps()
-        return emps
+        return {salon: self.salons[salon].getEmps()}
+
 
     def discardNewSettings(self):
         self.newSettings = self.loadedSettings
@@ -185,14 +180,5 @@ class Ai:
         os.rename(os.path.join(downloadPath,filename),os.path.join(downloadPath,newName))
 
     def getSettings(self):
-        sg.Print(self.loadedSettings)
         return self.loadedSettings
 
-    def getSalonBundles(self):
-        '''
-        Called by ai to print salon bundles into gui output text
-        Returns:
-            (dict): keys are salon names, values are salon obj and settings in nested dict
-        '''
-        sg.Print(self.salons)
-        return self.salons

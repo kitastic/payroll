@@ -283,6 +283,7 @@ class Salon(Bot.Bot):
 
     def getPayroll(self):
         # TODO start here
+
         pass
 
     def getEmps(self, name=None):

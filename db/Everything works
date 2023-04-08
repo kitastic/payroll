@@ -1,0 +1,64 @@
+Everything works
+
+=========update emp tab's keys
+============ Event =  Populate Employees Settings  ==============
+-------- Values Dictionary (key=value) --------
+0  =  None
+updateJson  =  None
+-startDateInput-  =  Enter Start Date
+-endDateInput-  =  Enter End Date
+-mTab_om_salon-  =  Choose Salon
+-mTab_lb-  =  []
+-salonName-  =  
+-empId-  =  
+-empName-  =  
+-basePay-  =  
+-fees-  =  
+-rent-  =  
+-regular-  =  True
+-special-  =  False
+-commission-  =  6
+-check-  =  6
+-commissionspecial-  =  6
+-checkdeal-  =  6
+-checkoriginal-  =  6
+-salon-  =  Upscale
+-eTab_lb-  =  []
+-OUT-  =  
+6  =  Employees
+INFO: rounding up employees!
+
+- changed 'Populate Employee Settings' to 'eTab_btn_loadEmployees' and pass salon name instead of self.values
+-changed '-salon-' to '-eTab_om_salon-'
+- Ai.populateEmpList() receive just salon name not a list
+-changed -salonName- to -eTab_in_salon-
+============ Event =  -mTab_cal_sDate-  ==============
+-------- Values Dictionary (key=value) --------
+0  =  None
+updateJson  =  None
+-mTab_in_sDate-  =  3/6/2023
+-mTab_in_eDate-  =  3/12/2023
+-mTab_om_salon-  =  Posh
+-mTab_lb-  =  []
+-eTab_in_salon-  =  
+-empId-  =  
+-empName-  =  
+-basePay-  =  
+-fees-  =  
+-rent-  =  
+-regular-  =  True
+-special-  =  False
+-commission-  =  6
+-check-  =  6
+-commissionspecial-  =  6
+-checkdeal-  =  6
+-checkoriginal-  =  6
+-eTab_om_salon-  =  Upscale
+-eTab_lb-  =  []
+-OUT-  =  
+6  =  Main
+6  =  Employees
+INFO: rounding up employees!
+
+webscraping was able to download but bot timed out and ai raised exception
+

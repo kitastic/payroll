@@ -20,37 +20,6 @@ class Bot:
     def __init__(self):
         self.driver = None
 
-    def connect(self, dlDir, uName, password):
-        """
-        Salon inherits this method
-        Args:
-            login: (list) first element is username and second is password
-
-        Returns:
-            None
-        """
-        chromedriver_autoinstaller.install()
-        opts = webdriver.ChromeOptions()
-        # dlDir = "D:\\pradagy\\projects\\payrollAutomation\\tmp\\"
-        prefs = {'download.default_directory': dlDir,
-                 'directory_upgrade': True,
-                 }
-        opts.add_experimental_option('prefs',prefs)
-        self.driver = webdriver.Chrome(options=opts)
-
-        self.driver.get("https://pos2.zota.us/#/login")
-        # self.driver.maximize_window()
-        usernameInput = self.driver.find_element(By.NAME,"username")
-        usernameInput.clear()
-        usernameInput.send_keys(uName)
-        passInput = self.driver.find_element(By.NAME,"password")
-        passInput.clear()
-        passInput.send_keys(password)
-        loginBtn = self.driver.find_element(By.CLASS_NAME,"btn-login")
-        loginBtn.click()
-        # once logged in, wait for page to load (when avatar is located)
-        helper.waitLoadingPresence('avatar', 10, self.driver)
-
     def dlEmpSales(self, salonName, uname, password, startDate, endDate):
         """
         Goes directly to employee sales reports on website and downloads excel file version.
@@ -119,7 +88,7 @@ class Bot:
         while not fileFound:
             time.sleep(1)
             time_counter += 1
-            if counter % 2 == 0:
+            if time_counter % 2 == 0:
                 try:
                     # max() called on empty (in this case folder) will return error
                     filename = max([f for f in os.listdir(dlDir)],
@@ -153,4 +122,37 @@ class Bot:
             os.remove(dlDir + salonName[0] + 'Sales.xlsx')
             os.rename(os.path.join(dlDir,filename),os.path.join(dlDir,salonName[0] + 'Sales.xlsx'))
         return dlDir, salonName[0] + 'Sales.xlsx'  # returns path and filename
+
+    def connect(self, dlDir, uName, password):
+        """
+        Salon inherits this method
+        Args:
+            login: (list) first element is username and second is password
+
+        Returns:
+            None
+        """
+        chromedriver_autoinstaller.install()
+        opts = webdriver.ChromeOptions()
+        # dlDir = "D:\\pradagy\\projects\\payrollAutomation\\tmp\\"
+        prefs = {'download.default_directory': dlDir,
+                 'directory_upgrade': True,
+                 }
+        opts.add_experimental_option('prefs',prefs)
+        self.driver = webdriver.Chrome(options=opts)
+
+        self.driver.get("https://pos2.zota.us/#/login")
+        # self.driver.maximize_window()
+        usernameInput = self.driver.find_element(By.NAME,"username")
+        usernameInput.clear()
+        usernameInput.send_keys(uName)
+        passInput = self.driver.find_element(By.NAME,"password")
+        passInput.clear()
+        passInput.send_keys(password)
+        loginBtn = self.driver.find_element(By.CLASS_NAME,"btn-login")
+        loginBtn.click()
+        # once logged in, wait for page to load (when avatar is located)
+        helper.waitLoadingPresence('avatar', 10, self.driver)
+
+
 

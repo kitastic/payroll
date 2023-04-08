@@ -176,8 +176,9 @@ def popup_get_date(start_mon=None,start_day=None,start_year=None,begin_at_sunday
         m = chosen_mon_day_year[0]
         d = chosen_mon_day_year[1]
         y = chosen_mon_day_year[2]
-        date = '{}/{}/{}'.format(str(m), str(d), str(y))
-        return date
+        sdate = '{}/{}/{}'.format(str(m), str(d), str(y))
+        edate = '{}/{}/{}'.format(str(m), str(d+6), str(y))
+        return [sdate, edate]
     # return chosen_mon_day_year
 
 

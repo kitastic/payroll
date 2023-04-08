@@ -10,32 +10,26 @@ class Controller:
         self.endDate = ''
         self.guiData = dict()
 
-    def listen(self, command, guiData=None, addOn=None):
-        salons = addOn
-        if command == 'loadSettings':
+    def listen(self, command, guiData):
+        if command == 'Load Settings':
             self.ai.loadSettings()
-        elif command == 'viewSettings':
-            self.guiPrint(self.ai.getSettings())
-        elif command == 'viewSalonBundles':
-            self.guiPrint(self.ai.getSalonBundles())
-        elif command == 'Get Sales':
-            if self.validDates(guiData=guiData):
-                self.ai.webscrapeSales(addOn, self.startDate, self.endDate)
-        elif command == 'Json::view':
-            salons = self.determineSalon(guiData=guiData)
-            if self.validDates(guiData=guiData):
-                self.guiPrint(self.ai.getJson(salons, self.startDate, self.endDate))
+        elif command == 'View Settings':
+            return self.ai.getSettings()
+        elif command == 'view sales':
+                self.guiPrint(self.ai.getJson(guiData))
+        elif command == 'webscrape sales':
+            self.ai.webscrapeSales(guiData[0], guiData[1], guiData[2])
         elif command == 'Payroll':
-            if self.validDates(guiData=guiData):
-                self.ai.getPayrollFromSalon(salons, self.startDate, self.endDate)
-        elif command == 'save employee':
-            self.ai.modEmp(cmd='save', employee=guiData, salon=addOn)
-        elif command == 'Update Employee':
-            self.ai.modEmp(cmd='update', employee=guiData, salon=addOn)
-        elif command == 'Remove Employee':
-            self.ai.modEmp(cmd='remove', employee=guiData, salon=addOn)
-        elif command == 'populateEmpListSettings':
-            return self.ai.populateEmpList(addOn)
+            self.ai.getPayrollFromSalon(guiData[0], guiData[1], guiData[2])
+        elif command == '-eTab_btn_loadEmployees-':
+            return self.ai.populateEmpList(guiData)
+        elif command == '-eTab_btn_save-':
+            self.ai.modEmp(cmd='save', salon=guiData[0], employee=guiData[1])
+        elif command == '-eTab_btn_update-':
+            self.ai.modEmp(cmd='update', salon=guiData[0], employee=guiData[1])
+        elif command == '-eTab_btn_remove-':
+            self.ai.modEmp(cmd='remove', salon=guiData[0], employee=guiData[1])
+
         elif command == 'savedb':
             self.ai.saveNewSettings()
         else:
@@ -69,12 +63,10 @@ class Controller:
         except TypeError:
             print('TypeError: Cannot determine which salon ')
 
-    def validDates(self, guiData, gui=None):
-        self.startDate = guiData['-startDateInput-']
-        self.endDate = guiData['-endDateInput-']
+    def validDates(self, sdate, edate):
         try:
-            sd = datetime.datetime.strptime(self.startDate, '%m/%d/%Y')
-            ed = datetime.datetime.strptime(self.endDate, '%m/%d/%Y')
+            sd = datetime.datetime.strptime(sdate, '%m/%d/%Y')
+            ed = datetime.datetime.strptime(edate, '%m/%d/%Y')
             if sd <= ed:
                 return True
             else:
