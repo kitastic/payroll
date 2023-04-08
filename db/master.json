@@ -1,6 +1,91 @@
 {
     "posh": {
-        "employees": {},
+        "employees": {
+            "Mary": {
+                "active": true,
+                "fees": 0,
+                "id": 537,
+                "name": "Mary",
+                "pay": 900,
+                "paygrade": {
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "rent": 0,
+                "salonName": "posh"
+            },
+            "Nancy": {
+                "active": true,
+                "fees": 0,
+                "id": 357,
+                "name": "Nancy",
+                "pay": 900,
+                "paygrade": {
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "rent": 0,
+                "salonName": "posh"
+            },
+            "Sophia": {
+                "active": true,
+                "fees": 0,
+                "id": 505,
+                "name": "Sophia",
+                "pay": 1300,
+                "paygrade": {
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "rent": 0,
+                "salonName": "posh"
+            },
+            "Vu": {
+                "active": true,
+                "fees": 0,
+                "id": 497,
+                "name": "Vu",
+                "pay": 1500,
+                "paygrade": {
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "rent": 0,
+                "salonName": "posh"
+            }
+        },
         "login": {
             "password": "Joeblack334$",
             "username": "kit@posh"
@@ -73,6 +158,27 @@
                     }
                 },
                 "rent": 0,
+                "salonName": "upscale"
+            },
+            "Judy": {
+                "active": true,
+                "fees": 5,
+                "id": 147,
+                "name": "Judy",
+                "pay": 1000,
+                "paygrade": {
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "rent": 187,
                 "salonName": "upscale"
             },
             "Kayla": {
@@ -157,6 +263,90 @@
                     }
                 },
                 "rent": 70,
+                "salonName": "upscale"
+            },
+            "Lisa": {
+                "active": true,
+                "fees": 5,
+                "id": 245,
+                "name": "Lisa",
+                "pay": 900,
+                "paygrade": {
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "rent": 60,
+                "salonName": "upscale"
+            },
+            "Sammy": {
+                "active": true,
+                "fees": 5,
+                "id": 165,
+                "name": "Sammy",
+                "pay": 1200,
+                "paygrade": {
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "rent": 60,
+                "salonName": "upscale"
+            },
+            "Sumo": {
+                "active": true,
+                "fees": 5,
+                "id": 164,
+                "name": "Sumo",
+                "pay": 1400,
+                "paygrade": {
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 7
+                    },
+                    "special": {
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "rent": 60,
+                "salonName": "upscale"
+            },
+            "Tuan": {
+                "active": true,
+                "fees": 5,
+                "id": 207,
+                "name": "Tuan",
+                "pay": 1100,
+                "paygrade": {
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "rent": 187,
                 "salonName": "upscale"
             }
         },

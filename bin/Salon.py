@@ -1,5 +1,4 @@
 import os
-import glob
 import openpyxl
 import datetime
 import re
@@ -10,8 +9,14 @@ import time
 import PySimpleGUI as sg
 import random
 import Employee
+from pprint import PrettyPrinter
 
-import helper
+pp = PrettyPrinter(
+            indent=2,
+            width=100,
+            compact=True,
+            sort_dicts=False,
+        )
 
 
 class Salon(Bot.Bot):
@@ -68,20 +73,21 @@ class Salon(Bot.Bot):
                     self.Emps[emp] = Employee.EmployeeSpecial(info)
             else:
                 self.Emps[emp] = Employee.Employee(info)
-            # self.Emps[emp] = Employee.Employee(info)
-
 
     def createEmpFromGui(self, name, empData):
-        """
-
-        Args:
-            name:
-            empData:
-
-        Returns:
-
-        """
         self.Emps[name] = Employee.Employee(empData[name])
+
+    def createEmpReg(self, name):
+        newEmp = {
+            name:{'active':True,
+                  'id':0,'name':name,'salonName':self.salonName,'pay':0,'fees':0,'rent':0,
+                  'paygrade':{'regType':True,
+                              'regular':{'commission':6,'check':6},
+                              'special':{'commissionspecial':0,'checkdeal':0,
+                                         'checkoriginal':0}
+                              }}}
+        self.Emps[name] = Employee.Employee(newEmp[name])
+
 
     def updateEmpFromGui(self, name, empData):
         # easiest way is to remove existing dictionary and set new one
@@ -278,13 +284,54 @@ class Salon(Bot.Bot):
                 # convert key back to string to match json
                 kstr = datetime.datetime.strftime(k,'%m/%d/%Y')
                 wantedRange[k] = self.salesJson[kstr]
-        print(wantedRange)
         return wantedRange
 
-    def getPayroll(self):
-        # TODO start here
+    def getPayroll(self, request):
+        """
+            given startdate and enddate, salon will tell each employee to calculate
+            their own payroll and return their report back
+        Args:
+            request: (list) [startDate, endDate]
 
-        pass
+        Returns:
+
+        """
+        sDate = request[0]
+        eDate = request[1]
+        week = self.getJsonRange(sDate, eDate)
+        sorted = {}
+        # rearrange dictionary keys from days to employees
+        for dates,value in week.items():
+            for e in value:
+                sorted[e.lower()] = {}
+        for dates,value in week.items():
+            for e,total in value.items():
+                sorted[e.lower()][dates] = total
+        pp.pprint(sorted)
+        # compare for extra employees , ie 'anybody*', not currently in settings DB and create new regular ones
+        salesEmployees = []
+        currentEmployees = []
+        for keys in sorted:
+            # remove everything and just get nicknames which is in parenthesis in sales report
+            emp = re.search('\w+\)$', keys.lower()).group(0).rstrip(')')
+            salesEmployees.append(emp)
+        for key, obj in self.Emps.items():
+            currentEmployees.append(key.lower())
+        # create Employees for any extra in sales so they can calculate their sales
+        for e in salesEmployees:
+            if e not in currentEmployees:
+                self.createEmpReg(e)
+        # now tell all employees to calculate
+        for eName, eObj in self.Emps.items():
+            for e, val in sorted.items():
+                if eName.lower() in e:
+                    print(eName)
+                    eObj.calculatePayroll(val)
+                    print(eObj.getPayroll())
+                    print()
+
+
+
 
     def getEmps(self, name=None):
         emps = {}

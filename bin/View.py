@@ -68,7 +68,7 @@ class View:
             [sg.Text('Salon: '), sg.Input('',key='-eTab_in_salon-', size=(15,None)),
              sg.Text('ID: ', tooltip='Upscale: 100-299\nPosh: 300-599'),
              sg.Input(key='-eTab_in_empId-', size=(6,None)),
-             sg.Button(image_filename='../images/help-30.png', key='eTab_btn_empid', button_color=self.btnColor)],
+             sg.Button(image_filename='../images/help-30.png', key='eTab_btn_empid', button_color=self.btnColor,)],
             [sg.T('Status'), sg.Button(image_data=toggle_btn_on, key='-eTab_btn_status-', image_subsample=2,border_width=0,
                                        button_color=(sg.theme_background_color(), sg.theme_background_color()),
                                        metadata=BtnInfo())],
@@ -124,7 +124,7 @@ class View:
                     ], size=(130, 90))
         mTab_r1c3 = sg.Column([[sg.T('Payroll')],
                         [sg.Button('', image_filename='../images/money-transfer-94.png', image_subsample=(2),
-                                   button_color=self.btnColor, pad=0 ,key='mTab_btn_payroll', tooltip='Payroll', )],
+                                   button_color=self.btnColor, pad=0 ,key='-mTab_btn_payroll-', tooltip='Payroll', )],
                     ])
 
         mainTab = [[mTab_r1c1, mTab_r1c2, mTab_r1c3],
@@ -165,10 +165,10 @@ class View:
         # setup commands to cleanup gui while True loop
         mBar = ['Load Settings','Retrieve Payments', 'Get Sales', 'All::sales', 'Upscale::sales', 'Posh::sales',
                 'View Settings','Salon Bundles','Json::view',]
-        mTab = ['-mTab_cal_sDate-', '-mTab_in_sDate-', '-mTab_cal_eDate-', '-mTab_in_eDate-']
-        eTab = ['-eTab_r_regular-', '-eTab_in_rent-', '-eTab_in_fees-', '-eTab_in_basePay-', '-eTab_in_empName-', '-eTab_in_empId-',
-                '-eTab_in_salon-', '-eTab_btn_save-', '-eTab_btn_clear-', '-eTab_btn_update-', '-eTab_btn_remove-',
-                '-eTab_btn_loadEmployees-', '-eTab_lb-', 'eTab_btn_empid']
+        mTab = ['-mTab_cal_sDate-', '-mTab_in_sDate-', '-mTab_cal_eDate-', '-mTab_in_eDate-', '-mTab_btn_payroll-']
+        eTab = ['-eTab_r_regular-', '-eTab_in_rent-', '-eTab_in_fees-', '-eTab_in_basePay-', '-eTab_in_empName-',
+                '-eTab_in_empId-', '-eTab_in_salon-', '-eTab_btn_save-', '-eTab_btn_clear-', '-eTab_btn_update-',
+                '-eTab_btn_remove-', '-eTab_btn_loadEmployees-', '-eTab_lb-', 'eTab_btn_empid']
 
         while True:
             event, values = self.gui.read()
@@ -267,14 +267,26 @@ class View:
 
     def listenMTab(self):
         if self.event == '-mTab_cal_sDate-':
-            list = cal.popup_get_date()
-            if list:
-                self.gui['-mTab_in_sDate-'].update(list[0])
-                self.gui['-mTab_in_eDate-'].update(list[1])
+            try:
+                sDate = sg.popup_get_date(title='Choose start date')
+                sdate = '{}/{}/{}'.format(sDate[0],sDate[1],sDate[2])
+                # tried simply adding 6 to day element and instead of going next month, day was 33
+                # time delta is smarter and know when to increment month
+                edate = datetime.datetime.strptime(sdate, '%m/%d/%Y') + datetime.timedelta(6)
+                e = datetime.datetime.strftime(edate, '%m/%d/%Y')
+                self.gui['-mTab_in_sDate-'].update(sdate)
+                self.gui['-mTab_in_eDate-'].update(e)
+            except Exception:
+                print('ERROR:(View.listenMTab) failed to get valid date')
         elif self.event == '-mTab_cal_eDate-':
-            list = cal.popup_get_date()
-            if list:
-                self.gui['-mTab_in_eDate-'].update(list[1])
+            eDate = sg.popup_get_date(title='Choose start date')
+            edate = '{}/{}/{}'.format(eDate[0],eDate[1],eDate[2])
+            self.gui['-mTab_in_eDate-'].update(edate)
+        elif self.event == '-mTab_btn_payroll-':
+            sDate = self.values['-mTab_in_sDate-']
+            eDate = self.values['-mTab_in_eDate-']
+            salon = self.values['-mTab_om_salon-'].lower()
+            self.controller.listen(self.event, [salon, sDate, eDate])
 
     def listenETab(self):
         salonName = self.values['-eTab_om_salon-'].lower()
@@ -301,7 +313,6 @@ class View:
             else:
                 print('INFO (View.listenETab): choose salon first because id is based on that')
         elif self.event == '-eTab_btn_save-':
-            print('[LOG] saving employee')
             # grab employees and gather into dictionary to validate id and etc
             # this step is needed incase the first thing someone does is add employee without
             # populating list first. if not, the first thing throwing error is gathering all
@@ -492,7 +503,7 @@ class View:
     def refreshETabList(self, salonName):
         # refresh list with employee removed
         self.eTab_lb_Emps = self.controller.listen('-eTab_btn_loadEmployees-', salonName)
-        self.gui['-eTab_lb-'].update(values=self.eTab_lb_Emps[salonName].keys())
+        self.gui['-eTab_lb-'].update(values=(i for i in sorted(self.eTab_lb_Emps[salonName])))
 
     def clearBtn(self):
         inputs = ['-eTab_in_empId-', '-eTab_in_salon-', '-eTab_in_empName-', '-eTab_in_basePay-', '-eTab_in_fees-', '-eTab_in_rent-',

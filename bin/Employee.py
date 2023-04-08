@@ -24,9 +24,19 @@ class Employee:
         self.commissionspecial = data['paygrade']['special']['commissionspecial']
         self.checkdeal = data['paygrade']['special']['checkdeal']
         self.checkoriginal = data['paygrade']['special']['checkoriginal']
-
+        self.sales = {}
         self.payroll = dict()
     def calculatePayroll(self, sales):
+        """
+
+        Args:
+            sales: dictionary of daily sales, keys are datetime
+
+        Returns:
+
+        """
+        self.sales = sales
+        salesKeys = list(sales.keys())
         tips, commissionSales, totalSales, cleaningFees, daysWorked = [0 for i in range(1,6)]
         for days, amt in sales.items():
             tips += amt[2]

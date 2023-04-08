@@ -109,9 +109,15 @@ class Ai:
         else:
             sg.Print('Warning: did not do anything because dont know command regarding Ai.modEmp()')
 
-    def getPayrollFromSalon(self, salons, sDate, eDate):
-        for s in self.salons:
-            salon = self.salons[s]
+    def getPayrollFromSalon(self, guiData):
+        """
+            Retrieves sales from json for given date range and salon name
+        Args:
+            guiData: (list) [salonName, startDate, endDate]
+        Returns:
+
+        """
+        result = self.salons[guiData[0]].getPayroll([guiData[1], guiData[2]])
 
     def saveNewSettings(self):
         data = {}
@@ -181,4 +187,5 @@ class Ai:
 
     def getSettings(self):
         return self.loadedSettings
+
 
