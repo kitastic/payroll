@@ -19,8 +19,10 @@ class Controller:
                 self.guiPrint(self.ai.getJson(guiData))
         elif command == 'webscrape sales':
             self.ai.webscrapeSales(guiData[0], guiData[1], guiData[2])
+        elif command == 'Txt Files':
+            self.ai.exportTxtPayroll(guiData[0], guiData[1], guiData[2])
         elif command == '-mTab_btn_payroll-':
-            self.ai.getPayrollFromSalon(guiData)
+            return self.ai.getPayrollFromSalon(guiData)
         elif command == '-eTab_btn_loadEmployees-':
             return self.ai.populateEmpList(guiData)
         elif command == '-eTab_btn_save-':

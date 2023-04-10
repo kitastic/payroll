@@ -97,6 +97,9 @@ class Ai:
             tmp[s] = salon.getJsonRange(sDate, eDate)
         return tmp
 
+    def exportTxtPayroll(self,sName, sDate, eDate):
+        self.salons[sName].exportTxtPayroll(sDate, eDate)
+
     def modEmp(self, cmd, salon, employee):
         # employee has its name as the key so we get it from list(dict.keys()) and get the only value in the list
         if cmd == 'save':
@@ -117,7 +120,7 @@ class Ai:
         Returns:
 
         """
-        result = self.salons[guiData[0]].getPayroll([guiData[1], guiData[2]])
+        return self.salons[guiData[0]].getPayroll([guiData[1], guiData[2]])
 
     def saveNewSettings(self):
         data = {}

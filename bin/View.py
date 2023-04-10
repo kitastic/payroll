@@ -1,3 +1,5 @@
+import string
+
 import PySimpleGUI as sg
 from Controller import Controller
 import json
@@ -40,9 +42,10 @@ class View:
                         ['View',['View Settings', 'Json Sales', ['All::viewjsonsales', 'Upscale::viewjsonsales', 'Posh::viewjsonsales']]],
                         ['Payroll',['All','Salon',['Upscale','Posh::payroll']]],
                         ['Tools',],
+                        ['Export', ['Txt Files']]
                         ]
         logTab = [[sg.Text("Anything printed will display here!")],
-                  [sg.Multiline(size=(60,15),font='Courier 10',expand_x=True,expand_y=True,write_only=True,
+                  [sg.Multiline(font='Courier 10',expand_x=True,expand_y=True,write_only=True,
                                 reroute_stdout=True,reroute_stderr=True,echo_stdout_stderr=True,autoscroll=True,
                                 auto_refresh=True)]
                   ]
@@ -104,7 +107,7 @@ class View:
              sg.OptionMenu(values=('Upscale','Posh'),default_value='Upscale',key='-eTab_om_salon-'),
              sg.Button(image_filename='../images/refresh-30.png', button_color=self.btnColor, key='-eTab_btn_loadEmployees-')],
             [sg.Image('../images/staff50.png', expand_x=True,)],
-            [sg.Listbox(values=[],select_mode='extended',size=(50,23),key='-eTab_lb-', enable_events=True,expand_y=True)],
+            [sg.Listbox(values=[],select_mode='extended',size=(50,22),key='-eTab_lb-', enable_events=True,expand_y=True)],
             [sg.Column([[sg.Button(key='-eTab_btn_remove-', image_filename='../images/trash-40.png', button_color=self.btnColor, tooltip='Delete employee')]],justification='r')]
         ], expand_x=True, expand_y=True)
 
@@ -128,7 +131,9 @@ class View:
                     ])
 
         mainTab = [[mTab_r1c1, mTab_r1c2, mTab_r1c3],
-                   [sg.T('Employees')], [sg.Listbox(values=[], select_mode='extended',size=(30,20), key='-mTab_lb-')],
+                   [sg.Frame('', [[sg.T('Employees')],
+                                  [sg.Listbox(values=[],select_mode='extended',key='-mTab_lb-', expand_y=True,expand_x=True, enable_events=True)]],expand_y=True, size=(150,None)),
+                    sg.Frame('',[[sg.Multiline('',key='-mTab_in_display-',expand_x=True,expand_y=True,autoscroll=True,)]], expand_y=True, expand_x=True, size=(550,None))],
                    ]
 
         self.layout = [[sg.Menubar(menu_def)],
@@ -139,40 +144,42 @@ class View:
                                     sg.T('', key='jsonInfo'),
                                     sg.Button(image_filename='../images/shutdown-50.png',button_color='#40444b', key='Exit')]],justification='right',)],
                        ]
-
         self.layout += [[sg.TabGroup([[sg.Tab('Main', mainTab),
                                        sg.Tab('Employees', empTab),
                                        sg.Tab('Log', logTab),
-                                       sg.Tab('Output',[[sg.Multiline('',key='-OUT-',horizontal_scroll=True,
-                                                                      expand_x=True,expand_y=True,autoscroll=True,
-                                                                      size=(100,100))]],)
+                                       sg.Tab('Output',[[sg.Multiline('', key='-OUT-', expand_x=True,expand_y=True, autoscroll=True, auto_refresh=True)]],)
                                        ]])
-                         ]]
-        self.layout[-1].append(sg.Sizegrip())
+                         ],
+                        [sg.T(key='-noticeBuffer-', font='ANY 1', pad=(0,0))],
+                        [sg.StatusBar('hi',key='-notice-', expand_x=True, size=(200,None))]
+                        ]
+        # self.layout[-1].append(sg.Sizegrip())
 
     def openApp(self):
         
         # sg.show_debugger_window(location=(10,10))
         self.gui = sg.Window('', self.layout,
-                             size=(700,700),
+                             size=(700,735),
                              resizable=True,
                              finalize=True,
                              grab_anywhere=True,
                              )
-
+        self.gui['-noticeBuffer-'].expand(True, True, True)
         self.gui.set_min_size(self.gui.size)
         self.getJsonLatestDates('display')
         # setup commands to cleanup gui while True loop
         mBar = ['Load Settings','Retrieve Payments', 'Get Sales', 'All::sales', 'Upscale::sales', 'Posh::sales',
-                'View Settings','Salon Bundles','Json::view',]
-        mTab = ['-mTab_cal_sDate-', '-mTab_in_sDate-', '-mTab_cal_eDate-', '-mTab_in_eDate-', '-mTab_btn_payroll-']
-        eTab = ['-eTab_r_regular-', '-eTab_in_rent-', '-eTab_in_fees-', '-eTab_in_basePay-', '-eTab_in_empName-',
+                'View Settings','Salon Bundles','Json::view', 'Txt Files']
+        mTab = ['-mTab_cal_sDate-', '-mTab_in_sDate-', '-mTab_cal_eDate-', '-mTab_in_eDate-', '-mTab_btn_payroll-',
+                '-mTab_lb-']
+        eTab = ['-eTab_r_regular-', '-eTab_r_special-', '-eTab_in_rent-', '-eTab_in_fees-', '-eTab_in_basePay-', '-eTab_in_empName-',
                 '-eTab_in_empId-', '-eTab_in_salon-', '-eTab_btn_save-', '-eTab_btn_clear-', '-eTab_btn_update-',
                 '-eTab_btn_remove-', '-eTab_btn_loadEmployees-', '-eTab_lb-', 'eTab_btn_empid']
 
         while True:
             event, values = self.gui.read()
             if event not in (sg.TIMEOUT_EVENT,sg.WIN_CLOSED):
+                self.gui['-notice-'].update(event)
                 print('============ Event = ',event,' ==============')
                 print('-------- Values Dictionary (key=value) --------')
                 for key in values:
@@ -264,6 +271,18 @@ class View:
         elif self.event == 'Payroll':
             print('[LOG] payroll clicked')
             self.controller.listen('Payroll',guiData=self.values)
+        elif self.event == 'Txt Files':
+            try:
+                sDate = self.values['-mTab_in_sDate-']
+                eDate = self.values['-mTab_in_eDate-']
+                passed = self.validDates(sDate, eDate)
+                if passed:
+                    # package for each salon webscrape: name and dates, even if the dates are the same
+                    for s in self.salonNames:
+                        self.controller.listen(self.event, [s,sDate,eDate])
+            except Exception:
+                print('ERROR:(View.listenMBar) failed to validate dates to export files')
+
 
     def listenMTab(self):
         if self.event == '-mTab_cal_sDate-':
@@ -280,13 +299,29 @@ class View:
                 print('ERROR:(View.listenMTab) failed to get valid date')
         elif self.event == '-mTab_cal_eDate-':
             eDate = sg.popup_get_date(title='Choose start date')
-            edate = '{}/{}/{}'.format(eDate[0],eDate[1],eDate[2])
-            self.gui['-mTab_in_eDate-'].update(edate)
+            try:
+                edate = '{}/{}/{}'.format(eDate[0],eDate[1],eDate[2])
+                if edate:
+                    self.gui['-mTab_in_eDate-'].update(edate)
+            except TypeError:
+                pass
+
         elif self.event == '-mTab_btn_payroll-':
             sDate = self.values['-mTab_in_sDate-']
             eDate = self.values['-mTab_in_eDate-']
             salon = self.values['-mTab_om_salon-'].lower()
-            self.controller.listen(self.event, [salon, sDate, eDate])
+            payrollPkt = self.controller.listen(self.event, [salon, sDate, eDate])
+            self.mTab_lb_Emps[salon] = payrollPkt
+            self.gui['-mTab_lb-'].update(payrollPkt.keys())
+        elif self.event == '-mTab_lb-':
+            try:
+                # make sure something is selected, will catch and error if nothing is selected
+                salon = self.values['-mTab_om_salon-'].lower()
+                n = self.values['-mTab_lb-'][0]
+                e = self.mTab_lb_Emps[salon][n]
+                self.gui['-mTab_in_display-'].update(value=e)
+            except KeyError:
+                pass
 
     def listenETab(self):
         salonName = self.values['-eTab_om_salon-'].lower()
@@ -332,7 +367,11 @@ class View:
             try:
                 eName = self.values['-eTab_lb-'][0]
                 if eName:
-                    self.controller.listen(self.event,guiData=[salonName, eName])
+                    if len(self.values['-eTab_lb-']) > 1:
+                        for n in self.values['-eTab_lb-']:
+                            self.controller.listen(self.event,guiData=[salonName,n])
+                    else:
+                        self.controller.listen(self.event,guiData=[salonName, eName])
                     self.refreshETabList(salonName)
             except Exception:
                 print('ERROR: View.listenETab cannot remove employee > no name')
@@ -344,7 +383,6 @@ class View:
             self.togglePaygrade('special')
         elif self.event == '-eTab_r_regular-':
             self.togglePaygrade('regular')
-
         elif self.event == '-eTab_lb-':
             try:
                 # make sure something is selected, will catch and error if nothing is selected
@@ -391,6 +429,7 @@ class View:
         name = self.test(self.values['-eTab_in_empName-'], 'str')
         if len(name) >= 1:
             checkpoint['name'] = True
+        string.capwords(name)
         pay = self.test(self.values['-eTab_in_basePay-'], 'int')
         fees = self.test(self.values['-eTab_in_fees-'], 'int')
         rent = self.test(self.values['-eTab_in_rent-'], 'int')
@@ -408,7 +447,7 @@ class View:
         # validating paygrades and amounts correspond
         if regType and commission > 0 and check > 0:
             checkpoint['paygrade'] = True
-        if not regType and comspec > 0 and checkdeal > 0 and checkoriginal > 0:
+        if not regType and comspec > 0  and checkoriginal > 0:
             checkpoint['paygrade'] = True
 
         if all(checkpoint.values()):        # if all data entries are valid or 'True'
@@ -503,7 +542,11 @@ class View:
     def refreshETabList(self, salonName):
         # refresh list with employee removed
         self.eTab_lb_Emps = self.controller.listen('-eTab_btn_loadEmployees-', salonName)
-        self.gui['-eTab_lb-'].update(values=(i for i in sorted(self.eTab_lb_Emps[salonName])))
+        self.gui['-eTab_lb-'].update(values=self.eTab_lb_Emps[salonName].keys())
+
+    def refreshMTabList(self, salonName):
+        if self.eTab_lb_Emps:
+            self.gui['-mTab_lb-'].update(self.mTab_lb_Emps[salonName].keys())
 
     def clearBtn(self):
         inputs = ['-eTab_in_empId-', '-eTab_in_salon-', '-eTab_in_empName-', '-eTab_in_basePay-', '-eTab_in_fees-', '-eTab_in_rent-',

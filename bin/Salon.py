@@ -10,7 +10,8 @@ import PySimpleGUI as sg
 import random
 import Employee
 from pprint import PrettyPrinter
-
+import string
+from pathlib import Path
 pp = PrettyPrinter(
             indent=2,
             width=100,
@@ -67,15 +68,15 @@ class Salon(Bot.Bot):
 
         for emp, info in self.employees.items():
             if not info['paygrade']['regType']:
-                if info['paygrade']['special']['checkoriginal'] == 0:
-                    self.Emps[emp] = Employee.EmployeeCash(info)
+                if info['paygrade']['special']['checkdeal'] == 0:
+                    self.Emps[string.capwords(emp)] = Employee.EmployeeCash(info)
                 else:
-                    self.Emps[emp] = Employee.EmployeeSpecial(info)
+                    self.Emps[string.capwords(emp)] = Employee.EmployeeSpecial(info)
             else:
-                self.Emps[emp] = Employee.Employee(info)
+                self.Emps[string.capwords(emp)] = Employee.Employee(info)
 
     def createEmpFromGui(self, name, empData):
-        self.Emps[name] = Employee.Employee(empData[name])
+        self.Emps[string.capwords(name)] = Employee.Employee(empData[string.capwords(name)])
 
     def createEmpReg(self, name):
         newEmp = {
@@ -94,98 +95,98 @@ class Salon(Bot.Bot):
         self.Emps.pop(name)
         self.Emps[name] = Employee.Employee(empData[name])
 
-    def loadEmp(self, name, data):
-        """
-            mainly for setting up salon and parsing information from json da
-        Args:
-            name: (str) employee name
-            data: (dict) key is emp name
-
-        Returns:
-
-        """
-        usedId = []
-        # for emp in self.Emps:
-        #     usedId.append(emp.getId())
-        for e in self.Emps.keys():
-            usedId.append(self.Emps[e].getId())
-
-        pay,fees,rent,commission,check,comspec,checkdeal,checkoriginal = (0 for i in range(1,9))
-        idNum = 0
-        active = True
-        searching = True
-        while searching:
-            if self.salonName == 'upscale':
-                idNum = random.randint(100,299)
-            elif self.salonName == 'posh':
-                idNum = random.randint(300,599)
-            if idNum not in usedId:
-                searching = False
-
-        paygradetype = True
-
-        try:
-            idNum = data['empId']
-        except KeyError:
-            pass
-        try:
-            active = data['active']
-        except KeyError:
-            pass
-        try:
-            pay = data['pay']
-        except KeyError:
-            pass
-        try:
-            fees = data['fees']
-        except KeyError:
-            pass
-        try:
-            rent = data['rent']
-        except KeyError:
-            pass
-        try:
-            paygradetype = data['paygrade']['regType']
-        except KeyError:
-            pass
-        try:
-            commission = data['paygrade']['regular']['commission']
-        except KeyError:
-            pass
-        try:
-            check = data['paygrade']['regular']['check']
-        except KeyError:
-            pass
-        try:
-            comspec = data['paygrade']['special']['commissionspecial']
-        except KeyError:
-            pass
-        try:
-            checkdeal = data['paygrade']['special']['checkdeal']
-        except KeyError:
-            pass
-        try:
-            checkoriginal = data['paygrade']['special']['checkoriginal']
-        except KeyError:
-            pass
-
-        # make sure id is unique
-        searching = True
-        while searching:
-            if self.salonName == 'upscale':
-                idNum = random.randint(100,299)
-            elif self.salonName == 'posh':
-                idNum = random.randint(300,599)
-            if idNum not in usedId:
-                searching = False
-
-        objBundle = {'paygrade':{'regType':paygradetype,
-                                 'regular':{'commission':commission,'check':check},
-                                 'special':{'commissionspecial':comspec,'checkdeal':checkdeal,
-                                            'checkoriginal':checkoriginal}},
-                     'id':idNum,'name':name,'salonName':self.salonName,
-                     'active': active, 'rent':rent,'fees':fees,'pay':pay}
-        self.Emps[name] = Employee.Employee(objBundle)
+    # def loadEmp(self, name, data):
+    #     """
+    #         mainly for setting up salon and parsing information from json da
+    #     Args:
+    #         name: (str) employee name
+    #         data: (dict) key is emp name
+    #
+    #     Returns:
+    #
+    #     """
+    #     usedId = []
+    #     # for emp in self.Emps:
+    #     #     usedId.append(emp.getId())
+    #     for e in self.Emps.keys():
+    #         usedId.append(self.Emps[e].getId())
+    #
+    #     pay,fees,rent,commission,check,comspec,checkdeal,checkoriginal = (0 for i in range(1,9))
+    #     idNum = 0
+    #     active = True
+    #     searching = True
+    #     while searching:
+    #         if self.salonName == 'upscale':
+    #             idNum = random.randint(100,299)
+    #         elif self.salonName == 'posh':
+    #             idNum = random.randint(300,599)
+    #         if idNum not in usedId:
+    #             searching = False
+    #
+    #     paygradetype = True
+    #
+    #     try:
+    #         idNum = data['empId']
+    #     except KeyError:
+    #         pass
+    #     try:
+    #         active = data['active']
+    #     except KeyError:
+    #         pass
+    #     try:
+    #         pay = data['pay']
+    #     except KeyError:
+    #         pass
+    #     try:
+    #         fees = data['fees']
+    #     except KeyError:
+    #         pass
+    #     try:
+    #         rent = data['rent']
+    #     except KeyError:
+    #         pass
+    #     try:
+    #         paygradetype = data['paygrade']['regType']
+    #     except KeyError:
+    #         pass
+    #     try:
+    #         commission = data['paygrade']['regular']['commission']
+    #     except KeyError:
+    #         pass
+    #     try:
+    #         check = data['paygrade']['regular']['check']
+    #     except KeyError:
+    #         pass
+    #     try:
+    #         comspec = data['paygrade']['special']['commissionspecial']
+    #     except KeyError:
+    #         pass
+    #     try:
+    #         checkdeal = data['paygrade']['special']['checkdeal']
+    #     except KeyError:
+    #         pass
+    #     try:
+    #         checkoriginal = data['paygrade']['special']['checkoriginal']
+    #     except KeyError:
+    #         pass
+    #
+    #     # make sure id is unique
+    #     searching = True
+    #     while searching:
+    #         if self.salonName == 'upscale':
+    #             idNum = random.randint(100,299)
+    #         elif self.salonName == 'posh':
+    #             idNum = random.randint(300,599)
+    #         if idNum not in usedId:
+    #             searching = False
+    #
+    #     objBundle = {'paygrade':{'regType':paygradetype,
+    #                              'regular':{'commission':commission,'check':check},
+    #                              'special':{'commissionspecial':comspec,'checkdeal':checkdeal,
+    #                                         'checkoriginal':checkoriginal}},
+    #                  'id':idNum,'name':name,'salonName':self.salonName,
+    #                  'active': active, 'rent':rent,'fees':fees,'pay':pay}
+    #     self.Emps[name] = Employee.Employee(objBundle)
 
     def deleteEmp(self, name):
         deletedValue = self.Emps.pop(name)
@@ -307,29 +308,28 @@ class Salon(Bot.Bot):
         for dates,value in week.items():
             for e,total in value.items():
                 sorted[e.lower()][dates] = total
-        pp.pprint(sorted)
+        # pp.pprint(sorted)
         # compare for extra employees , ie 'anybody*', not currently in settings DB and create new regular ones
-        salesEmployees = []
+        salesEmployees = [string.capwords(n) for n in sorted]
         currentEmployees = []
-        for keys in sorted:
-            # remove everything and just get nicknames which is in parenthesis in sales report
-            emp = re.search('\w+\)$', keys.lower()).group(0).rstrip(')')
-            salesEmployees.append(emp)
         for key, obj in self.Emps.items():
-            currentEmployees.append(key.lower())
+            currentEmployees.append(string.capwords(key))
         # create Employees for any extra in sales so they can calculate their sales
         for e in salesEmployees:
             if e not in currentEmployees:
-                self.createEmpReg(e)
+                agree = sg.popup_ok_cancel(f'{e} not found in current employees list.\n\nWould you like to add employee to database?')
+                if agree == 'OK':
+                    self.createEmpReg(e)
+                else:
+                    print(f'INFO: skipping payroll calculations for {e}.')
         # now tell all employees to calculate
+        payrollPkt = {}
         for eName, eObj in self.Emps.items():
             for e, val in sorted.items():
-                if eName.lower() in e:
-                    print(eName)
+                if eName in string.capwords(e):
                     eObj.calculatePayroll(val)
-                    print(eObj.getPayroll())
-                    print()
-
+                    payrollPkt[eName] = eObj.getPrintOut()
+        return payrollPkt
 
 
 
@@ -338,6 +338,22 @@ class Salon(Bot.Bot):
         for name, empObj in self.Emps.items():
             emps[name] = empObj.getInfo()
         return emps
+
+    def exportTxtPayroll(self, sDate, eDate):
+        for name, obj in self.Emps.items():
+            printableData = ''
+            try:
+                printableData = obj.getPrintOut()
+            except Exception:
+                sg.popup_ok('ERROR: Salon.exportTxtPayroll: employee data is empty\n'
+                            'Try to calculate payroll first')
+            if len(printableData) > 5:
+                pfname = f'../payroll/{self.salonName}/{self.salonName[0]}.{sDate.replace("/",".")}.{name}.txt'
+                Path(pfname.replace(f'{self.salonName[0]}.{sDate.replace("/",".")}.{name}.txt', '')).mkdir(parents=True,exist_ok=True)
+                with open(pfname,'w') as f:
+                    f.writelines(printableData)
+                print(f'INFO: ({self.salonName}) finished exporting text files')
+
 
     def getDataToSave(self):
         emps = {}
