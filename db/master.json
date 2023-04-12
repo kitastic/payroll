@@ -1,4 +1,16 @@
 {
+    "nails": {
+        "employees": {},
+        "login": {
+            "password": "Joeblack334$",
+            "username": "kit@nails"
+        },
+        "name": "nails",
+        "payments": "",
+        "salesFnames": {},
+        "paymentsFnames": {},
+        "path": "../db/"
+    },
     "posh": {
         "employees": {
             "Khanh Vu (vu)": {
@@ -155,8 +167,9 @@
         },
         "name": "posh",
         "payments": "",
-        "salesJson": "../db/pSales.json",
-        "salesXl": "pSales.xlsx"
+        "salesFnames": {},
+        "paymentsFnames": {},
+        "path": "../db/"
     },
     "upscale": {
         "employees": {
@@ -461,7 +474,8 @@
         },
         "name": "upscale",
         "payments": "",
-        "salesJson": "../db/uSales.json",
-        "salesXl": "uSales.xlsx"
+        "salesFnames": {},
+        "paymentsFnames": {},
+        "path": "../db/"
     }
 }

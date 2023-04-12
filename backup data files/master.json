@@ -1,4 +1,16 @@
 {
+    "nails": {
+        "employees": {},
+        "login": {
+            "password": "Joeblack334$",
+            "username": "kit@nails"
+        },
+        "name": "nails",
+        "payments": "",
+        "salesFnames": {},
+        "paymentsFnames": {},
+        "path": "../db/"
+    },
     "posh": {
         "employees": {
             "Khanh Vu (vu)": {
@@ -155,8 +167,9 @@
         },
         "name": "posh",
         "payments": "",
-        "salesJson": "../db/pSales.json",
-        "salesXl": "pSales.xlsx"
+        "salesFnames": {},
+        "paymentsFnames": {},
+        "path": "../db/"
     },
     "upscale": {
         "employees": {
@@ -289,13 +302,13 @@
             "Kelly Tran (kelly)": {
                 "active": true,
                 "fees": 0,
-                "id": 284,
+                "id": 172,
                 "name": "Kelly Tran (kelly)",
                 "pay": 1300,
                 "paygrade": {
                     "regType": true,
                     "regular": {
-                        "check": 6,
+                        "check": 5,
                         "commission": 7
                     },
                     "special": {
@@ -461,7 +474,8 @@
         },
         "name": "upscale",
         "payments": "",
-        "salesJson": "../db/uSales.json",
-        "salesXl": "uSales.xlsx"
+        "salesFnames": {},
+        "paymentsFnames": {},
+        "path": "../db/"
     }
 }

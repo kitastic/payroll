@@ -65,7 +65,7 @@ class Employee:
         basePayCash = basePayPerRange * ((10 - self.check) / 10)
         fees = (daysWorked * self.fees) + self.rent
         self.payrollSummary = {
-            'totalSale':totalSales,
+            'totalsale':totalSales,
             'commission':commissionSales,
             'check':check,
             'cash':cash,
@@ -114,6 +114,18 @@ class Employee:
     def getPrintOut(self):
         return self.payrollPrint
 
+    def getStatus(self):
+        try:
+            result = {
+                'total': math.ceil(self.payrollSummary['totalsale']),
+                'comm': math.ceil(self.payrollSummary['commission']),
+                'tips': math.ceil(self.payrollSummary['tips']),
+                'daysWorked': math.ceil(self.payrollSummary['daysworked']),
+                'metGoal': math.ceil(self.payrollSummary['metGoal'])
+            }
+            return result
+        except Exception:
+            print('cannot get from emp {}'.format(self.name))
     def exportPayroll(self):
         sdate = ''
         counter = 0

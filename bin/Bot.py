@@ -60,9 +60,8 @@ class Bot:
 
         # wait to locate and click the excel download button
         excelxpath = '//div/div/div[2]/div/main/div/div/div[4]/div/div/div/div/div/div/div/div[2]/span[2]'
-        linkFound = False
         counter = 0
-        while not linkFound:
+        while True:
             time.sleep(1)
             counter += 1
             helper.waitLoadingClick(excelxpath, 10, 'By.XPATH: excel link', self.driver)
@@ -70,33 +69,32 @@ class Bot:
                 self.driver.find_element(By.XPATH, excelxpath).click()
                 print('INFO: {}s out of 10s - Successfuly clicked download link'.format(counter))
                 linkFound = True
+                break
             except Exception as e:
                 print('WARNING: {}s out of 10s - Failed to click excel link: '.format(counter))
 
-            if counter == 5:
+            if counter == 30 :
                 print('WARNING: refreshing page')
                 self.driver.refresh()
-            if counter == 10:
+            if counter == 60:
                 print('WARNING: {}s out of 10s - Cannot find link even after refreshing'.format(counter))
                 self.driver.quit()
                 return False
 
-        fileFound = False
         time_counter = 0
         time_to_wait = 8
-        filename = ''
-        while not fileFound:
+        downloadedFileName = ''
+        while True:
             time.sleep(1)
             time_counter += 1
             if time_counter % 2 == 0:
                 try:
                     # max() called on empty (in this case folder) will return error
-                    filename = max([f for f in os.listdir(dlDir)],
+                    downloadedFileName = max([f for f in os.listdir(dlDir)],
                                    key=lambda xa: os.path.getctime(os.path.join(dlDir,xa)))
-                    fileFound = True
+                    break
                 except ValueError as e:
                     print('{}: waiting {} sec more'.format(e, time_counter))
-
             if time_counter == time_to_wait:
                 sg.Print('ERROR: file never found')
                 self.driver.quit()
@@ -107,21 +105,22 @@ class Bot:
         # rename file
         time_counter = 0
         time_to_wait = 20
-        while '.crdownload' in filename:
+        while '.crdownload' in downloadedFileName:
             time.sleep(1)
             time_counter += 1
             if time_counter > time_to_wait:
                 print('Waited too long for file to download')
                 return False
 
-        filename = max([f for f in os.listdir(dlDir)],
+        downloadedFileName = max([f for f in os.listdir(dlDir)],
                        key=lambda xa: os.path.getctime(os.path.join(dlDir,xa)))
+        newDownloadedFname = f'{salonName[0]}Sales{endDate[-4:]}.xlsx'
         try:
-            os.rename(os.path.join(dlDir,filename),os.path.join(dlDir,salonName[0] + 'Sales.xlsx'))
+            os.rename(os.path.join(dlDir,downloadedFileName),os.path.join(dlDir, newDownloadedFname))
         except FileExistsError:
             os.remove(dlDir + salonName[0] + 'Sales.xlsx')
-            os.rename(os.path.join(dlDir,filename),os.path.join(dlDir,salonName[0] + 'Sales.xlsx'))
-        return dlDir, salonName[0] + 'Sales.xlsx'  # returns path and filename
+            os.rename(os.path.join(dlDir,downloadedFileName),os.path.join(dlDir,newDownloadedFname))
+        return dlDir, newDownloadedFname  # returns path and filename
 
     def connect(self, dlDir, uName, password):
         """
