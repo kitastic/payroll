@@ -1,6 +1,5 @@
 import string
 import PySimpleGUI as sg
-import json
 import random
 import re
 import datetime
@@ -44,9 +43,12 @@ class View:
                               'Exit']],
                         ['View',['View Settings', 'Json Sales', ['Nails::viewjsonsales', 'Upscale::viewjsonsales', 'Posh::viewjsonsales']]],
                         ['Payroll',['All::payroll','Salon',['Upscale::payroll','Posh::payroll']]],
-                        ['Export', ['Txt Files']],
+                        ['Export', ['Txt Files', 'Print Payroll', ['All::printpayroll']]],
                         ['Import', ['Excel Sales::importExcel']]
-                        ]
+                    ]
+        for s in self.salonNames:
+            menu_def[3][1][2].append(s.capitalize()+'::printpayroll')
+
         logTab = [[sg.Text("Anything printed will display here!")],
                   [sg.Multiline(font='Courier 10',expand_x=True,expand_y=True,write_only=True,
                                 reroute_stdout=True,reroute_stderr=True,echo_stdout_stderr=True,autoscroll=True,
@@ -168,7 +170,7 @@ class View:
                     ], size=(130, 90), element_justification='c')
         mTab_r1c3 = sg.Column([[sg.Checkbox('This\nWeek', default=False, key='-mTab_cb_thisweek-', enable_events=True)]])
         mTab_r1c4 = sg.Column([
-            [sg.T('Sales')],[sg.Button('', image_filename='../images/chart-45.png', key='-mTab_btn_sales-', tooltip='Download salse reports')]
+            [sg.T('Sales')],[sg.Button('', image_filename='../images/chart-45.png', key='-mTab_btn_sales-', tooltip='Download sales reports')]
         ])
         mTab_r1c5 = sg.Column([[sg.T('Payroll')],
                         [sg.Button('', image_filename='../images/money-transfer-45.png',
@@ -178,7 +180,7 @@ class View:
             [sg.T("Export")], [sg.Button(image_filename='../images/document-45.png', key='-mTab_btn_exporttxt-',  tooltip='Export txt files to hard drive')]
         ])
         mTab_r1c7 = sg.Column([
-            [sg.T('Status')],[sg.Button(image_filename='../images/in-progress-45.png', key='-mTab_btn_status-',  tooltip='Export txt files to hard drive')]
+            [sg.T('Status')],[sg.Button(image_filename='../images/in-progress-45.png', key='-mTab_btn_status-',  tooltip='Current week income status for employees')]
         ])
 
         mainTab = [[mTab_r1c1,  mTab_r1c3, mTab_r1c4, mTab_r1c5, mTab_r1c6, mTab_r1c7],
@@ -189,11 +191,14 @@ class View:
                                   [sg.Listbox(values=[],select_mode='extended',key='-mTab_lb-', expand_y=True,expand_x=True, enable_events=True)]],expand_y=True, size=(150,None)),
                     sg.Frame('',[[sg.Multiline('',key='-mTab_in_display-',expand_x=True,expand_y=True,autoscroll=True,horizontal_scroll=True)]], expand_y=True, expand_x=True, size=(550,None))],
                    ]
-
+        bm1 = [i[0].lower() for i in self.salonNames]
+        bm1.insert(0, 'a')
+        bm2 = [i for i in self.salonNames]
+        bm2.insert(0, 'All')
         self.layout = [[sg.Menubar(menu_def)],
                        [sg.Column([[sg.Image('../images/kp_w40.png', expand_x=True)]]),
                         sg.Column([[sg.Button(image_filename='../images/save-50.png',button_color='#40444b', expand_x=True,key='-Save-')]]),
-                        sg.Column([[sg.ButtonMenu('', [['a','u','p'],['All','Upscale','Posh']], tooltip='Update sales database',
+                        sg.Column([[sg.ButtonMenu('', [bm1, bm2], tooltip='Update sales database',
                                                   image_filename='../images/cloud-sync-50.png', key='updateJson', button_color=self.btnColor),
                                     sg.T('', key='jsonInfo'),
                                     sg.Button(image_filename='../images/shutdown-50.png',button_color='#40444b', key='Exit')]],justification='right',)],]
@@ -207,35 +212,39 @@ class View:
                         # key '-noticeBuffer-' is a MUST HAVE in order to make status bar show because
                         # it expands (assigned after starting window) and make sure there is space for the bar
                         [sg.T(key='-noticeBuffer-', font='ANY 1', pad=(0,0))],
-                        [sg.StatusBar('hi',key='-notice-', expand_x=True, size=(200,None))]
+                        [sg.StatusBar('',key='-notice-', size=90)]
                         ]
         # self.layout[-1].append(sg.Sizegrip())
 
     def openApp(self):
-        self.salonNames = self.ai.listen('getSalonNames', None)
+        self.salonNames = self.ai.getAllSalonNames()
 
         # sg.show_debugger_window(location=(10,10))
         self.gui = sg.Window('', self.layout,
-                             size=(700,735),
+                             # size=(700,735),
                              resizable=True,
                              finalize=True,
                              grab_anywhere=True,
                              sbar_background_color=self.sbColor,
                              button_color=self.btnColor
                              )
-        self.gui['-noticeBuffer-'].expand(True, True, True)
+        # self.gui['-noticeBuffer-'].expand(True, True, True)
         self.gui.set_min_size(self.gui.size)
-        # self.getJsonLatestDates('display')
-        self.salonNames = self.ai.listen('getSalonNames', guiData=False)
+        self.gui['jsonInfo'].update(self.ai.getJsonLatestDates('display'))
+        self.salonNames = self.ai.getAllSalonNames()
         salonLists = ['-mTab_c_salon-', '-eTab_om_salon-', '-sTab_c_salon-',]
         for l in salonLists:
             self.gui[l].update(value=self.salonNames[0])
 
         for s in self.salonNames:
-            self.eTab_lb_Emps[s] = self.ai.listen('-eTab_btn_load-',s)
+            self.eTab_lb_Emps[s] = self.ai.populateEmpList(s)
+
         # setup commands to cleanup gui while True loop
         mBar = ['Load Settings','Retrieve Payments', 'Get Sales', 'All::sales', 'Upscale::sales', 'Posh::sales',
-                'View Settings','Salon Bundles','Json::view', '::viewjsonsales', 'Txt Files', 'Excel Sales::importExcel']
+                'View Settings','Salon Bundles','Json::view', '::viewjsonsales', 'Txt Files', 'Excel Sales::importExcel',
+                'All::printpayroll',]
+        for s in self.salonNames:
+            mBar.append(s.capitalize()+'::printpayroll')
 
         mTab = ['-mTab_cal_sDate-', '-mTab_in_sDate-', '-mTab_cal_eDate-', '-mTab_in_eDate-', '-mTab_c_salon-',
                 '-mTab_btn_load-', '-mTab_cb_thisweek-', '-mTab_btn_sales-',
@@ -272,27 +281,26 @@ class View:
             elif event in sTab:
                 self.listenSTab()
             elif event == 'updateJson':
-                recentSalonDates = self.ai.listen('updateJson', 'webscrape')
+                recentSalonDates = self.ai.getJsonLatestDates('webscrape')
                 today = datetime.datetime.today().strftime('%m/%d/%Y')
                 '''
                     Webscrape start date should be inclusive of recent json date in case
                     last information pull was mid-day and not a full day of record
                 '''
-                if self.values['updateJson'] == 'Posh':
-                    self.ai.listen('webscrape sales',['posh',recentSalonDates[0],today])
-                elif self.values['updateJson'] == 'Upscale':
-                    salons = ['upscale']
-                    self.ai.listen('webscrape sales',['upscale',recentSalonDates[1],today])
+                salon = self.values['updateJson'].lower()
+                if self.values['updateJson'] != 'All':
+                    index = self.salonNames.index(salon)
+                    self.ai.webscrapeSales(salon, recentSalonDates[index], today)
                 else:
                     salons = self.salonNames
                     # have to send webscrape command for each salon separately
                     # if the recent dates were the same then we could just send it in one go
                     for s, d in zip(salons, recentSalonDates):
-                        self.ai.listen('webscrape sales',[s,d,today])
-                self.ai.listen('updateJson', 'display')
+                        self.ai.webscrapeSales(s, d, today)
+                self.gui['jsonInfo'].update(self.ai.getJsonLatestDates('display'))
             elif event == '-Save-':
                 print('INFO: saving to database')
-                self.ai.listen('savedb', guiData=self.values)
+                self.ai.saveNewSettings()
 
             else:
                 print('INFO: command not found')
@@ -301,24 +309,34 @@ class View:
 
     def listenMBar(self):
         if self.event == 'Load Settings':
-            self.ai.listen(self.event, guiData=None)
+            pfname = sg.popup_get_file('Choose Json settings', 'Import Settings', os.getcwd())
+            if os.path.isfile(pfname):
+                self.ai.loadSettings(pfname)
+            else:
+                self.ai.loadSettings()
+
         elif self.event == 'View Settings':
-            result = self.ai.listen(self.event, guiData=None)
-            nicerResult = ''
-            for key, value in result.items():
-                if isinstance(value, dict):
-                    for subkey, subval in value.items():
-                        if isinstance(subval, dict):
-                            for sskey, ssval in subval.items():
-                                nicerResult += '    {}: {}\n'.format(sskey, ssval)
-                        else:
-                            nicerResult += '  {}: {}\n'.format(subkey, subval)
-                else:
-                    nicerResult += '{}: {}\n'.format(key, value)
-            self.gui['-OUT-'].update(nicerResult)
+            result = self.ai.getSettings()
+            self.printDict(result, '-OUT-')
+
         elif '::viewjsonsales' in self.event:
-            # extract name and lower case salon name
-            self.ai.listen('view sales', re.search('^\w+', self.event).group(0).lower())
+            sname = re.search('^\w+', self.event).group(0).lower()
+            try:
+                sDate = sg.popup_get_date(title='Choose start date')
+                sdate = '{}/{}/{}'.format(sDate[0],sDate[1],sDate[2])
+                eDate = sg.popup_get_date(title='Choose end date')
+                edate = '{}/{}/{}'.format(eDate[0],eDate[1],eDate[2])
+                self.verifyDates(sdate, edate)
+            except Exception:
+                print('[View.listenMBar] failed to validate dates to retrieve json sales')
+            if self.dates:
+                if sname == 'all':
+                    for s in self.salonNames:
+                        self.ai.getJsonRange(salon=s, sDate=self.startDate, eDate=self.endDate)
+                else:
+                    self.ai.getJsonRange(sname, self.startDate, self.endDate)
+
+
         elif '::sales' in self.event:
             sName = re.search('^\w+', self.event).group(0).lower()
             if sName == 'all':
@@ -332,35 +350,54 @@ class View:
                 eDate = sg.popup_get_date(title='Choose end date')
                 edate = '{}/{}/{}'.format(eDate[0],eDate[1],eDate[2])
                 self.verifyDates(sdate, edate)
-                if self.dates:
-                    # package for each salon webscrape: name and dates, even if the dates are the same
-                    for s in sname:
-                        self.ai.listen('webscrape sales', [s,sdate,edate])
             except Exception:
                 print('ERROR:(View.listenMBar) failed to validate dates to webscrape sales')
 
-            self.getJsonLatestDates('display')
+            if self.dates:
+                # package for each salon webscrape: name and dates, even if the dates are the same
+                for s in sname:
+                    self.ai.webscrapeSales(s, sDate=self.startDate, eDate=self.endDate)
+                self.gui['jsonInfo'].update(self.ai.getJsonLatestDates('display'))
 
-        elif self.event == 'Payroll':
-            print('[LOG] payroll clicked')
-            self.ai.listen('Payroll',guiData=self.values)
         elif self.event == 'Txt Files':
             try:
                 sDate = sg.popup_get_date(title='Choose start date')
                 sdate = '{}/{}/{}'.format(sDate[0],sDate[1],sDate[2])
                 eDate = sg.popup_get_date(title='Choose end date')
                 edate = '{}/{}/{}'.format(eDate[0],eDate[1],eDate[2])
-                if self.verifyDates(sdate,edate):
+                self.verifyDates(sdate,edate)
+                if self.dates:
                     # package for each salon webscrape: name and dates, even if the dates are the same
                     for s in self.salonNames:
-                        self.ai.listen(self.event, [s,sDate,eDate])
+                        self.ai.exportPayroll(s, self.startDate, 'txt')
             except Exception:
                 print('ERROR:(View.listenMBar) failed to validate dates to export files')
+
+        elif '::printpayroll' in self.event:
+            sname = re.search('^\w+', self.event).group(0).lower()
+            self.verifyDates()
+            recentSalonDates = self.ai.getJsonLatestDates('webscrape')
+            today = datetime.datetime.today().strftime('%m/%d/%Y')
+            if self.dates:
+                if sname == 'all':
+                    for s,d in zip(self.salonNames,recentSalonDates):
+                        # update json sales for each salon
+                        self.ai.webscrapeSales(s, d, today)
+                        # calculate payroll
+                        self.mTab_lb_Emps[s] = self.ai.getPayrollFromSalon(s, self.startDate, self.endDate)
+                        # export html format
+                        self.ai.exportPayroll(s, self.startDate, 'html')
+                else:
+                    self.ai.webscrapeSales(sname, recentSalonDates[self.salonNames.index(sname)], today)
+                    self.mTab_lb_Emps[sname] = self.ai.getPayrollFromSalon(sname,self.startDate,self.endDate)
+                    self.ai.exportPayroll(sname, self.startDate, 'html')
+                self.gui['jsonInfo'].update(self.ai.getJsonLatestDates('display'))
+
         elif self.event == 'Excel Sales::importExcel':
-            lo = [[sg.T('Salon'), sg.Combo(values=self.salonNames, key='sname')],
+            layout = [[sg.T('Salon'), sg.Combo(values=self.salonNames, key='sname')],
                   [sg.Input('',key='-salespfname-'), sg.FileBrowse(target='-salespfname-', initial_folder=os.getcwd())],
                   [sg.Button('Submit'), sg.Button('Cancel')]]
-            win = sg.Window('Choose excel sales file to import', lo, finalize=True)
+            win = sg.Window('Choose excel sales file to import', layout, finalize=True)
             win.read()
             pfname = ''
             sname = ''
@@ -374,7 +411,7 @@ class View:
                     break
             win.close()
             if pfname and sname:
-                self.ai.listen('Excel Sales::importExcel', [sname, pfname])
+                self.ai.importJson(sname, pfname)
 
     def listenMTab(self):
         performedPayroll = False
@@ -393,6 +430,7 @@ class View:
                 self.gui['-mTab_in_eDate-'].update(e)
             except Exception:
                 print('ERROR:(View.listenMTab) failed to get valid date')
+
         elif self.event == '-mTab_cal_eDate-':
             eDate = sg.popup_get_date(title='Choose start date')
             try:
@@ -401,37 +439,38 @@ class View:
                     self.gui['-mTab_in_eDate-'].update(edate)
             except TypeError:
                 pass
+
         elif self.event == '-mTab_cb_thisweek-':
             self.verifyDates()
+
         elif self.event == '-mTab_btn_sales-':
             if self.dates:
                 sname = self.values['-mTab_c_salon-'].lower()
                 ranges = self.splitRange(self.startDate, self.endDate)
                 for r in ranges:
                     # each r is [sdate, edate]
-                    self.ai.listen('webscrape sales', [sname, r[0], r[1]])
+                    self.ai.webscrapeSales(sname, r[0], r[1])
+
         elif self.event in ('-mTab_btn_payroll-', '-mTab_btn_exporttxt-', '-mTab_btn_status-', '-mTab_btn_load-'):
             sname = self.values['-mTab_c_salon-'].lower()
             if not self.dates and self.event != '-mTab_c_salon-':
                 print("[View] Dates are not valid")
                 return
-            # if list box doesn't have existing salon's dictionary of employees
-            if sname not in self.mTab_lb_Emps:
-                self.mTab_lb_Emps[sname] = self.ai.listen('-mTab_btn_payroll-', [sname, self.startDate, self.endDate])
-                self.gui['-mTab_lb-'].update(self.mTab_lb_Emps[sname].keys())
-            else:
-                print("WARNING(View.listenMTab): invalid dates")
+            # it is better to perform payroll everytime any request is made because there may be other income
+            # updates since last payroll command. ie such as updating json sales after performing payroll
+            self.mTab_lb_Emps[sname] = self.ai.getPayrollFromSalon(sname, self.startDate, self.endDate)
+            self.gui['-mTab_lb-'].update(self.mTab_lb_Emps[sname].keys())
 
             if self.event == '-mTab_btn_exporttxt-':
                 try:
                     for s in self.salonNames:
-                        self.ai.listen(self.event, [s, self.startDate, self.endDate])
+                        self.ai.exportPayroll(s, self.startDate, 'txt')
                 except Exception:
                     print('ERROR:(View.listenMTab): dates are valid, performed payroll,\n'
                           'but error after sending cmd to controller')
 
             elif self.event == '-mTab_btn_status-':
-                self.mTab_empStatus = self.ai.listen('-mTab_btn_status-', sname)
+                self.mTab_empStatus = self.ai.getEmpStatus(sname)
                 tmp = ''
                 for name,bundle in self.mTab_empStatus.items():
                     tmp += '{}:\n {}\n'.format(name,bundle)
@@ -455,8 +494,9 @@ class View:
         salonName = self.values['-eTab_om_salon-'].lower()
         if self.event == '-eTab_btn_load-':
             # send this command first to have a list to compare ids when adding new one
-            self.eTab_lb_Emps = self.ai.listen('-eTab_btn_load-', salonName)
+            self.eTab_lb_Emps = self.ai.populateEmpList(salonName)
             self.refreshETabList(salonName)
+
         elif self.event == 'eTab_btn_empid':
             salon = self.test(self.values['-eTab_in_salon-'], 'str')
             if salon and salon in self.salonNames:
@@ -465,52 +505,53 @@ class View:
                 # gather ids already in use
                 for emp,values in self.eTab_lb_Emps[salon].items():
                     usedId.append(int(values['id']))
-
-                while True:
-                    id = random.randint(100,599)
-                    if salon == 'upscale' and (100 <= id <= 299):
-                        break
-                    if salon == 'posh' and (300 <= id <= 599):
-                        break
+                id = random.randint(100,999)
                 self.gui['-eTab_in_empId-'].update(id)
             else:
-                print('INFO (View.listenETab): choose salon first because id is based on that')
+                print('[INFO (]View.listenETab]: choose salon first because id is based on that')
+
         elif self.event == '-eTab_btn_save-':
             # grab employees and gather into dictionary to validate id and etc
             # this step is needed incase the first thing someone does is add employee without
             # populating list first. if not, the first thing throwing error is gathering all
             # ids to make avoid duplicates
-            result = self.parseEmp()
-            if result:
+            employee = self.parseEmp()
+            if employee:
                 salonName = self.values['-eTab_in_salon-']      # specified when creating employee, not from listbox
-                self.ai.listen(self.event, guiData=[salonName, result])
+                self.ai.modEmp('save', salonName, employee)
             self.refreshETabList(salonName)
+
         elif self.event == '-eTab_btn_update-':
-            result = self.parseEmp()
-            if result:
+            employee = self.parseEmp()
+            if employee:
                 salonName = self.values['-eTab_in_salon-']
-                self.ai.listen(self.event, guiData=[salonName, result])
+                self.ai.modEmp('update', salonName, employee)
                 self.refreshETabList(salonName)
+
         elif self.event == '-eTab_btn_remove-':
             try:
                 eName = self.values['-eTab_lb-'][0]
                 if eName:
                     if len(self.values['-eTab_lb-']) > 1:
                         for n in self.values['-eTab_lb-']:
-                            self.ai.listen(self.event,guiData=[salonName,n])
+                            self.ai.modEmp('remove', self.values['-eTab_om_salon-'].lower(), n)
                     else:
-                        self.ai.listen(self.event,guiData=[salonName, eName])
+                        self.ai.modEmp('remove',self.values['-eTab_om_salon-'].lower(),eName)
                     self.refreshETabList(salonName)
             except Exception:
                 print('ERROR: View.listenETab cannot remove employee > no name')
+
         elif '-eTab_btn_status-' in self.event:
             self.gui[self.event].metadata.state = not self.gui[self.event].metadata.state
             self.gui[self.event].update(image_data=toggle_btn_on if self.gui[self.event].metadata.state else toggle_btn_off,
                                    image_subsample=2)
+
         elif self.event == '-eTab_r_special-':
             self.togglePaygrade('special')
+
         elif self.event == '-eTab_r_regular-':
             self.togglePaygrade('regular')
+
         elif self.event == '-eTab_lb-':
             try:
                 # make sure something is selected, will catch and error if nothing is selected
@@ -522,8 +563,9 @@ class View:
                 pass
         elif self.event == '-eTab_btn_clear-':
             self.clearBtn()
+
         else:
-            print('INFO: Command not found in employee tab')
+            print('[View.listenEtab]: Command not found in employee tab')
 
     def listenSTab(self):
         if self.event == '-sTab_btn_save-':
@@ -541,17 +583,18 @@ class View:
                      'login': {'username': uname, 'password': password},
                      'salesFnames':{},   # default path and filename of json
                      'path': '../db/',     # might not need yet
-                     'payments': '',
+                     'paymentsFnames': {},
                      'employees': {}}
-            self.ai.listen('-sTab_btn_save-', salon)
+            self.ai.createSalon(salon)
             self.salonNames.append(sname)
             self.refreshSalonLists()
             if json:
-                self.ai.listen('importJson', [salon, salon['salesJson']])
+                self.ai.importJson(salon, json)
+
         elif self.event == '-sTab_btn_remove-':
             sname = self.values['-sTab_c_salon-']
             if sname in self.salonNames:
-                self.ai.listen(self.event, sname)
+                self.ai.removeSalon(sname)
                 self.salonNames.remove(sname)
                 self.refreshSalonLists()
         elif self.event == '-sTab_btn_clear-':
@@ -559,87 +602,32 @@ class View:
             self.gui['-sTab_in_uname-'].update('')
             self.gui['-sTab_in_pass-'].update('')
             self.gui['-sTab_in_jsonFile-'].update('')
+        elif self.event == '-sTab_btn_load-':
+            salon = self.values['-sTab_c_salon-']
+            login, niceprint = self.ai.getSalonInfo(salon)
+            self.gui['-sTab_in_name-'].update(salon)
+            self.gui['-sTab_in_uname-'].update(login['username'])
+            self.gui['-sTab_in_pass-'].update(login['password'])
+            self.gui['-sTab_in_display-'].update(niceprint)
 
 
-
-
-    def parseEmp(self):
-        """
-            instead of deciphering values everytime data passes between classes, this method
-            will format it so that when employees object is passed around, it is easier to know
-            what to do with it without having to catch all types of errors
-        Returns:
-
-        """
-        checkpoint = {'salonname':False,'id':False,'name':False, 'paygrade':False}
-        usedId = []
-        currentSalon = self.values['-eTab_in_salon-']
-        if self.eTab_lb_Emps[currentSalon]:
-            for emp, values in self.eTab_lb_Emps[currentSalon].items():
-                usedId.append(int(values['id']))
-
-        # validating each field of information before sending to ai
-        salon = self.test(self.values['-eTab_in_salon-'],'str')
-        if salon in self.salonNames:
-            checkpoint['salonname'] = True
-        idNum = self.test(self.values['-eTab_in_empId-'], 'int')
-        if (100 <= idNum <= 999)  and (idNum not in usedId):
-            checkpoint['id'] = True
-        if 'Update' in self.event:
-            checkpoint['id'] = True
-
-        # dont need to test status its a given
-        name = self.test(self.values['-eTab_in_empName-'], 'str')
-        if len(name) >= 1:
-            checkpoint['name'] = True
-        string.capwords(name)
-        pay = self.test(self.values['-eTab_in_basePay-'], 'int')
-        fees = self.test(self.values['-eTab_in_fees-'], 'int')
-        rent = self.test(self.values['-eTab_in_rent-'], 'int')
-        regType = self.test(self.values['-eTab_r_regular-'],'bool')
-        commission,check,comspec,checkdeal,checkoriginal = (0 for i in range(1,6))
-        if regType:
-            self.togglePaygrade('regular')
-            commission = self.test(self.values['-eTab_c_commission-'], 'int')
-            check = self.test(self.values['-eTab_c_check-'], 'int')
-        else:
-            self.togglePaygrade('special')
-            comspec = self.test(self.values['-eTab_c_commissionspecial-'], 'int')
-            checkdeal = self.test(self.values['-eTab_c_checkdeal-'], 'int')
-            checkoriginal = self.test(self.values['-eTab_c_checkoriginal-'], 'int')
-        # validating paygrades and amounts correspond
-        if regType and commission > 0 and check > 0:
-            checkpoint['paygrade'] = True
-        if not regType and comspec > 0  and checkoriginal > 0:
-            checkpoint['paygrade'] = True
-
-        if all(checkpoint.values()):        # if all data entries are valid or 'True'
-            newEmp = {
-                name:{'active':True,
-                      'id': idNum, 'name': name, 'salonName':salon, 'pay':pay, 'fees':fees, 'rent':rent, 'paygrade':{'regType':regType,
-                      'regular':{'commission': commission, 'check': check},
-                      'special':{'commissionspecial': comspec, 'checkdeal': checkdeal, 'checkoriginal': checkoriginal}
-                      }}}
-            return newEmp
-        elif not checkpoint['id']:
-            sg.popup_ok('Invalid ID number:\nUpscale employees should be 100 - 299\n'
-                        'Posh employees should be 300 - 599\nOr ID exists already')
-        else:
-            failed = []
-            for point, val in checkpoint.items():
-                if not val:
-                    failed.append('Entry: {}'.format(point))
-            sg.popup_ok('Invalid Entry\n{}'.format(failed))
+    def clearBtn(self):
+        inputs = ['-eTab_in_empId-', '-eTab_in_salon-', '-eTab_in_empName-', '-eTab_in_basePay-', '-eTab_in_fees-', '-eTab_in_rent-',
+                  '-eTab_c_commission-', '-eTab_c_check-', '-eTab_c_commissionspecial-', '-eTab_c_checkdeal-', '-eTab_c_checkoriginal-']
+        self.gui['-eTab_btn_status-'].metadata.setState(False)
+        self.gui['-eTab_btn_status-'].update(image_data=toggle_btn_off, image_subsample=2)
+        for i in inputs:
+            self.gui[i].update('')
+        self.togglePaygrade('regular')
 
     def empToGui(self, emp):
         """
             Updates the gui with information of employee retrieved from ai and fills
             the form on emloyees tab
         Args:
-            emp:
-
+            emp: employee dictionary
         Returns:
-
+            None
         """
         if emp['active']:
             self.gui['-eTab_btn_status-'].metadata.setState(True)
@@ -668,62 +656,8 @@ class View:
             self.gui['-eTab_c_checkdeal-'].update(emp['paygrade']['special']['checkdeal'])
             self.gui['-eTab_c_checkoriginal-'].update(emp['paygrade']['special']['checkoriginal'])
 
-    def determineSalon(self):
-        """
-        *** IMPORTANT *** If adding or removing salon, modify this method accordingly.
-        If processing anything, we need to know which salon do we want to access if not all.
-        During development, sometimes only one salon needs to be tested to make sure the
-        workflow and functions are proper. After that we can expand to multiple salon tests.
-        Args:
-
-        Returns:
-                list with salon name or False if can't find salon
-        """
-        try:
-            if self.values['salonUpscale']:
-                return ['upscale']
-            elif self.values['salonPosh']:
-                return ['posh']
-        except TypeError:
-            print('TypeError: Cannot determine which salon ')
-            return False
-
-    def togglePaygrade(self, paytype):
-        rkeys = ['-eTab_c_commission-', '-eTab_c_check-']
-        skeys = ['-eTab_c_commissionspecial-', '-eTab_c_checkdeal-', '-eTab_c_checkoriginal-']
-        if paytype == 'regular':
-            [self.gui[i].update(disabled=False) for i in rkeys]
-            [self.gui[i].update(disabled=True) for i in skeys]
-            self.gui['-eTab_r_regular-'].update(True)
-            self.gui['-eTab_r_special-'].update(False)
-        else:
-            [self.gui[i].update(disabled=True) for i in rkeys]
-            [self.gui[i].update(disabled=False) for i in skeys]
-            self.gui['-eTab_r_regular-'].update(False)
-            self.gui['-eTab_r_special-'].update(True)
-
-    def refreshETabList(self, salonName):
-        # refresh list with employee removed
-        self.eTab_lb_Emps = self.ai.listen('-eTab_btn_load-', salonName)
-        self.gui['-eTab_lb-'].update(values=self.eTab_lb_Emps[salonName].keys())
-
-    def refreshMTabList(self, salonName):
-        if self.eTab_lb_Emps:
-            self.gui['-mTab_lb-'].update(self.mTab_lb_Emps[salonName].keys())
-
-    def refreshSalonLists(self):
-        salonLists = ['-mTab_c_salon-','-eTab_om_salon-','-sTab_c_salon-',]
-        for l in salonLists:
-            self.gui[l].update(values=(self.salonNames))
-
-    def clearBtn(self):
-        inputs = ['-eTab_in_empId-', '-eTab_in_salon-', '-eTab_in_empName-', '-eTab_in_basePay-', '-eTab_in_fees-', '-eTab_in_rent-',
-                  '-eTab_c_commission-', '-eTab_c_check-', '-eTab_c_commissionspecial-', '-eTab_c_checkdeal-', '-eTab_c_checkoriginal-']
-        self.gui['-eTab_btn_status-'].metadata.setState(False)
-        self.gui['-eTab_btn_status-'].update(image_data=toggle_btn_off, image_subsample=2)
-        for i in inputs:
-            self.gui[i].update('')
-        self.togglePaygrade('regular')
+    def exitProgram(self):
+        self.gui.close()
 
     def getDateRange(self):
         layout = [
@@ -737,58 +671,103 @@ class View:
                       ],size=(150,90)),],
         ]
 
-    def test(self, expression, dataType):
-        try:
-            if dataType == 'int':
-                return int(expression)
-            else:
-                return expression
-
-        except Exception:
-            if dataType == 'str':
-                return ''
-            if dataType == 'int':
-                return 0
-            if dataType == 'bool':
-                return False
-
-    def verifyDates(self, sdate=None, edate=None):
+    def parseEmp(self):
         """
-            takes two dates and make sure it is sdate is before edate.
-            and if the "this week" checkbox is marked, figure out the monday
-            and sunday dates automatically if current day is mid-week. This
-            method sets global variables instead of returning any value.
-            The other part of the test will convert text to datetime and compare
-            dates.
-        Args:
-            sdate: string mm/dd/yyyy
-            edate:
-
+            instead of deciphering values everytime data passes between classes, this method
+            will format it so that when employees object is passed around, it is easier to know
+            what to do with it without having to catch all types of errors
         Returns:
-
+            formatted employee dict
         """
-        if self.values['-mTab_cb_thisweek-']:
-            cday = datetime.date.today()
-            daynum = cday.weekday()
-            startday = cday - datetime.timedelta(daynum)
-            endday = startday + datetime.timedelta(6)
-            self.startDate = startday.strftime('%m/%d/%Y')
-            self.endDate = endday.strftime('%m/%d/%Y')
-            self.gui['-mTab_in_sDate-'].update(self.startDate)
-            self.gui['-mTab_in_eDate-'].update(self.endDate)
-            self.dates = True
+        checkpoint = {'salonname':False,'id':False,'name':False, 'paygrade':False}
+        usedId = []
+        currentSalon = self.values['-eTab_in_salon-']
+        if self.eTab_lb_Emps[currentSalon]:
+            for emp, values in self.eTab_lb_Emps[currentSalon].items():
+                usedId.append(int(values['id']))
+
+        # validating each field of information before sending to ai
+        salon = self.test(self.values['-eTab_in_salon-'],'str')
+        if salon in self.salonNames:
+            checkpoint['salonname'] = True
+        idNum = self.test(self.values['-eTab_in_empId-'], 'int')
+        if (100 <= idNum <= 999)  and (idNum not in usedId):
+            checkpoint['id'] = True
+        if 'Update' in self.event:
+            checkpoint['id'] = True
+
+        # dont need to test status its a given
+        name = self.test(self.values['-eTab_in_empName-'], 'str')
+        nameCapitalized = ' '.join(word.capitalize() for word in name.split())
+
+        if len(name) >= 1:
+            checkpoint['name'] = True
+        string.capwords(name)
+        pay = self.test(self.values['-eTab_in_basePay-'], 'int')
+        fees = self.test(self.values['-eTab_in_fees-'], 'int')
+        rent = self.test(self.values['-eTab_in_rent-'], 'int')
+        regType = self.test(self.values['-eTab_r_regular-'],'bool')
+        commission,check,comspec,checkdeal,checkoriginal = (0 for i in range(1,6))
+        if regType:
+            self.togglePaygrade('regular')
+            commission = self.test(self.values['-eTab_c_commission-'], 'int')
+            check = self.test(self.values['-eTab_c_check-'], 'int')
         else:
-            try:
-                sd = datetime.datetime.strptime(sdate, '%m/%d/%Y')
-                ed = datetime.datetime.strptime(edate, '%m/%d/%Y')
-                if sd <= ed:
-                    self.dates = True
-                    self.startDate = sdate
-                    self.endDate = edate
-                else:
-                    self.dates = False
-            except ValueError:
-                pass
+            self.togglePaygrade('special')
+            comspec = self.test(self.values['-eTab_c_commissionspecial-'], 'int')
+            checkdeal = self.test(self.values['-eTab_c_checkdeal-'], 'int')
+            checkoriginal = self.test(self.values['-eTab_c_checkoriginal-'], 'int')
+        # validating paygrades and amounts correspond
+        if regType and commission > 0 and check > 0:
+            checkpoint['paygrade'] = True
+        if not regType and comspec > 0  and checkoriginal > 0:
+            checkpoint['paygrade'] = True
+
+        if all(checkpoint.values()):        # if all data entries are valid or 'True'
+            newEmp = {
+                name:{'active':True,
+                      'id': idNum, 'name': nameCapitalized, 'salonName':salon, 'pay':pay, 'fees':fees, 'rent':rent, 'paygrade':{'regType':regType,
+                      'regular':{'commission': commission, 'check': check},
+                      'special':{'commissionspecial': comspec, 'checkdeal': checkdeal, 'checkoriginal': checkoriginal}
+                      }}}
+            return newEmp
+        elif not checkpoint['id']:
+            sg.popup_ok('Invalid ID number:\nUpscale employees should be 100 - 299\n'
+                        'Posh employees should be 300 - 599\nOr ID exists already')
+        else:
+            failed = []
+            for point, val in checkpoint.items():
+                if not val:
+                    failed.append('Entry: {}'.format(point))
+            sg.popup_ok('Invalid Entry\n{}'.format(failed))
+
+    def printDict(self, result, location):
+        nicerResult = ''
+        for key,value in result.items():
+            if isinstance(value,dict):
+                for subkey,subval in value.items():
+                    if isinstance(subval,dict):
+                        for sskey,ssval in subval.items():
+                            nicerResult += '    {}: {}\n'.format(sskey,ssval)
+                    else:
+                        nicerResult += '  {}: {}\n'.format(subkey,subval)
+            else:
+                nicerResult += '{}: {}\n'.format(key,value)
+        self.gui[location].update(nicerResult)
+
+    def refreshETabList(self, salonName):
+        # refresh list with employee removed
+        self.eTab_lb_Emps[salonName] = self.ai.populateEmpList(salonName)
+        self.gui['-eTab_lb-'].update(values=self.eTab_lb_Emps[salonName].keys())
+
+    def refreshMTabList(self, salonName):
+        if self.eTab_lb_Emps:
+            self.gui['-mTab_lb-'].update(self.mTab_lb_Emps[salonName].keys())
+
+    def refreshSalonLists(self):
+        salonLists = ['-mTab_c_salon-','-eTab_om_salon-','-sTab_c_salon-',]
+        for l in salonLists:
+            self.gui[l].update(values=(self.salonNames))
 
     def splitRange(self, sDate, eDate):
         """
@@ -816,12 +795,75 @@ class View:
         else:
             return [[sDate, eDate]]
 
-    def exitProgram(self):
-        self.gui.close()
+    def test(self, expression, dataType):
+        try:
+            if dataType == 'int':
+                return int(expression)
+            else:
+                return expression
+        except Exception:
+            if dataType == 'str':
+                return ''
+            if dataType == 'int':
+                return 0
+            if dataType == 'bool':
+                return False
+
+    def togglePaygrade(self, paytype):
+        rkeys = ['-eTab_c_commission-', '-eTab_c_check-']
+        skeys = ['-eTab_c_commissionspecial-', '-eTab_c_checkdeal-', '-eTab_c_checkoriginal-']
+        if paytype == 'regular':
+            [self.gui[i].update(disabled=False) for i in rkeys]
+            [self.gui[i].update(disabled=True) for i in skeys]
+            self.gui['-eTab_r_regular-'].update(True)
+            self.gui['-eTab_r_special-'].update(False)
+        else:
+            [self.gui[i].update(disabled=True) for i in rkeys]
+            [self.gui[i].update(disabled=False) for i in skeys]
+            self.gui['-eTab_r_regular-'].update(False)
+            self.gui['-eTab_r_special-'].update(True)
 
     def updateValues(self, values):
         self.values = self.values | values
 
+    def verifyDates(self, sdate=None, edate=None):
+        """
+            takes two dates and make sure it is sdate is before edate.
+            and if the "this week" checkbox is marked, figure out the monday
+            and sunday dates automatically if current day is mid-week. This
+            method sets global variables instead of returning any value.
+            The other part of the test will convert text to datetime and compare
+            dates.
+        Args:
+            sdate: string mm/dd/yyyy
+            edate:
+
+        Returns:
+
+        """
+        if sdate and edate:
+            try:
+                sd = datetime.datetime.strptime(sdate, '%m/%d/%Y')
+                ed = datetime.datetime.strptime(edate, '%m/%d/%Y')
+                if sd <= ed:
+                    self.dates = True
+                    self.startDate = sdate
+                    self.endDate = edate
+                else:
+                    self.dates = False
+            except Exception:
+                pass
+
+        elif self.values['-mTab_cb_thisweek-']:
+            cday = datetime.date.today()
+            daynum = cday.weekday()
+            startday = cday - datetime.timedelta(daynum)
+            endday = startday + datetime.timedelta(6)
+            self.startDate = startday.strftime('%m/%d/%Y')
+            self.endDate = endday.strftime('%m/%d/%Y')
+            self.gui['-mTab_in_sDate-'].update(self.startDate)
+            self.gui['-mTab_in_eDate-'].update(self.endDate)
+            self.dates = True
 
 class BtnInfo:
     def __init__(self, state=True):

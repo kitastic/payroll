@@ -1,15 +1,288 @@
 {
     "nails": {
-        "employees": {},
+        "employees": {
+            "Cat Lam (8) (michael)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Cat Lam (8) (michael)",
+                "pay": 0,
+                "paygrade": {
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "rent": 0,
+                "salonName": "nails"
+            },
+            "Cat Lam (8) (micheal)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Cat Lam (8) (micheal)",
+                "pay": 0,
+                "paygrade": {
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "rent": 0,
+                "salonName": "nails"
+            },
+            "Danny(13) Du (danny)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Danny(13) Du (danny)",
+                "pay": 0,
+                "paygrade": {
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "rent": 0,
+                "salonName": "nails"
+            },
+            "Jackie(2) My (jackie)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Jackie(2) My (jackie)",
+                "pay": 0,
+                "paygrade": {
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "rent": 0,
+                "salonName": "nails"
+            },
+            "Loi(7) Lam (loi)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Loi(7) Lam (loi)",
+                "pay": 0,
+                "paygrade": {
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "rent": 0,
+                "salonName": "nails"
+            },
+            "Nhat Tran (nathan)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Nhat Tran (nathan)",
+                "pay": 0,
+                "paygrade": {
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "rent": 0,
+                "salonName": "nails"
+            },
+            "Phat(6) Truong (paul)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Phat(6) Truong (paul)",
+                "pay": 0,
+                "paygrade": {
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "rent": 0,
+                "salonName": "nails"
+            },
+            "Thuy Hinh (jenny )": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Thuy Hinh (jenny )",
+                "pay": 0,
+                "paygrade": {
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "rent": 0,
+                "salonName": "nails"
+            },
+            "Tram(1) Lam (kate)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Tram(1) Lam (kate)",
+                "pay": 0,
+                "paygrade": {
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "rent": 0,
+                "salonName": "nails"
+            },
+            "Trang Do (trang)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Trang Do (trang)",
+                "pay": 0,
+                "paygrade": {
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "rent": 0,
+                "salonName": "nails"
+            },
+            "Tuoi(5) Vu (tina)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Tuoi(5) Vu (tina)",
+                "pay": 0,
+                "paygrade": {
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "rent": 0,
+                "salonName": "nails"
+            },
+            "Tuyen Tran (anna)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Tuyen Tran (anna)",
+                "pay": 0,
+                "paygrade": {
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "rent": 0,
+                "salonName": "nails"
+            },
+            "Van(3) Pham (van)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Van(3) Pham (van)",
+                "pay": 0,
+                "paygrade": {
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "rent": 0,
+                "salonName": "nails"
+            }
+        },
         "login": {
             "password": "Joeblack334$",
             "username": "kit@nails"
         },
         "name": "nails",
-        "payments": "",
-        "salesFnames": {},
+        "path": "../db/",
         "paymentsFnames": {},
-        "path": "../db/"
+        "salesFnames": {}
     },
     "posh": {
         "employees": {
@@ -166,10 +439,9 @@
             "username": "kit@posh"
         },
         "name": "posh",
-        "payments": "",
-        "salesFnames": {},
+        "path": "../db/",
         "paymentsFnames": {},
-        "path": "../db/"
+        "salesFnames": {}
     },
     "upscale": {
         "employees": {
@@ -297,6 +569,27 @@
                     }
                 },
                 "rent": 60,
+                "salonName": "upscale"
+            },
+            "Kayla Mai (kayla)": {
+                "active": true,
+                "fees": 5,
+                "id": 266,
+                "name": "Kayla Mai (kayla)",
+                "pay": 1300,
+                "paygrade": {
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "rent": 70,
                 "salonName": "upscale"
             },
             "Kelly Tran (kelly)": {
@@ -473,9 +766,8 @@
             "username": "upscalemanager"
         },
         "name": "upscale",
-        "payments": "",
-        "salesFnames": {},
+        "path": "../db/",
         "paymentsFnames": {},
-        "path": "../db/"
+        "salesFnames": {}
     }
 }

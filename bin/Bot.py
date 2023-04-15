@@ -5,6 +5,7 @@ from selenium import webdriver
 import chromedriver_autoinstaller
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.action_chains import ActionChains
 import time
 import re
 import glob                     # check if file exists with wildcard
@@ -80,7 +81,7 @@ class Bot:
                 print('WARNING: {}s out of 10s - Cannot find link even after refreshing'.format(counter))
                 self.driver.quit()
                 return False
-
+        time.sleep(3)
         time_counter = 0
         time_to_wait = 8
         downloadedFileName = ''
@@ -101,7 +102,7 @@ class Bot:
                 return False
 
         self.driver.quit()
-
+        time.sleep(2)
         # rename file
         time_counter = 0
         time_to_wait = 20
@@ -153,5 +154,25 @@ class Bot:
         # once logged in, wait for page to load (when avatar is located)
         helper.waitLoadingPresence('avatar', 10, self.driver)
 
-
-
+    def printHtml(self, pfname):
+        chromedriver_autoinstaller.install()
+        opts = webdriver.ChromeOptions()
+        # dlDir = "D:\\pradagy\\projects\\payrollAutomation\\tmp\\"
+        prefs = {
+                'directory_upgrade':True,
+                'detach': True,
+                # "services.sync.prefs.sync.browser.download.manager.showWhenStarting":False,
+                # "pdfjs.disabled":True,
+                # "print.always_print_silent":True,
+                # "print.show_print_progress":False,
+                # "browser.download.show_plugins_in_list":False,
+        }
+        opts.add_experimental_option('prefs',prefs)
+        self.driver = webdriver.Chrome(options=opts)
+        self.driver.get(os.getcwd()+ '/' + pfname)
+        time.sleep(2)
+        # self.driver.execute_script("window.print();")
+        actions = ActionChains(self.driver)
+        actions.key_down(Keys.CONTROL).send_keys('P').key_up(Keys.CONTROL).perform()
+        time.sleep(1)
+        actions.send_keys(Keys.ENTER).perform()

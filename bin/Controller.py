@@ -20,7 +20,7 @@ class Controller:
         elif command == 'webscrape sales':
             return self.ai.webscrapeSales(guiData[0], guiData[1], guiData[2])
         elif command in ('Txt Files', '-mTab_btn_exporttxt-'):
-            self.ai.exportTxtPayroll(guiData[0], guiData[1], guiData[2])
+            self.ai.exportPayroll(guiData[0], guiData[1], guiData[2])
         elif command == '-mTab_btn_payroll-':
             return self.ai.getPayrollFromSalon(guiData)
         elif command == '-mTab_btn_status-':

@@ -30,6 +30,7 @@ class Employee:
         self.sales = {}
         self.sDate = ''         # m.d.y for saving text purpose
         self.payrollSummary = dict()
+        self.xlreport= {'check': 0, 'checkdeal': 0, 'cash': 0}
 
         self.payrollPrint = ''
 
@@ -100,6 +101,8 @@ class Employee:
     def regTypeSummaryAddOn(self):
         check = self.payrollSummary['check'] if self.payrollSummary['metGoal'] else self.payrollSummary['basepaycheck']
         cash = self.payrollSummary['cash'] if self.payrollSummary['metGoal'] else self.payrollSummary['basepaycash']
+        self.xlreport['check'] = check + self.payrollSummary["tips"]
+        self.xlreport['cash'] = cash - self.payrollSummary["fees"]
         output = f'{"Check":<10} + {"Tip"}\n'
         output += f'{check:<10.2f} + {self.payrollSummary["tips"]:<8.2f} = ' \
                   f'${math.ceil(check + self.payrollSummary["tips"]):<10}\n'
@@ -153,6 +156,8 @@ class Employee:
                 'id': self.id, 'active': self.active,'salonName': self.salonName, 'name': self.name,
                 'rent': self.rent, 'fees': self.fees, 'pay': self.basePay}
 
+    def getXlReport(self):
+        return self.xlreport
 
 class EmployeeSpecial(Employee):
     """
@@ -211,6 +216,9 @@ class EmployeeSpecial(Employee):
         # add additional info to payroll for special case
         checkdeal = self.payrollSummaryEtc['checkdeal'] if self.payrollSummaryEtc['metGoal'] else self.payrollSummaryEtc['basepaycheckdeal']
         cashdeal = self.payrollSummaryEtc['cashdeal'] if self.payrollSummaryEtc['metGoal'] else self.payrollSummaryEtc['basepaycashdeal']
+        self.xlreport['check'] = check + self.payrollSummary["tips"]
+        self.xlreport['checkdeal'] = checkdeal + self.payrollSummary["tips"]
+        self.xlreport['cashdeal'] = cashdeal - self.payrollSummary["fees"]
         output += f'{"*":*^40}\n'
         output += f'{"Check":<10} + {"Tip"}\n'
         output += f'{checkdeal:<10.2f} + {self.payrollSummary["tips"]:<10.2f} = ' \
@@ -254,6 +262,7 @@ class EmployeeCash(Employee):
         cash = self.payrollSummaryEtc['cash'] if self.payrollSummaryEtc['metGoal'] else self.payrollSummaryEtc['basepaycash']
         check = self.payrollSummaryEtc['check'] if self.payrollSummaryEtc['metGoal'] else self.payrollSummaryEtc['basepaycheck']
         cashdeal = (check + self.payrollSummary['tips']) * self.payrollSummaryEtc['rate']
+        self.xlreport['cash'] = cash + cashdeal - self.payrollSummary["fees"]
         output = f'{"Check":<10} + {"Tip"}\n'
         output += f'{check:<10.2f} + {self.payrollSummary["tips"]:<8.2f} = ' \
                   f'${math.ceil(check + self.payrollSummary["tips"]):<10}\n'

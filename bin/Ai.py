@@ -1,14 +1,12 @@
 import datetime
 import glob
 import json
-import openpyxl
 import os
 import PySimpleGUI as sg
 
 import re
 import Salon
 import time
-import xlHelper
 
 
 class Ai:
@@ -40,13 +38,16 @@ class Ai:
         '''
         self.salons = dict()  # keys are salon names and values are salon class objects
         self.employees = dict()
-        self.loadSettings()
+        self.loadSettings(pfname=None)
 
     def createSalon(self,salonPkt):
         self.salons[salonPkt['name']] = Salon.Salon(salonPkt)
 
-    def exportTxtPayroll(self,sName,sDate,eDate):
-        self.salons[sName].exportTxtPayroll(sDate,eDate)
+    def exportPayroll(self, sName, sDate, format):
+        if format == 'html':
+            self.salons[sName].exportPayroll(sDate, format)
+        else:
+            self.salons[sName].exportPayroll(sDate,format)
 
     def getAllSalonNames(self):
         names = []
@@ -54,51 +55,52 @@ class Ai:
             names.append(s)
         return names
 
-    def getEmpStatus(self,guiData):
-        return self.salons[guiData].getEmpStatus()
+    def getEmpStatus(self, sname):
+        return self.salons[sname].getEmpStatus()
 
-    def getJson(self,salons,sDate,eDate):
+    def getJsonRange(self, salon, sDate, eDate):
         """
-        Gets json with specific dates from salon constructor.
+            Gets json with specific dates from salon obj.
         Args:
             salons: [str] list of strings of salon names
             sDate: str
             eDate: str
 
         Returns:
+            list with first element indicating how many nestic dict layers and
             dictionary with salon names as keys and values is dictionary
         """
-        tmp = dict()
-        for s in self.salons.keys():
-            salon = self.salons[s]
-            tmp[s] = salon.getJsonRange(sDate,eDate)
-        return tmp
+        return [2, {salon: {self.salons[salon].getJsonRange(sDate, eDate)}}]
+
 
     def getJsonLatestDates(self, cmd):
         salon = [s for s in self.salons]
         result = []
+        displayResult = ''
+        currentYr = datetime.datetime.now().year
         for i in salon:
-            with open('../db/{}Sales.json'.format(i),'r') as read:
+            with open(f'../db/{i}Sales{currentYr}.json','r') as read:
                 for line in reversed(list(read)):
                     line.rstrip()
                     l = re.search('\d+/\d+/\d+',line)
                     if l:
                         result.append(l.group(0))
+                        displayResult += f'{i}: {l.group(0)}\n'
                         break
         if cmd == 'display':
-            self.gui['jsonInfo'].update('Posh Latest: {}\nUpscale Latest: {}'.format(result[0], result[1]))
+            return displayResult
         elif cmd == 'webscrape':
             return result
 
-    def getPayrollFromSalon(self,guiData):
+    def getPayrollFromSalon(self, sname, sdate, edate):
         """
             Retrieves sales from json for given date range and salon name
         Args:
-            guiData: (list) [salonName, startDate, endDate]
-        Returns:
 
+        Returns:
+            dictionary of employee key and their payroll values
         """
-        return self.salons[guiData[0]].getPayroll([guiData[1],guiData[2]])
+        return self.salons[sname].getPayroll(sdate, edate)
 
     def getSalonInfo(self,salonName):
         """
@@ -111,7 +113,7 @@ class Ai:
         if salonName not in salonNames:
             print('Salon name not found in settings: check name or update settings with new salon')
         else:
-            return self.salons[salonName]['settings']
+            return self.salons[salonName].getSalonInfo()
 
     def getSettings(self):
         return self.loadedSettings
@@ -120,47 +122,7 @@ class Ai:
         self.salons[sname].readSalesXltoJson(pfname)
         self.salons[sname].updateJsonFileDelXl(path=None)
 
-    def listen(self,command,guiData):
-        if command == 'Load Settings':
-            self.loadSettings()
-        elif command == 'View Settings':
-            return self.getSettings()
-        elif command == 'view sales':
-            self.getJson(guiData)
-        elif command == 'updateJson':
-            self.getJsonLatestDates(guiData)
-        elif command == 'webscrape sales':
-            return self.webscrapeSales(guiData[0],guiData[1],guiData[2])
-        elif command in ('Txt Files','-mTab_btn_exporttxt-'):
-            self.exportTxtPayroll(guiData[0],guiData[1],guiData[2])
-        elif command == 'Excel Sales::importExcel':
-            self.importJson(guiData[0], guiData[1])
-        elif command == '-mTab_btn_payroll-':
-            return self.getPayrollFromSalon(guiData)
-        elif command == '-mTab_btn_status-':
-            return self.getEmpStatus(guiData)
-        elif command == '-eTab_btn_load-':
-            return self.populateEmpList(guiData)
-        elif command == '-eTab_btn_save-':
-            self.modEmp(cmd='save',salon=guiData[0],employee=guiData[1])
-        elif command == '-eTab_btn_update-':
-            self.modEmp(cmd='update',salon=guiData[0],employee=guiData[1])
-        elif command == '-eTab_btn_remove-':
-            self.modEmp(cmd='remove',salon=guiData[0],employee=guiData[1])
-        elif command == 'getSalonNames':
-            return self.getAllSalonNames()
-        elif command == '-sTab_btn_save-':
-            self.createSalon(guiData)
-        elif command == '-sTab_btn_remove-':
-            self.removeSalon(guiData)
-        elif command == 'importJson':
-            self.importJson(guiData[0],guiData[1])
-        elif command == 'savedb':
-            self.saveNewSettings()
-        else:
-            print('WARNING:(Controller.listen): Command not found')
-
-    def loadSettings(self):
+    def loadSettings(self, pfname):
         '''
         This function will get information from one big dictionary in the form
          of json and parse that information and divide them into separate salon dictionaries,
@@ -168,12 +130,14 @@ class Ai:
         Returns:
             None
         '''
-        with open('../db/master.json','r') as reader:
-            self.loadedSettings = json.load(reader)
-        salonNames = []
+        if pfname:
+            with open(pfname,'r') as reader:
+                self.loadedSettings = json.load(reader)
+        else:
+            with open('../db/master.json','r') as reader:
+                self.loadedSettings = json.load(reader)
         for name in self.loadedSettings.keys():  # dict keys are iterable BUT NOT subscriptable ie [0]
             self.salons[name] = Salon.Salon(self.loadedSettings[name])  # create salon objects
-            salonNames.append(name)
 
     def modEmp(self,cmd,salon,employee):
         # employee has its name as the key so we get it from list(dict.keys()) and get the only value in the list
@@ -189,14 +153,12 @@ class Ai:
 
     def populateEmpList(self,salon):
         """
-
         Args:
             salons: [str]
-
         Returns:
             list of employee dictionaries
         """
-        return {salon:self.salons[salon].getEmps()}
+        return self.salons[salon].getEmps()
 
     def removeSalon(self,name):
         if name in self.salons.keys():
@@ -253,15 +215,15 @@ class Ai:
         salonObj = self.salons[salon]
         # salon is using inherited method dlEmpSales from WebBot
         try:
-            print('INFO: beginning to retrieve sales for {}'.format(salon))
+            print(f'[Ai.webscrapeSales]: beginning to retrieve sales for {salon} date range {sDate} - {eDate}')
             path,fname = salonObj.dlEmpSales(salon,salonObj.zotaUname,salonObj.zotaPass,
                                              startDate=sDate,endDate=eDate)
             if not path:
                 print(f'[Ai.webscrapeSales]{salon} unable to download file range {sDate} - {eDate}')
                 return False
             salonObj.readSalesXltoJson(path + fname)
+            time.sleep(2)
             salonObj.updateJsonFileDelXl(path)
-            time.sleep(5)
             return True
         except Exception:
             print('[Ai.webscrapeSales]ERROR: Failed to get sales.\nPossible problems:\n-date range too long and '
