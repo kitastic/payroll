@@ -4,12 +4,13 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 import datetime
 import pandas as pd
-import openpyxl
 import re
 import tkinter as tk
 from tkinter import simpledialog
 import time
 import os
+
+
 
 
 def parseDate(date):
@@ -186,3 +187,18 @@ def renameFile(newName, downloadPath, time_to_wait=60):
             raise Exception('Waited too long for file to download')
     filename = max([f for f in os.listdir(downloadPath)], key=lambda xa :   os.path.getctime(os.path.join(downloadPath,xa)))
     os.rename(os.path.join(downloadPath, filename), os.path.join(downloadPath, newName))
+
+def update1099Xl():
+    # pass path, salon prefix for sheetname, data
+    path = '2023 - Copy.xlsx'
+    sheet = 'p.salary'
+    data = [[datetime.now(), '', 'Kit', 2000, '', '', 3000],
+            [datetime.now(), '', 'kelly', 2300, '', '', 4300]]
+    df = pd.DataFrame(data, )
+    reader = pd.read_excel(path, sheet_name=sheet, index_col=False)
+    startRow = len(reader.index)
+    with pd.ExcelWriter(path, mode='a', engine='openpyxl',
+                        if_sheet_exists='overlay') as writer:
+        df.to_excel(writer, sheet_name='p.salary',
+                    header=False, index=False, startrow=startRow
+                    )

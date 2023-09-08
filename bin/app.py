@@ -1,5 +1,23 @@
 """
-This will be the main driver file
+This will be the main driver file. First, the WebBot will be constructed
+to login to website and retrieve various data and format the information
+into different forms such as txt, and excel. There is a method to convert
+to csv but it is not needed. Next, Employees will be constructed to
+process their individual payrol from a range of dates. Mostly the range is
+a week to week bases with Monday is the first day.
+Order of operation:
+    1. Construct webBot (per salon) and call login method
+            method used: WebBot.login()
+    2. Create thread to download employee sales so that there is no file
+        conflict with multiple salon bots trying to race for it.
+            method used: WebBot.dlEmpSales()
+    3. Create another thread, after the previous one finishes, to extract
+        information from the excel downloaded file.
+            method used: WebBot.parseXlToData()
+    4.Construct each employee and call the Employee.exportPayroll() method
+
+During debugging stage and if logging into website is not needed, there
+are also import/export methods for working with locally stored files in WebBot.py
 """
 from WebBot import WebBot
 from Employee import Employee
@@ -20,7 +38,7 @@ def payrollAutomateThread(botBundle, startDate, endDate, threadBundle):
     # daemon threads will terminate immediately when program exits
     # with regular threads, program will wait for thread to finish before exiting
     threadDlEmpSales = threading.Thread(target=bot.dlEmpSales,
-                                        args=(startDate, endDate, threadBundle[0], 'dlEmpSales'),
+                                        args=(startDate, endDate, threadBundle[0]),
                                         daemon=True,
                                         )
     logging.info("Main    : before running dlEmpSales thread")
@@ -31,7 +49,7 @@ def payrollAutomateThread(botBundle, startDate, endDate, threadBundle):
 
     logging.info("Main    : before creating parseXlToDa thread")
     threadParseXlToData = threading.Thread(target=bot.parseXlToData,
-                                           args=(threadBundle[0][0] + '.' + startDate.replace('/','.'),'parseXlToData'),
+                                           args=(threadBundle[0][0] + '.' + startDate.replace('/','.'),),
                                            daemon=True,
                                            )
     logging.info("Main    : before running threadParseXlToData")
@@ -79,34 +97,6 @@ payrollAutomateThread(pBotBundle, startDate, endDate, pThreadBundle)
 
 # upscale bot automate payroll
 payrollAutomateThread(uBotBundle, startDate, endDate, uThreadBundle)
-# posh = WebBot(pBotBundle)
-# posh.login()
-# posh.dlEmpSales(startDate, endDate, 'p', 'pWeeklyDB.xlsx')
-# posh.parseXlToData('p.' + startDate.replace('/','.'))
-# time.sleep(3)
-#
-# for emp in poshEmployee:
-#     emp = Employee(emp,
-#                    'posh',
-#                    posh.exportEmployee(emp),
-#                    pBase[poshEmployee.index(emp)],
-#                    pRent[poshEmployee.index(emp)],
-#                    )
-#     emp.exportPayroll()
-#
-# upscale = WebBot(uBotBundle)
-# upscale.login()
-# upscale.dlEmpSales(startDate, endDate, 'u', 'uWeeklyDB.xlsx')
-# upscale.parseXlToData('u.' + startDate.replace('/','.'))
-#
-# for emp in upscaleEmployee:
-#     emp = Employee(emp,
-#                    'upscale',
-#                    upscale.exportEmployee(emp),
-#                    uBase[upscaleEmployee.index(emp)],
-#                    uRent[upscaleEmployee.index(emp)],
-#                    )
-#     emp.exportPayroll()
 
 
 print('Done')

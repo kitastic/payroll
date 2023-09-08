@@ -4,19 +4,18 @@ import os.path
 from selenium import webdriver
 # no longer need to download browser drivers
 import chromedriver_autoinstaller
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-import itertools
 import time
 import re
 import glob                     # check if file exists with wildcard
 import datetime
-import logging
+import PySimpleGUI as sg
 
 # local files
 import helper
 import xlHelper
+from pathlib import Path
 
 class WebBot:
 
@@ -28,7 +27,12 @@ class WebBot:
         # start web auto
         chromedriver_autoinstaller.install()
         opts = webdriver.ChromeOptions()
-        prefs = {'download.default_directory': "D:\\pradagy\\projects\\payrollAutomation\\tmp\\",
+
+
+        dlDir = r'{}\{}\\'.format(os.getcwd(),'dl')
+        # make sure path exists
+        Path(dlDir).mkdir(parents=True,exist_ok=True)
+        prefs = {'download.default_directory': dlDir,
                  'directory_upgrade': True,
                  }
         opts.add_experimental_option('prefs', prefs)
@@ -96,7 +100,7 @@ class WebBot:
                                             '//*[@id="root"]/div/div[2]/div/main/div/div/div/div[3]/div[1]/div/div[4]/button')
             load.click()  # click load payroll button
             reportBtn = '//div/div/div[2]/div/main/div/div/div/div[3]/div[2]/div/div/div/div/div/div/div[2]/div/div/div[1]/div[2]/button'
-            helper.waitLoadingClick(reportBtn, 5, "By.XPATH",
+            helper.waitLoadingClick(reportBtn, 8, "By.XPATH",
                                     self.driver)  # wait for report to load before selecting type of report
             reportBtn = self.driver.find_element(By.XPATH, reportBtn)
             reportBtn.click()
@@ -168,8 +172,7 @@ class WebBot:
             tempParsed.clear()
             tempIncome.clear()
 
-    def dlEmpSales(self, startDate, endDate, salonName, tName):
-        logging.info("Thread %s: starting", tName)
+    def dlEmpSales(self, startDate, endDate, salonName,):
 
         self.startDate = startDate
         saveAsName = salonName[0] + '.' + startDate.replace('/', '.') + '.xlsx'
@@ -191,42 +194,17 @@ class WebBot:
 
         runReportBtn = self.driver.find_element(By.XPATH, '//*[@id="root"]/div/div[2]/div/main/div/div/div[2]/div[5]/button')
         runReportBtn.click()
-        helper.waitLoadingClick(sDateXpath, 10, 'By.XPATH: startDate', self.driver)
 
-        # locate and click the excel download button
+        # wait to locate and click the excel download button
         excelxpath = '//div/div/div[2]/div/main/div/div/div[4]/div/div/div/div/div/div/div/div[2]/span[2]'
+        helper.waitLoadingClick(excelxpath, 10, 'By.XPATH: excel link', self.driver)
         try:
             self.driver.find_element(By.XPATH, excelxpath).click()
+            sg.easy_print('Successfuly clicked download link')
         except Exception as e:
             print('Failed to click excel link')
-            quit()
 
-        '''
-        check if file exists: glob will return a list with any match or empty list
-                            empty list is boolean False
-        '''
-        while not (glob.glob('../tmp/Employee_Sales*.xlsx')):
-            time.sleep(1)
 
-        helper.renameFile(saveAsName, '../tmp')
-        tempPathAndFname = '../tmp/' + saveAsName
-        sheetName = saveAsName.replace('.xlsx', '')
-
-        # import new workbook sheet to existing book and delete new book
-        wb_target = openpyxl.load_workbook(self.workBook)
-
-        # before copying new temp sheet into weeklyDB, delete existing match
-        if sheetName in wb_target.sheetnames:  # remove default sheet
-            wb_target.remove(wb_target[sheetName])
-
-        target_sheet = wb_target.create_sheet(sheetName)
-        wb_source = openpyxl.load_workbook(tempPathAndFname)
-        source_sheet = wb_source['Sales Summary']
-        xlHelper.copy_sheet(source_sheet, target_sheet)
-        wb_target.save(self.workBook)
-        # remove temporary downloaded file from zota after extracting info
-        os.remove(tempPathAndFname)
-        logging.info("Thread %s: finishing", tName)
 
     def exportParToXlsx(self, fname):
         # hard-coded date for now and changed / to . because of xlsx error
@@ -252,19 +230,15 @@ class WebBot:
                     worksheet.append(lines)
             book.save(fname)
 
-
-    def parseXlToData(self, sheetName, tName):
-        logging.info("Thread %s: starting", tName)
+    def parseXlToData(self, sheetName):
         workBook = openpyxl.load_workbook(self.workBook)
         workSheet = workBook[sheetName]
-        firstLine = ['======', '======', '======', '======']
         dates = re.findall('\d+/\d+/\d+', workSheet['A3'].value)
-        secondLine = ['Date', '', dates[0], dates[1]]
+        firstLine = ['Date', '', dates[0], ' - ' + dates[1]]
 
         techTable = []
         for tech in self.activeEmp:
             techTable.append(firstLine)
-            techTable.append(secondLine)
             techTable.append(['Name', '', '', tech])
             techTable.append(['Pay', '-----', '-----', '-----'])
             totalSale = 0
@@ -293,7 +267,7 @@ class WebBot:
                                 tips = tips + row[10]
                                 tempDailies.append([day,row[4],row[11],row[10]])
                     except Exception as e:
-                        print('Cannot interate to find tech')
+                        print('Cannot iterate to find tech')
 
             techTable.append(['Total Sale', '', '', totalSale])
             techTable.append(['', '', '', '', ])
@@ -314,7 +288,6 @@ class WebBot:
             self.parsedData.append(techTable.copy())
             tempIncome.clear()
             techTable.clear()
-        logging.info("Thread %s: finishing", tName)
 
     def printOriginalData(self):
         print(self.originalData)
@@ -350,4 +323,4 @@ class WebBot:
 
     def exportEmployee(self, name):
         index = self.activeEmp.index(name)
-        return [self.parsedData[index][1:].copy(), self.income[index].copy()]
+        return [self.parsedData[index].copy(), self.income[index].copy()]
