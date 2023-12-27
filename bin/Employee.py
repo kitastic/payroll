@@ -8,10 +8,15 @@ class Employee:
         """
 
         Args:
-            data layout: {'paygrade': {'type': boolean,  True if regular, False if special
-                                        'regular': {'commission': commission, 'check': check}
-                                        'special': {'commissionspecial': comspec, 'checkdeal': checkdeal, 'checkoriginal': checkoriginal}}
-                            'id': idNum, 'salonName': sname, 'name': name, 'rent': rent, 'fees': fees, 'pay': pay, 'active': bool}
+            data layout: {'active':True,
+                      'id': idNum, 'name': nameCapitalized, 'salonName':salon, 'pay':pay,
+                      'fees':fees, 'rent':rent, 'printchecks': printchecks,
+                      'paygrade':{'regType':regType, 'cashType': cashtype,
+                                  'janitorType': janitortype, 'checkdealType': checkdealtype, 'owner': owner,
+                                  'regular':{'commission': commission, 'check': check},
+                                  'special':{'commissionspecial': comspec, 'checkdeal': checkdeal,
+                                             'checkoriginal': checkoriginal, 'cashrate': cashrate}
+                      }}}
         """
         self.id = data['id']
         self.name = data['name']
@@ -20,12 +25,18 @@ class Employee:
         self.rent = data['rent']
         self.fees = data['fees']
         self.active = data['active']
+        self.cashtype = data['paygrade']['cashType']
+        self.janitortype = data['paygrade']['janitorType']
+        self.checkdealtype = data['paygrade']['checkdealType']
+        self.owner = data['paygrade']['owner']
         self.regtype = data['paygrade']['regType']
         self.commission = data['paygrade']['regular']['commission']
         self.check = data['paygrade']['regular']['check']
         self.commissionspecial = data['paygrade']['special']['commissionspecial']
         self.checkdeal = data['paygrade']['special']['checkdeal']
         self.checkoriginal = data['paygrade']['special']['checkoriginal']
+        self.printchecks = data['printchecks']
+        self.cashrate = float(data['paygrade']['special']['cashrate'])
 
         self.sales = {}
         self.sDate = ''         # m.d.y for saving text purpose
@@ -43,8 +54,9 @@ class Employee:
         Returns:
 
         """
-        self.sales = sales.copy()
-        self.genericCalculate()
+        if not self.janitortype:
+            self.sales = sales.copy()
+            self.genericCalculate()
 
 
     def genericCalculate(self):
@@ -59,12 +71,30 @@ class Employee:
         # self.commission is an integer 1-10 convert it to decimal percent
         check = (commissionSales * (self.check / 10))
         cash = commissionSales * ((10 - self.check) / 10)
-        # check if made enough
+        # check if made enough if worked 6 days
         basePayPerDay = self.basePay / 6
         basePayPerRange = basePayPerDay * daysWorked
         basePayCheck = (basePayPerRange * (self.check / 10))
         basePayCash = basePayPerRange * ((10 - self.check) / 10)
-        fees = (daysWorked * self.fees) + self.rent
+
+        # if daysWorked == 7:
+        #     basePayPerRange = basePayPerRange + 100
+        #     basePayCheck = (basePayPerRange * (self.check / 10))
+        #     basePayCash = basePayPerRange * ((10 - self.check) / 10)
+
+        metgoal = False
+        if daysWorked >= 6 and self.salonName != 'posh':
+            if (commissionSales / daysWorked) >= basePayPerDay:
+                metgoal = True
+        else:
+            if commissionSales > basePayPerRange:
+                metgoal = True
+
+        if self.rent >= 0:
+            fees = (daysWorked * self.fees) + self.rent
+        else:
+            fees = daysWorked * self.fees
+
         self.payrollSummary = {
             'totalsale':totalSales,
             'commission':commissionSales,
@@ -75,7 +105,7 @@ class Employee:
             'tips':tips,
             'fees':fees,
             'daysworked': daysWorked,
-            'metGoal':True if commissionSales > basePayPerRange else False
+            'metGoal': metgoal,
         }
 
         output = f'{"  "+string.capwords(self.salonName)+"  ":=^40}\n'
@@ -99,13 +129,30 @@ class Employee:
             self.regTypeSummaryAddOn()
 
     def regTypeSummaryAddOn(self):
+        """
+            This is the summary at the end of the payroll print out. When rent is positive, then that means
+            owner is paying rent and will deduct from cash payroll. When rent is negative, then that means
+            owner is helping employee pay rent and will be added to check payroll. Note in calculations
+            if rent is negative, we subtract rent from check amount. Minus a negative is a positive
+        Returns:
+            None
+        """
         check = self.payrollSummary['check'] if self.payrollSummary['metGoal'] else self.payrollSummary['basepaycheck']
         cash = self.payrollSummary['cash'] if self.payrollSummary['metGoal'] else self.payrollSummary['basepaycash']
-        self.xlreport['check'] = check + self.payrollSummary["tips"]
-        self.xlreport['cash'] = cash - self.payrollSummary["fees"]
-        output = f'{"Check":<10} + {"Tip"}\n'
-        output += f'{check:<10.2f} + {self.payrollSummary["tips"]:<8.2f} = ' \
-                  f'${math.ceil(check + self.payrollSummary["tips"]):<10}\n'
+        if self.rent < 0:
+            self.xlreport['check'] = math.ceil(check + self.payrollSummary["tips"] - self.rent)
+        else:
+            self.xlreport['check'] = math.ceil(check + self.payrollSummary["tips"])
+        self.xlreport['cash'] = math.ceil(cash - self.payrollSummary["fees"])
+        output = ''
+        if self.rent < 0:
+            output = f'{"Check":<10} + {"Tip"} + {"Rent"}\n'
+            output += f'{check:<10.2f} + {self.payrollSummary["tips"]:<8.2f} + {abs(self.rent):<5.0f} = ' \
+                      f'${math.ceil(check + self.payrollSummary["tips"] - self.rent):<10}\n'
+        else:
+            output = f'{"Check":<10} + {"Tip"}\n'
+            output += f'{check:<10.2f} + {self.payrollSummary["tips"]:<8.2f} = ' \
+                      f'${math.ceil(check + self.payrollSummary["tips"]):<10}\n'
         output += f'{"Tien Mat":<10} - {"Le Phi":<8}\n'
         output += f'{cash:<10.2f} - {self.payrollSummary["fees"]:<8.2f} = ' \
                   f'${math.ceil(cash - self.payrollSummary["fees"]):<10}\n\n'
@@ -118,17 +165,20 @@ class Employee:
         return self.payrollPrint
 
     def getStatus(self):
+        if self.commission == 0 and self.regtype:
+            return False
         try:
             result = {
                 'total': math.ceil(self.payrollSummary['totalsale']),
                 'comm': math.ceil(self.payrollSummary['commission']),
                 'tips': math.ceil(self.payrollSummary['tips']),
                 'daysWorked': math.ceil(self.payrollSummary['daysworked']),
-                'metGoal': math.ceil(self.payrollSummary['metGoal'])
+                'metGoal': self.payrollSummary['metGoal']
             }
             return result
         except Exception:
             print('cannot get from emp {}'.format(self.name))
+
     def exportPayroll(self):
         sdate = ''
         counter = 0
@@ -150,11 +200,13 @@ class Employee:
         return self.name
 
     def getInfo(self):
-        return {'paygrade': {'regType': self.regtype,
+        return {'paygrade': {'regType':self.regtype, 'cashType': self.cashtype,
+                            'janitorType': self.janitortype, 'checkdealType': self.checkdealtype, 'owner': self.owner,
                             'regular': {'commission': self.commission, 'check': self.check},
-                            'special': {'commissionspecial': self.commissionspecial, 'checkdeal': self.checkdeal, 'checkoriginal': self.checkoriginal}},
+                            'special': {'commissionspecial': self.commissionspecial, 'checkdeal': self.checkdeal,
+                                        'checkoriginal': self.checkoriginal, 'cashrate': self.cashrate}},
                 'id': self.id, 'active': self.active,'salonName': self.salonName, 'name': self.name,
-                'rent': self.rent, 'fees': self.fees, 'pay': self.basePay}
+                'rent': self.rent, 'fees': self.fees, 'pay': self.basePay, 'printchecks': self.printchecks}
 
     def getXlReport(self):
         return self.xlreport
@@ -216,9 +268,9 @@ class EmployeeSpecial(Employee):
         # add additional info to payroll for special case
         checkdeal = self.payrollSummaryEtc['checkdeal'] if self.payrollSummaryEtc['metGoal'] else self.payrollSummaryEtc['basepaycheckdeal']
         cashdeal = self.payrollSummaryEtc['cashdeal'] if self.payrollSummaryEtc['metGoal'] else self.payrollSummaryEtc['basepaycashdeal']
-        self.xlreport['check'] = check + self.payrollSummary["tips"]
-        self.xlreport['checkdeal'] = checkdeal + self.payrollSummary["tips"]
-        self.xlreport['cashdeal'] = cashdeal - self.payrollSummary["fees"]
+        self.xlreport['check'] = math.ceil(checkdeal + self.payrollSummary["tips"])
+        self.xlreport['checkdeal'] = math.ceil(check + self.payrollSummary["tips"])
+        self.xlreport['cash'] = math.ceil(cashdeal - self.payrollSummary["fees"])
         output += f'{"*":*^40}\n'
         output += f'{"Check":<10} + {"Tip"}\n'
         output += f'{checkdeal:<10.2f} + {self.payrollSummary["tips"]:<10.2f} = ' \
@@ -227,6 +279,7 @@ class EmployeeSpecial(Employee):
         output += f'{cashdeal:<10.2f} - {self.payrollSummary["fees"]:<8} = ' \
                              f'{math.ceil(cashdeal - self.payrollSummary["fees"])}\n\n'
         self.payrollPrint += output
+
 
 class EmployeeCash(Employee):
     def __init__(self, data):
@@ -254,15 +307,15 @@ class EmployeeCash(Employee):
             'check': check,
             'basepaycash': basePayCash,
             'basepaycheck': basePayCheck,
-            'rate': 0.83,
+            'cashrate': self.cashrate,
             'metGoal': True if cash > basePayCash else False
         }
 
         # add additional info to payroll for special case
         cash = self.payrollSummaryEtc['cash'] if self.payrollSummaryEtc['metGoal'] else self.payrollSummaryEtc['basepaycash']
         check = self.payrollSummaryEtc['check'] if self.payrollSummaryEtc['metGoal'] else self.payrollSummaryEtc['basepaycheck']
-        cashdeal = (check + self.payrollSummary['tips']) * self.payrollSummaryEtc['rate']
-        self.xlreport['cash'] = cash + cashdeal - self.payrollSummary["fees"]
+        cashdeal = float(check + self.payrollSummary['tips']) *  self.payrollSummaryEtc['cashrate']
+        self.xlreport['cash'] = math.ceil(cash + cashdeal - self.payrollSummary["fees"])
         output = f'{"Check":<10} + {"Tip"}\n'
         output += f'{check:<10.2f} + {self.payrollSummary["tips"]:<8.2f} = ' \
                   f'${math.ceil(check + self.payrollSummary["tips"]):<10}\n'
@@ -280,4 +333,13 @@ class EmployeeCash(Employee):
         self.payrollPrint += output
 
 
+class EmployeeJanitor(Employee):
+    def __init__(self, data):
+        super().__init__(data)
 
+    def calculatePayroll(self, sales=None):
+        self.xlreport['check'] = self.basePay * (self.check * 0.1)
+        self.xlreport['cash'] = self.basePay * ((10 - self.check) * 0.1)
+        if self.xlreport['cash'] == 0:
+            self.xlreport['check'] = self.xlreport['check'] - self.rent
+        self.payrollPrint = f'Check: {self.xlreport["check"]}    Cash: {self.xlreport["cash"]}'

@@ -1,6 +1,87 @@
 {
     "nails": {
         "employees": {
+            "Anyone1 Anyone1 (anyone1)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Anyone1 Anyone1 (anyone1)",
+                "pay": 0,
+                "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "printchecks": true,
+                "rent": 0,
+                "salonName": "nails"
+            },
+            "Brandon Nguyen (brandon)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Brandon Nguyen (brandon)",
+                "pay": 0,
+                "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "printchecks": true,
+                "rent": 0,
+                "salonName": "nails"
+            },
+            "Cat Lam (8) (michael)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Cat Lam (8) (michael)",
+                "pay": 0,
+                "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "printchecks": true,
+                "rent": 0,
+                "salonName": "nails"
+            },
             "Cat Lam (8) (micheal)": {
                 "active": true,
                 "fees": 0,
@@ -8,17 +89,131 @@
                 "name": "Cat Lam (8) (micheal)",
                 "pay": 0,
                 "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
                     "regType": true,
                     "regular": {
                         "check": 6,
                         "commission": 6
                     },
                     "special": {
+                        "cashrate": 0.0,
                         "checkdeal": 0,
                         "checkoriginal": 0,
                         "commissionspecial": 0
                     }
                 },
+                "printchecks": true,
+                "rent": 0,
+                "salonName": "nails"
+            },
+            "Danny(13) Du (danny)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Danny(13) Du (danny)",
+                "pay": 0,
+                "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "printchecks": true,
+                "rent": 0,
+                "salonName": "nails"
+            },
+            "Dung Tang (vi)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Dung Tang (vi)",
+                "pay": 0,
+                "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "printchecks": true,
+                "rent": 0,
+                "salonName": "nails"
+            },
+            "Gina Nguyen (gina)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Gina Nguyen (gina)",
+                "pay": 0,
+                "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "printchecks": true,
+                "rent": 0,
+                "salonName": "nails"
+            },
+            "Hai Nguyen (anthony)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Hai Nguyen (anthony)",
+                "pay": 0,
+                "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "printchecks": true,
                 "rent": 0,
                 "salonName": "nails"
             },
@@ -29,17 +224,104 @@
                 "name": "Jackie(2) My (jackie)",
                 "pay": 0,
                 "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
                     "regType": true,
                     "regular": {
                         "check": 6,
                         "commission": 6
                     },
                     "special": {
+                        "cashrate": 0.0,
                         "checkdeal": 0,
                         "checkoriginal": 0,
                         "commissionspecial": 0
                     }
                 },
+                "printchecks": true,
+                "rent": 0,
+                "salonName": "nails"
+            },
+            "Kit Ana (kit)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Kit Ana (kit)",
+                "pay": 0,
+                "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "printchecks": true,
+                "rent": 0,
+                "salonName": "nails"
+            },
+            "Linh Nguyen (lee)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Linh Nguyen (lee)",
+                "pay": 0,
+                "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "printchecks": true,
+                "rent": 0,
+                "salonName": "nails"
+            },
+            "Linh Nguyen (linh)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Linh Nguyen (linh)",
+                "pay": 0,
+                "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "printchecks": true,
                 "rent": 0,
                 "salonName": "nails"
             },
@@ -50,17 +332,23 @@
                 "name": "Loi(7) Lam (loi)",
                 "pay": 0,
                 "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
                     "regType": true,
                     "regular": {
                         "check": 6,
                         "commission": 6
                     },
                     "special": {
+                        "cashrate": 0.0,
                         "checkdeal": 0,
                         "checkoriginal": 0,
                         "commissionspecial": 0
                     }
                 },
+                "printchecks": true,
                 "rent": 0,
                 "salonName": "nails"
             },
@@ -71,17 +359,23 @@
                 "name": "Nhat Tran (nathan)",
                 "pay": 0,
                 "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
                     "regType": true,
                     "regular": {
                         "check": 6,
                         "commission": 6
                     },
                     "special": {
+                        "cashrate": 0.0,
                         "checkdeal": 0,
                         "checkoriginal": 0,
                         "commissionspecial": 0
                     }
                 },
+                "printchecks": true,
                 "rent": 0,
                 "salonName": "nails"
             },
@@ -92,17 +386,158 @@
                 "name": "Phat(6) Truong (paul)",
                 "pay": 0,
                 "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
                     "regType": true,
                     "regular": {
                         "check": 6,
                         "commission": 6
                     },
                     "special": {
+                        "cashrate": 0.0,
                         "checkdeal": 0,
                         "checkoriginal": 0,
                         "commissionspecial": 0
                     }
                 },
+                "printchecks": true,
+                "rent": 0,
+                "salonName": "nails"
+            },
+            "Sammy Tran (sammy)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Sammy Tran (sammy)",
+                "pay": 0,
+                "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "printchecks": true,
+                "rent": 0,
+                "salonName": "nails"
+            },
+            "Tanya Nguyen (tanya)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Tanya Nguyen (tanya)",
+                "pay": 0,
+                "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "printchecks": true,
+                "rent": 0,
+                "salonName": "nails"
+            },
+            "Thanh Tran (travis)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Thanh Tran (travis)",
+                "pay": 0,
+                "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "printchecks": true,
+                "rent": 0,
+                "salonName": "nails"
+            },
+            "Thinh Nguyen (tommy)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Thinh Nguyen (tommy)",
+                "pay": 0,
+                "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "printchecks": true,
+                "rent": 0,
+                "salonName": "nails"
+            },
+            "Thuy Hinh (jenny )": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Thuy Hinh (jenny )",
+                "pay": 0,
+                "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "printchecks": false,
                 "rent": 0,
                 "salonName": "nails"
             },
@@ -113,17 +548,50 @@
                 "name": "Tram(1) Lam (kate)",
                 "pay": 0,
                 "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
                     "regType": true,
                     "regular": {
                         "check": 6,
                         "commission": 6
                     },
                     "special": {
+                        "cashrate": 0.0,
                         "checkdeal": 0,
                         "checkoriginal": 0,
                         "commissionspecial": 0
                     }
                 },
+                "printchecks": true,
+                "rent": 0,
+                "salonName": "nails"
+            },
+            "Trang Do (taylor)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Trang Do (taylor)",
+                "pay": 0,
+                "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "printchecks": true,
                 "rent": 0,
                 "salonName": "nails"
             },
@@ -134,17 +602,23 @@
                 "name": "Trang Do (trang)",
                 "pay": 0,
                 "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
                     "regType": true,
                     "regular": {
                         "check": 6,
                         "commission": 6
                     },
                     "special": {
+                        "cashrate": 0.0,
                         "checkdeal": 0,
                         "checkoriginal": 0,
                         "commissionspecial": 0
                     }
                 },
+                "printchecks": true,
                 "rent": 0,
                 "salonName": "nails"
             },
@@ -155,17 +629,23 @@
                 "name": "Tuoi(5) Vu (tina)",
                 "pay": 0,
                 "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
                     "regType": true,
                     "regular": {
                         "check": 6,
                         "commission": 6
                     },
                     "special": {
+                        "cashrate": 0.0,
                         "checkdeal": 0,
                         "checkoriginal": 0,
                         "commissionspecial": 0
                     }
                 },
+                "printchecks": false,
                 "rent": 0,
                 "salonName": "nails"
             },
@@ -176,17 +656,23 @@
                 "name": "Tuyen Tran (anna)",
                 "pay": 0,
                 "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
                     "regType": true,
                     "regular": {
                         "check": 6,
                         "commission": 6
                     },
                     "special": {
+                        "cashrate": 0.0,
                         "checkdeal": 0,
                         "checkoriginal": 0,
                         "commissionspecial": 0
                     }
                 },
+                "printchecks": true,
                 "rent": 0,
                 "salonName": "nails"
             },
@@ -197,17 +683,77 @@
                 "name": "Van(3) Pham (van)",
                 "pay": 0,
                 "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
                     "regType": true,
                     "regular": {
                         "check": 6,
                         "commission": 6
                     },
                     "special": {
+                        "cashrate": 0.0,
                         "checkdeal": 0,
                         "checkoriginal": 0,
                         "commissionspecial": 0
                     }
                 },
+                "printchecks": true,
+                "rent": 0,
+                "salonName": "nails"
+            },
+            "Van(3) Pham (vicky)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Van(3) Pham (vicky)",
+                "pay": 0,
+                "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "printchecks": true,
+                "rent": 0,
+                "salonName": "nails"
+            },
+            "Zota Support (zota Support)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Zota Support (zota Support)",
+                "pay": 0,
+                "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "printchecks": true,
                 "rent": 0,
                 "salonName": "nails"
             }
@@ -219,28 +765,62 @@
         "name": "nails",
         "path": "../db/",
         "paymentsFnames": {},
-        "salesFnames": {}
+        "salesFnames": {},
+        "startchecknum": 0
     },
     "posh": {
         "employees": {
-            "Khanh Vu (vu)": {
+            "Hung Ngo": {
                 "active": true,
                 "fees": 0,
+                "id": 799,
+                "name": "Hung Ngo",
+                "pay": 600,
+                "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": true,
+                    "owner": false,
+                    "regType": true,
+                    "regular": {
+                        "check": 10,
+                        "commission": 0
+                    },
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "printchecks": true,
+                "rent": 35,
+                "salonName": "posh"
+            },
+            "Khanh Vu (vu)": {
+                "active": true,
+                "fees": 5,
                 "id": 579,
                 "name": "Khanh Vu (vu)",
                 "pay": 1500,
                 "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
                     "regType": true,
                     "regular": {
                         "check": 6,
                         "commission": 7
                     },
                     "special": {
+                        "cashrate": 0.0,
                         "checkdeal": 0,
                         "checkoriginal": 0,
                         "commissionspecial": 0
                     }
                 },
+                "printchecks": true,
                 "rent": 0,
                 "salonName": "posh"
             },
@@ -251,39 +831,105 @@
                 "name": "Kit Pham (kit)",
                 "pay": 0,
                 "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": true,
                     "regType": true,
                     "regular": {
                         "check": 6,
                         "commission": 6
                     },
                     "special": {
+                        "cashrate": 0.0,
                         "checkdeal": 0,
                         "checkoriginal": 0,
                         "commissionspecial": 0
                     }
                 },
+                "printchecks": false,
                 "rent": 0,
                 "salonName": "posh"
             },
-            "Mai Duong (mary)": {
+            "Levi Levi (levi)": {
                 "active": true,
-                "fees": 0,
-                "id": 534,
-                "name": "Mai Duong (mary)",
-                "pay": 900,
+                "fees": 5,
+                "id": 0,
+                "name": "Levi Levi (levi)",
+                "pay": 1200,
                 "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
                     "regType": true,
                     "regular": {
                         "check": 6,
                         "commission": 6
                     },
                     "special": {
+                        "cashrate": 0.0,
                         "checkdeal": 0,
                         "checkoriginal": 0,
                         "commissionspecial": 0
                     }
                 },
-                "rent": 0,
+                "printchecks": true,
+                "rent": 35,
+                "salonName": "posh"
+            },
+            "Nora Nora (nora)": {
+                "active": true,
+                "fees": 5,
+                "id": 0,
+                "name": "Nora Nora (nora)",
+                "pay": 1200,
+                "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "printchecks": true,
+                "rent": 35,
+                "salonName": "posh"
+            },
+            "Phat Truong (paul)": {
+                "active": true,
+                "fees": 5,
+                "id": 0,
+                "name": "Phat Truong (paul)",
+                "pay": 900,
+                "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "printchecks": true,
+                "rent": 60,
                 "salonName": "posh"
             },
             "Quynh Nhu Lam (nancy)": {
@@ -293,18 +939,24 @@
                 "name": "Quynh Nhu Lam (nancy)",
                 "pay": 900,
                 "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
                     "regType": true,
                     "regular": {
                         "check": 6,
                         "commission": 6
                     },
                     "special": {
+                        "cashrate": 0.0,
                         "checkdeal": 0,
                         "checkoriginal": 0,
                         "commissionspecial": 0
                     }
                 },
-                "rent": 0,
+                "printchecks": true,
+                "rent": 35,
                 "salonName": "posh"
             },
             "Tech 4 (tech 4)": {
@@ -314,38 +966,77 @@
                 "name": "Tech 4 (tech 4)",
                 "pay": 0,
                 "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
                     "regType": true,
                     "regular": {
                         "check": 6,
                         "commission": 6
                     },
                     "special": {
+                        "cashrate": 0.0,
                         "checkdeal": 0,
                         "checkoriginal": 0,
                         "commissionspecial": 0
                     }
                 },
+                "printchecks": false,
                 "rent": 0,
                 "salonName": "posh"
             },
-            "Trung Tao (ethan)": {
+            "Timmy Nguyen (timmy)": {
                 "active": true,
-                "fees": 0,
-                "id": 491,
-                "name": "Trung Tao (ethan)",
-                "pay": 0,
+                "fees": 5,
+                "id": 0,
+                "name": "Timmy Nguyen (timmy)",
+                "pay": 1100,
                 "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
                     "regType": true,
                     "regular": {
                         "check": 6,
                         "commission": 6
                     },
                     "special": {
+                        "cashrate": 0.0,
                         "checkdeal": 0,
                         "checkoriginal": 0,
                         "commissionspecial": 0
                     }
                 },
+                "printchecks": false,
+                "rent": 0,
+                "salonName": "posh"
+            },
+            "Tina Nguyen (tina)": {
+                "active": true,
+                "fees": 5,
+                "id": 0,
+                "name": "Tina Nguyen (tina)",
+                "pay": 1100,
+                "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "printchecks": false,
                 "rent": 0,
                 "salonName": "posh"
             },
@@ -354,19 +1045,25 @@
                 "fees": 0,
                 "id": 300,
                 "name": "Tuan Nguyen (sophia)",
-                "pay": 1300,
+                "pay": 1400,
                 "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
                     "regType": true,
                     "regular": {
                         "check": 6,
                         "commission": 6
                     },
                     "special": {
+                        "cashrate": 0.0,
                         "checkdeal": 0,
                         "checkoriginal": 0,
                         "commissionspecial": 0
                     }
                 },
+                "printchecks": false,
                 "rent": 0,
                 "salonName": "posh"
             }
@@ -378,7 +1075,8 @@
         "name": "posh",
         "path": "../db/",
         "paymentsFnames": {},
-        "salesFnames": {}
+        "salesFnames": {},
+        "startchecknum": 3025
     },
     "upscale": {
         "employees": {
@@ -389,18 +1087,105 @@
                 "name": "00 0 (00)",
                 "pay": 0,
                 "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
                     "regType": true,
                     "regular": {
                         "check": 6,
                         "commission": 6
                     },
                     "special": {
+                        "cashrate": 0.0,
                         "checkdeal": 0,
                         "checkoriginal": 0,
                         "commissionspecial": 0
                     }
                 },
+                "printchecks": false,
                 "rent": 0,
+                "salonName": "upscale"
+            },
+            "01 1 (01)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "01 1 (01)",
+                "pay": 0,
+                "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "printchecks": false,
+                "rent": 0,
+                "salonName": "upscale"
+            },
+            "Admin Admin (admin)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Admin Admin (admin)",
+                "pay": 0,
+                "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "printchecks": false,
+                "rent": 0,
+                "salonName": "upscale"
+            },
+            "Ai Nguyen (ai)": {
+                "active": true,
+                "fees": 5,
+                "id": 213,
+                "name": "Ai Nguyen (ai)",
+                "pay": 1000,
+                "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "printchecks": false,
+                "rent": 60,
                 "salonName": "upscale"
             },
             "Andrew Mai (kayla)": {
@@ -410,18 +1195,51 @@
                 "name": "Andrew Mai (kayla)",
                 "pay": 1300,
                 "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
                     "regType": true,
                     "regular": {
                         "check": 6,
                         "commission": 6
                     },
                     "special": {
+                        "cashrate": 0.0,
                         "checkdeal": 0,
                         "checkoriginal": 0,
                         "commissionspecial": 0
                     }
                 },
+                "printchecks": false,
                 "rent": 70,
+                "salonName": "upscale"
+            },
+            "Anh Nguyen (kim)": {
+                "active": true,
+                "fees": 5,
+                "id": 0,
+                "name": "Anh Nguyen (kim)",
+                "pay": 1200,
+                "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 6
+                    },
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "printchecks": true,
+                "rent": 0,
                 "salonName": "upscale"
             },
             "Anna Ho (anna)": {
@@ -429,19 +1247,25 @@
                 "fees": 5,
                 "id": 123,
                 "name": "Anna Ho (anna)",
-                "pay": 1000,
+                "pay": 1200,
                 "paygrade": {
+                    "cashType": false,
+                    "checkdealType": true,
+                    "janitorType": false,
+                    "owner": false,
                     "regType": false,
                     "regular": {
                         "check": 0,
                         "commission": 0
                     },
                     "special": {
+                        "cashrate": 0.0,
                         "checkdeal": 5,
                         "checkoriginal": 6,
                         "commissionspecial": 6
                     }
                 },
+                "printchecks": true,
                 "rent": 0,
                 "salonName": "upscale"
             },
@@ -452,18 +1276,24 @@
                 "name": "Chau Nguyen (tuan)",
                 "pay": 1100,
                 "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
                     "regType": true,
                     "regular": {
                         "check": 6,
                         "commission": 6
                     },
                     "special": {
+                        "cashrate": 0.0,
                         "checkdeal": 0,
                         "checkoriginal": 0,
                         "commissionspecial": 0
                     }
                 },
-                "rent": 60,
+                "printchecks": true,
+                "rent": 0,
                 "salonName": "upscale"
             },
             "Cindy Pham (cindy)": {
@@ -473,18 +1303,51 @@
                 "name": "Cindy Pham (cindy)",
                 "pay": 900,
                 "paygrade": {
+                    "cashType": true,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
                     "regType": false,
                     "regular": {
                         "check": 0,
                         "commission": 0
                     },
                     "special": {
+                        "cashrate": 0.85,
                         "checkdeal": 0,
                         "checkoriginal": 6,
                         "commissionspecial": 6
                     }
                 },
+                "printchecks": false,
                 "rent": 60,
+                "salonName": "upscale"
+            },
+            "Dong Huynh": {
+                "active": true,
+                "fees": 0,
+                "id": 648,
+                "name": "Dong Huynh",
+                "pay": 780,
+                "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": true,
+                    "owner": false,
+                    "regType": true,
+                    "regular": {
+                        "check": 5,
+                        "commission": 0
+                    },
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "printchecks": true,
+                "rent": 0,
                 "salonName": "upscale"
             },
             "Huong Mai (lisa)": {
@@ -494,17 +1357,50 @@
                 "name": "Huong Mai (lisa)",
                 "pay": 900,
                 "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
                     "regType": true,
                     "regular": {
                         "check": 6,
                         "commission": 6
                     },
                     "special": {
+                        "cashrate": 0.0,
                         "checkdeal": 0,
                         "checkoriginal": 0,
                         "commissionspecial": 0
                     }
                 },
+                "printchecks": true,
+                "rent": 60,
+                "salonName": "upscale"
+            },
+            "Huy Nguyen (sumo)": {
+                "active": true,
+                "fees": 5,
+                "id": 911,
+                "name": "Huy Nguyen (sumo)",
+                "pay": 1400,
+                "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
+                    "regType": true,
+                    "regular": {
+                        "check": 6,
+                        "commission": 7
+                    },
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0,
+                        "checkoriginal": 0,
+                        "commissionspecial": 0
+                    }
+                },
+                "printchecks": true,
                 "rent": 60,
                 "salonName": "upscale"
             },
@@ -515,38 +1411,50 @@
                 "name": "Kayla Mai (kayla)",
                 "pay": 1300,
                 "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
                     "regType": true,
                     "regular": {
                         "check": 6,
                         "commission": 6
                     },
                     "special": {
+                        "cashrate": 0.0,
                         "checkdeal": 0,
                         "checkoriginal": 0,
                         "commissionspecial": 0
                     }
                 },
+                "printchecks": true,
                 "rent": 70,
                 "salonName": "upscale"
             },
             "Kelly Tran (kelly)": {
                 "active": true,
-                "fees": 0,
+                "fees": 5,
                 "id": 172,
                 "name": "Kelly Tran (kelly)",
-                "pay": 1300,
+                "pay": 1500,
                 "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
                     "regType": true,
                     "regular": {
                         "check": 5,
                         "commission": 7
                     },
                     "special": {
+                        "cashrate": 0.0,
                         "checkdeal": 0,
                         "checkoriginal": 0,
                         "commissionspecial": 0
                     }
                 },
+                "printchecks": true,
                 "rent": 0,
                 "salonName": "upscale"
             },
@@ -557,17 +1465,23 @@
                 "name": "Luan Tran (sammy)",
                 "pay": 1200,
                 "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
                     "regType": true,
                     "regular": {
                         "check": 6,
                         "commission": 6
                     },
                     "special": {
+                        "cashrate": 0.0,
                         "checkdeal": 0,
                         "checkoriginal": 0,
                         "commissionspecial": 0
                     }
                 },
+                "printchecks": true,
                 "rent": 60,
                 "salonName": "upscale"
             },
@@ -578,17 +1492,23 @@
                 "name": "Manager Manager (manager)",
                 "pay": 0,
                 "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
                     "regType": true,
                     "regular": {
                         "check": 6,
                         "commission": 6
                     },
                     "special": {
+                        "cashrate": 0.0,
                         "checkdeal": 0,
                         "checkoriginal": 0,
                         "commissionspecial": 0
                     }
                 },
+                "printchecks": false,
                 "rent": 0,
                 "salonName": "upscale"
             },
@@ -599,39 +1519,51 @@
                 "name": "Ngoc Pham (kit)",
                 "pay": 0,
                 "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": true,
                     "regType": true,
                     "regular": {
                         "check": 6,
                         "commission": 7
                     },
                     "special": {
+                        "cashrate": 0.0,
                         "checkdeal": 0,
                         "checkoriginal": 0,
                         "commissionspecial": 0
                     }
                 },
+                "printchecks": false,
                 "rent": 0,
                 "salonName": "upscale"
             },
-            "Thanh Tran (leo)": {
+            "Quynh Nhu Lam (nhu)": {
                 "active": true,
-                "fees": 5,
-                "id": 108,
-                "name": "Thanh Tran (leo)",
-                "pay": 1200,
+                "fees": 0,
+                "id": 0,
+                "name": "Quynh Nhu Lam (nhu)",
+                "pay": 0,
                 "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
                     "regType": true,
                     "regular": {
                         "check": 6,
                         "commission": 6
                     },
                     "special": {
+                        "cashrate": 0.0,
                         "checkdeal": 0,
                         "checkoriginal": 0,
                         "commissionspecial": 0
                     }
                 },
-                "rent": 70,
+                "printchecks": false,
+                "rent": 0,
                 "salonName": "upscale"
             },
             "Trung Tao (ethan)": {
@@ -639,40 +1571,52 @@
                 "fees": 5,
                 "id": 195,
                 "name": "Trung Tao (ethan)",
-                "pay": 100,
+                "pay": 858,
                 "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
                     "regType": true,
                     "regular": {
                         "check": 6,
                         "commission": 6
                     },
                     "special": {
+                        "cashrate": 0.0,
                         "checkdeal": 0,
                         "checkoriginal": 0,
                         "commissionspecial": 0
                     }
                 },
+                "printchecks": true,
                 "rent": 0,
                 "salonName": "upscale"
             },
-            "Tuoi Vu (tina)": {
+            "Tuan Nguyen (sophia)": {
                 "active": true,
-                "fees": 0,
-                "id": 144,
-                "name": "Tuoi Vu (tina)",
-                "pay": 0,
+                "fees": 5,
+                "id": 0,
+                "name": "Tuan Nguyen (sophia)",
+                "pay": 1200,
                 "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
                     "regType": true,
                     "regular": {
                         "check": 6,
                         "commission": 6
                     },
                     "special": {
+                        "cashrate": 0.0,
                         "checkdeal": 0,
                         "checkoriginal": 0,
                         "commissionspecial": 0
                     }
                 },
+                "printchecks": true,
                 "rent": 0,
                 "salonName": "upscale"
             },
@@ -681,20 +1625,26 @@
                 "fees": 5,
                 "id": 164,
                 "name": "Ty Nguyen (judy)",
-                "pay": 1000,
+                "pay": 1100,
                 "paygrade": {
+                    "cashType": false,
+                    "checkdealType": false,
+                    "janitorType": false,
+                    "owner": false,
                     "regType": true,
                     "regular": {
                         "check": 6,
                         "commission": 6
                     },
                     "special": {
+                        "cashrate": 0.0,
                         "checkdeal": 0,
                         "checkoriginal": 0,
                         "commissionspecial": 0
                     }
                 },
-                "rent": 187,
+                "printchecks": true,
+                "rent": -50,
                 "salonName": "upscale"
             }
         },
@@ -705,6 +1655,7 @@
         "name": "upscale",
         "path": "../db/",
         "paymentsFnames": {},
-        "salesFnames": {}
+        "salesFnames": {},
+        "startchecknum": 1117
     }
 }

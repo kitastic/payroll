@@ -9,9 +9,9 @@ import Bot
 import PySimpleGUI as sg
 import Employee
 from pprint import PrettyPrinter
+import num2words
 import string
 from pathlib import Path
-import html
 
 pp = PrettyPrinter(
     indent=2,
@@ -29,17 +29,19 @@ class Salon(Bot.Bot):
             bundle: (dictionary) layout:
                     bundle =  { 'name': 'upscale',
                                 'login': {'username': 'upscalemanager', 'password': 'Joeblack334$'},
-                                'salesJson': '../db/uSales.json',
-                                'salesXl': '../db/uSales.xlsx',      # might not need yet
+                                'salesJson':
+                                'salesXl':    # might not need yet
                                 'payments': 'uPayments.xlsx',
-                                'employees': {'Name': { 'pay': 0, 'rent': 0, 'fees': 0,'active':bool, 'id': int,
-                                'salonName': str, 'name': empname,
-                                                        'paygrade':{'regType': True for regular False for special
-                                                                    'regular': {'commission':, 'check':, }
-                                                                    'special': {'commissionspecial', 'checkdeal':,
-                                                                    'checkoriginal':,}}},
-                                              'Name2': { ... }
-                                             }},
+                                'employees': {
+                                name:{'active':True,
+                                      'id': idNum, 'name': nameCapitalized, 'salonName':salon, 'pay':pay,
+                                      'fees':fees, 'rent':rent, 'printchecks': printchecks,
+                                      'paygrade':{'regType':regType, 'cashType': cashtype,
+                                                  'janitorType': janitortype, 'checkdealType': checkdealtype, 'owner': owner,
+                                      'regular':{'commission': commission, 'check': check},
+                                      'special':{'commissionspecial': comspec, 'checkdeal': checkdeal,
+                                                 'checkoriginal': checkoriginal, 'cashrate': cashrate}
+                                      }}}
         """
         super().__init__()
         # at this point, the keys in bundle have been alphabetized by json
@@ -50,6 +52,7 @@ class Salon(Bot.Bot):
         self.paymentsFnames = bundle['paymentsFnames']
         self.path = bundle['path']
         self.salesFnames = bundle['salesFnames']    # dict of json files names, key=year
+        self.startCheckNum = bundle['startchecknum']
 
         # variables stored during program runtime
         self.salesDict = dict()  # {year: {datetime: {empName: [total, comm, tips]}}
@@ -72,11 +75,12 @@ class Salon(Bot.Bot):
                     print(f'[Salon.setupSalon] {self.salonName} did not find any json')
 
         for emp,info in self.employees.items():
-            if not info['paygrade']['regType']:
-                if info['paygrade']['special']['checkdeal'] == 0:
-                    self.Emps[string.capwords(emp)] = Employee.EmployeeCash(info)
-                else:
-                    self.Emps[string.capwords(emp)] = Employee.EmployeeSpecial(info)
+            if info['paygrade']['cashType']:
+                self.Emps[string.capwords(emp)] = Employee.EmployeeCash(info)
+            elif info['paygrade']['checkdealType']:
+                self.Emps[string.capwords(emp)] = Employee.EmployeeSpecial(info)
+            elif info['paygrade']['janitorType']:
+                self.Emps[string.capwords(emp)] = Employee.EmployeeJanitor(info)
             else:
                 self.Emps[string.capwords(emp)] = Employee.Employee(info)
 
@@ -87,10 +91,15 @@ class Salon(Bot.Bot):
         newEmp = {
             name:{'active':True,
                   'id':0,'name':name,'salonName':self.salonName,'pay':0,'fees':0,'rent':0,
+                  'printchecks': True,
                   'paygrade':{'regType':True,
+                              'cashType': False,
+                              'janitorType': False,
+                              'checkdealType': False,
+                              'owner': False,
                               'regular':{'commission':6,'check':6},
                               'special':{'commissionspecial':0,'checkdeal':0,
-                                         'checkoriginal':0}
+                                         'checkoriginal':0, 'cashrate': 0}
                               }}}
         self.Emps[name] = Employee.Employee(newEmp[name])
 
@@ -100,6 +109,7 @@ class Salon(Bot.Bot):
 
     def exportPayroll(self, sDate, format):
         empdata = {}
+        xldict = dict()
         for name,obj in self.Emps.items():
             printableData = ''
             try:
@@ -108,8 +118,11 @@ class Salon(Bot.Bot):
                 sg.popup_ok('ERROR: Salon.exportPayroll: employee data is empty\n'
                             'Try to calculate payroll first')
             if len(printableData) > 5:
-                empdata[name] = printableData
+                if not obj.janitortype and not obj.owner:
+                    empdata[name] = printableData
                 if format == 'txt':
+                    # make sure path exists
+                    Path(f'../payroll/{self.salonName}/').mkdir(parents=True,exist_ok=True)
                     pfname = f'../payroll/{self.salonName}/{self.salonName[0]}.{sDate.replace("/",".")}.{name}.txt'
                     Path(pfname.replace(f'{self.salonName[0]}.{sDate.replace("/",".")}.{name}.txt','')).mkdir(parents=True,
                                                                                                               exist_ok=True)
@@ -131,42 +144,95 @@ class Salon(Bot.Bot):
                         </style>
                         </head>
                         <pre>
-                        <body>
-            """
+                        <body>"""
             htmlpagebreak = """<div class="pagebreak"></div>"""
             htmlfooter = """
             </body>
             <pre>
             </html>
             """
-            pfname = f'payroll/{sDate.replace("/",".")}.{self.salonName}.html'
+            pfname = f'../payroll/{sDate.replace("/",".")}.{self.salonName}.html'
             with open(pfname, 'w+') as write:
                 write.writelines(htmlheader)
+                write.write('\n')
+                lastValue = list(empdata.values())[-1]
                 for values in empdata.values():
                     write.writelines(values)
-                    write.writelines(htmlpagebreak)
+                    if values != lastValue:
+                        write.writelines(htmlpagebreak)
                 write.writelines(htmlfooter)
             print(f'[Salon.exportPayroll]: {self.salonName} finished exporting {pfname}')
             # self.printHtml(pfname)
 
             # now update yearly excel book for 1099
             # pass path, salon prefix for sheetname, data
-            path = '2023.xlsx'
+            path = f'../payroll/{sDate[-4:]}.xlsx'
             sheet = f'{self.salonName[0].lower()}.salary'
             data = []
             for emp, obj in self.Emps.items():
-                xldict = obj.getXlReport()
-                sdate = datetime.datetime.strptime('sDate', '%m/%d/%Y')
-                edate = sdate + datetime.timedelta(days=6)
-                data.append([sdate, edate, emp.upper(), xldict['check'], xldict['checkdeal'], '', xldict['cash']])
+                if obj.printchecks or obj.cashtype:
+                    xldict = xldict | {emp: {}}
+                    # remove nickname in parentheses
+                    xldict[emp] = obj.getXlReport()
+                    sdate = datetime.datetime.strptime(sDate, '%m/%d/%Y')
+                    edate = sdate + datetime.timedelta(days=6)
+                    eDate = datetime.datetime.strftime(edate, '%m/%d/%Y')
+                    xldict[emp]['name'] = re.search('^[^\(]+', emp).group(0)
+                    xldict[emp]['date'] = eDate
+                    xldict[emp]['memo'] = f'{sDate} - {eDate} PAYROLL'
+                    data.append([sDate, eDate, emp.upper(), xldict[emp]['cash'], xldict[emp]['check'], xldict[emp]['checkdeal']])
             df = pd.DataFrame(data,)
-            reader = pd.read_excel(path,sheet_name=sheet,index_col=False)
+            reader = pd.read_excel(path, sheet_name=sheet, index_col=False)
             startRow = len(reader.index) + 1
-            with pd.ExcelWriter(path,mode='a',engine='openpyxl',
-                                if_sheet_exists='overlay') as writer:
-                df.to_excel(writer,sheet_name='p.salary',
-                            header=False,index=False,startrow=startRow)
+            with pd.ExcelWriter(path, mode='a', engine='openpyxl', if_sheet_exists='overlay') as writer:
+                df.to_excel(writer, sheet_name=sheet, header=False, index=False, startrow=startRow)
 
+        # create check printouts
+        # ----------------------------------------------
+        # first copy template checks from excel sheet and create new sheet
+        # xlHelper preserves column and row sizes which is important
+        # TODO catch error if sheet does not exist create one when opening
+        # sourcepfname = f'../payroll/checksTemplates.xlsx'
+        # sourcesheet = f'{self.salonName[0].lower()}.check'
+        # pfname = f'../payroll/{self.salonName[0].lower()}.checks.xlsx'
+        # targetsheet = f'{sDate[0:5].replace("/", ".")}'
+        # wb_target = openpyxl.Workbook()
+        # target_sheet = wb_target.create_sheet(targetsheet)
+        # wb_source = openpyxl.load_workbook(sourcepfname,data_only=True)
+        # source_sheet = wb_source[sourcesheet]
+        # xlHelper.copy_sheet(source_sheet,target_sheet)
+        #
+        # counter = 0
+        # row = {
+        #         "checkNum": 2,
+        #         "checkDate": 3,
+        #         "name": 5,
+        #         "amtNum": 5,
+        #         "amtWord": 6,
+        #         "memo": 8,
+        #         "micrCheckNum": 10}
+        # nextCheckIndex = 11
+        # nextPageCheckIndex = 23
+        # for emp, values in xldict.items():
+        #     if values['check'] == 0:
+        #         pass
+        #     else:
+        #         target_sheet[f'J{row["checkNum"]}'] = self.startCheckNum
+        #         target_sheet[f'i{row["checkDate"]}'] = datetime.date.today().strftime('%m/%d/%Y')
+        #         target_sheet[f'd{row["name"]}'] = values['name']
+        #         target_sheet[f'i{row["amtNum"]}'] = f'{values["check"]:.2f}'
+        #         target_sheet[f'c{row["amtWord"]}'] = f'{num2words.num2words(values["check"]).replace(",", "").replace(" and", "").upper()}'
+        #         target_sheet[f'd{row["memo"]}'] = values["memo"]
+        #         target_sheet[f'g{row["micrCheckNum"]}'] = self.startCheckNum
+        #         self.startCheckNum += 1
+        #         counter += 1
+        #         if counter % 3 == 0:
+        #             for key in row:
+        #                 row[key] += nextPageCheckIndex
+        #         else:
+        #             for key in row:
+        #                 row[key] += nextCheckIndex
+        # wb_target.save(pfname)
 
 
     def getDataToSave(self):
@@ -178,7 +244,8 @@ class Salon(Bot.Bot):
                 'salesFnames': self.salesFnames,
                 'path': self.path,
                 'employees':emps,
-                'paymentsFnames': self.paymentsFnames
+                'paymentsFnames': self.paymentsFnames,
+                'startchecknum': self.startCheckNum
                 }
 
         return data
@@ -192,7 +259,9 @@ class Salon(Bot.Bot):
     def getEmpStatus(self):
         status = {}
         for name,obj in self.Emps.items():
-            status[name] = obj.getStatus()
+            result = obj.getStatus()
+            if result:
+                status[name] = result
         return status
 
     def getJsonRange(self,sDate,eDate):
@@ -213,22 +282,27 @@ class Salon(Bot.Bot):
         """
         sdate = datetime.datetime.strptime(sDate,'%m/%d/%Y')
         edate = datetime.datetime.strptime(eDate,'%m/%d/%Y')
-
-        if not os.path.isfile(f'{self.path}{self.salonName}Sales{sdate.year}.json'):
-            print(f'[Salon.getJsonRange] {self.salonName} file not found')
-            return False
-
-
         range = []
         if sdate.year != edate.year:
-            range = [sdate.year, edate.year]
+            start = sdate.year
+            while start <= edate.year:
+                range.append(start)
+                start += 1
         else:
             range = [sdate.year]
+
         tmpSales = dict()
         # grab all dates from, maybe both years into tmpSales
         for year in range:
-            with open(f'{self.path}{self.salonName}Sales{year}.json', 'r') as reader:
-                tmpSales = tmpSales | json.load(reader)
+            if not os.path.isfile(f'{self.path}{self.salonName}Sales{year}.json'):
+                print(f'[Salon.getJsonRange] {self.salonName} file not found')
+            else:
+                with open(f'{self.path}{self.salonName}Sales{year}.json', 'r') as reader:
+                    tmpSales = tmpSales | json.load(reader)
+
+        if not tmpSales:
+            # if there is not any file for any years in range
+            return False
 
         keys = [datetime.datetime.strptime(i,'%m/%d/%Y') for i in tmpSales]
         wantedRange = dict()
@@ -283,6 +357,9 @@ class Salon(Bot.Bot):
                 if eName in string.capwords(e):
                     eObj.calculatePayroll(val)
                     payrollPkt[eName] = eObj.getPrintOut()
+            if eObj.janitortype:
+                eObj.calculatePayroll(sales=None)
+                payrollPkt[eObj.name] = eObj.getPrintOut()
         return payrollPkt
 
     def getSalonInfo(self):
@@ -296,10 +373,12 @@ class Salon(Bot.Bot):
             'password': self.zotaPass,
         }
         niceprint = f'path: {self.path},\nsalesFnames: {self.salesFnames}' \
-                    f'\npymentsFnames: {self.paymentsFnames}\nemployees:\n'
+                    f'\npymentsFnames: {self.paymentsFnames}\n' \
+                    f'startingcheckNum: {self.startCheckNum}\n' \
+                    f'employees:\n'
         for names in self.Emps:
             niceprint += f'  {names}\n'
-        return login, niceprint
+        return login, niceprint, self.startCheckNum
 
     def mergeSheetToBook(self,fname,path,book):
         '''
@@ -420,3 +499,8 @@ class Salon(Bot.Bot):
                            key=lambda xa:os.path.getctime(os.path.join(path,xa)))
             os.remove(path + filename)
 
+    def updateSalon(self, salonPkt):
+        self.salonName = salonPkt['sname']
+        self.zotaUname = salonPkt['login']['username']
+        self.zotaPass = salonPkt['login']['password']
+        self.startCheckNum = salonPkt['startchecknum']

@@ -6,12 +6,13 @@ import chromedriver_autoinstaller
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.chrome.service import Service
 import time
+
 import re
 import glob                     # check if file exists with wildcard
 import datetime
 from pathlib import Path
-
 
 # local files
 import helper
@@ -81,7 +82,6 @@ class Bot:
                 print('WARNING: {}s out of 10s - Cannot find link even after refreshing'.format(counter))
                 self.driver.quit()
                 return False
-        time.sleep(3)
         time_counter = 0
         time_to_wait = 8
         downloadedFileName = ''
@@ -139,7 +139,7 @@ class Bot:
                  'directory_upgrade': True,
                  }
         opts.add_experimental_option('prefs',prefs)
-        self.driver = webdriver.Chrome(options=opts)
+        self.driver = webdriver.Chrome(options=opts, service=Service('chromedriver.exe'))
 
         self.driver.get("https://pos2.zota.us/#/login")
         # self.driver.maximize_window()

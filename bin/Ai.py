@@ -2,11 +2,19 @@ import datetime
 import glob
 import json
 import os
-import PySimpleGUI as sg
-
 import re
-import Salon
 import time
+
+import matplotlib
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import (
+    FigureCanvasTkAgg, NavigationToolbar2Tk)
+import PySimpleGUI as sg
+import pandas as pd
+
+import Salon
 
 
 class Ai:
@@ -31,7 +39,6 @@ class Ai:
                         }}
         '''
         self.loadedSettings = dict()
-
         '''
             salons dict:  {'salon name': salon obj
                               'salon name2: salon obj }
@@ -44,10 +51,8 @@ class Ai:
         self.salons[salonPkt['name']] = Salon.Salon(salonPkt)
 
     def exportPayroll(self, sName, sDate, format):
-        if format == 'html':
-            self.salons[sName].exportPayroll(sDate, format)
-        else:
-            self.salons[sName].exportPayroll(sDate,format)
+        self.salons[sName].exportPayroll(sDate, format)
+
 
     def getAllSalonNames(self):
         names = []
@@ -62,16 +67,14 @@ class Ai:
         """
             Gets json with specific dates from salon obj.
         Args:
-            salons: [str] list of strings of salon names
+            salon: [str] list of strings of salon names
             sDate: str
             eDate: str
-
         Returns:
             list with first element indicating how many nestic dict layers and
             dictionary with salon names as keys and values is dictionary
         """
         return [2, {salon: {self.salons[salon].getJsonRange(sDate, eDate)}}]
-
 
     def getJsonLatestDates(self, cmd):
         salon = [s for s in self.salons]
@@ -105,7 +108,6 @@ class Ai:
     def getSalonInfo(self,salonName):
         """
         this will be called by Salon class in order to construct Salon
-
         Returns:
             (list of lists): salon's list of settings
         """
@@ -117,6 +119,167 @@ class Ai:
 
     def getSettings(self):
         return self.loadedSettings
+
+    def graph(self, salon, sDate, eDate, frequency, canvas, fig, ax):
+        frequency = frequency.lower()
+        ax.cla()
+        # t = np.arange(0,3,.01)
+        # fig.add_subplot(111).plot(t,2 * np.sin(2 * np.pi * t))
+        results = {}
+        if salon == 'all':
+            for s, obj in self.salons.items():
+                results[s] = obj.getJsonRange(sDate, eDate)
+        else:
+            results[salon] = self.salons[salon].getJsonRange(sDate, eDate)
+
+        if frequency == 'daily':
+            x = pd.date_range(datetime.datetime.strptime(sDate, '%m/%d/%Y'),
+                              datetime.datetime.strptime(eDate,'%m/%d/%Y'),
+                              freq='D')
+        elif frequency == 'weekly':
+            x = pd.date_range(datetime.datetime.strptime(sDate, '%m/%d/%Y'),
+                              datetime.datetime.strptime(eDate,'%m/%d/%Y'),
+                              freq='W')
+        elif frequency == 'monthly':
+            x = pd.date_range(datetime.datetime.strptime(sDate, '%m/%d/%Y'),
+                              datetime.datetime.strptime(eDate,'%m/%d/%Y'),
+                              freq='M')
+        elif frequency == 'yearly':
+            x = pd.date_range(datetime.datetime.strptime(sDate, '%m/%d/%Y'),
+                              datetime.datetime.strptime(eDate,'%m/%d/%Y'),
+                              freq='Y')
+        dateRange = pd.date_range(datetime.datetime.strptime(sDate, '%m/%d/%Y'),
+                              datetime.datetime.strptime(eDate,'%m/%d/%Y'),
+                              freq='D')
+        xIndex = 0
+        y = {}
+        for sname, items in results.items():
+            y[sname] = []
+            xIndex = 0
+            subtotal = 0
+            for day in dateRange:
+                if not items:
+                    y[sname].append(0)
+                    break
+                else:
+                    if day in items.keys():
+                        for totals in items[day].values():
+                            subtotal += totals[0]
+                if len(x) == xIndex or day == dateRange[-1]:
+                    y[sname].append(subtotal)
+                    ax.plot(x, y[sname], label=sname, marker='o')
+                    # ax.annotate(f'{max(y[sname])}', xy=(y[sname].index(max(y[sname])), max(y[sname])), xycoords='data', textcoords='offset points', xytext=(1,1))
+                    a = x[y[sname].index(max(y[sname]))]
+                    b = max(y[sname])
+                    ax.annotate(f'{a.strftime("%m/%d")}: {max(y[sname])}', xy=(a, b), textcoords='offset points',
+                                xytext=(1, 1))
+                if day >= x[xIndex]:
+                    y[sname].append(subtotal)
+                    subtotal = 0
+                    xIndex += 1
+
+            if subtotal > 0 and items:
+                if subtotal != 0:
+                    y[sname].append(subtotal)
+                subtotal = 0
+                xIndex = 0
+            while len(x) > len(y[sname]) and items:
+                y[sname].append(0)
+
+        cdf = matplotlib.dates.ConciseDateFormatter(ax.xaxis.get_major_locator())
+        ax.xaxis.set_major_formatter(cdf)
+        ax.set_xlabel('Days')
+        ax.set_ylabel('Income')
+        ax.set_title(f'{frequency} from {sDate} to {eDate}')
+        ax.legend()
+        fig.canvas.draw()
+        return
+
+    def graphCompare(self, salon, sDate, eDate, frequency, canvas, fig, ax):
+        frequency = frequency.lower()
+        ax.cla()
+        # t = np.arange(0,3,.01)
+        # fig.add_subplot(111).plot(t,2 * np.sin(2 * np.pi * t))
+        results = {salon: self.salons[salon].getJsonRange(sDate, eDate)}
+
+        if frequency == 'daily':
+            interval = pd.date_range(datetime.datetime.strptime(sDate, '%m/%d/%Y'),
+                              datetime.datetime.strptime(eDate,'%m/%d/%Y'),
+                              freq='D')
+        elif frequency == 'weekly':
+            interval = pd.date_range(datetime.datetime.strptime(sDate, '%m/%d/%Y'),
+                                     datetime.datetime.strptime(eDate, '%m/%d/%Y'),
+                              # datetime.datetime.strptime(eDate,'%m/%d/%Y') + relativedelta(weeks=1),
+                              freq='W')
+        elif frequency == 'monthly':
+            interval = pd.date_range(datetime.datetime.strptime(sDate, '%m/%d/%Y'),
+                                     datetime.datetime.strptime(eDate, '%m/%d/%Y'),
+                              # datetime.datetime.strptime(eDate,'%m/%d/%Y') + relativedelta(months=1),
+                              freq='M')
+        elif frequency == 'yearly':
+            interval = pd.date_range(datetime.datetime.strptime(sDate, '%m/%d/%Y'),
+                                     datetime.datetime.strptime(eDate, '%m/%d/%Y'),
+                              # datetime.datetime.strptime(eDate,'%m/%d/%Y') + relativedelta(years=1),
+                              freq='Y')
+        dateRange = pd.date_range(datetime.datetime.strptime(sDate, '%m/%d/%Y'),
+                              datetime.datetime.strptime(eDate,'%m/%d/%Y'),
+                              freq='D')
+        xIndex = 0
+        subtotal = 0
+        yearStart = interval[0].year
+        leapYear = False
+        for sname, items in results.items():
+            y = []
+            x = []
+            xIndex = 0
+            for day in dateRange:
+                currentYear = day.year
+                if (currentYear % 4 == 0 and currentYear % 100 != 0) or (currentYear % 400 == 0):
+                    leapYear = True
+                else:
+                    leapYear = False
+
+                if not items:
+                    y.append(0)
+                    break
+                else:
+                    if day in items.keys():
+                        for totals in items[day].values():
+                            subtotal += totals[0]
+
+                if currentYear > yearStart or day == dateRange[-1] or len(interval) == xIndex:
+                    if day == dateRange[-1]:
+                        y.append(subtotal)
+                        x.append(day.strftime('%m/%d'))
+                    ax.plot(x, y, label=yearStart, marker='o')
+
+                    yearStart = currentYear
+                    a = x[y.index(max(y))]
+                    b = max(y)
+                    ax.annotate(f'{a}: {b}', xy=(a,b), textcoords='offset points', xytext=(1,1))
+                    x.clear()
+                    y.clear()
+                    subtotal = 0
+                    if len(interval) == xIndex:
+                        break
+
+                if day >= interval[xIndex] and day != dateRange[-1]:
+                    y.append(subtotal)
+                    x.append(day.strftime('%m/%d'))
+                    subtotal = 0
+                    xIndex += 1
+
+                if day.strftime('%m/%d') == '02/28' and not leapYear:
+                    y.append(0)
+                    x.append(day.strftime('02/29'))
+        # cdf = matplotlib.dates.ConciseDateFormatter(ax.xaxis.get_major_locator())
+        # ax.xaxis.set_major_formatter(cdf)
+        ax.set_xlabel('Days')
+        ax.set_ylabel('Income')
+        ax.set_title(f'{frequency} from {sDate} to {eDate}')
+        ax.legend()
+        fig.canvas.draw()
+        return
 
     def importJson(self,sname,pfname):
         self.salons[sname].readSalesXltoJson(pfname)
@@ -154,7 +317,7 @@ class Ai:
     def populateEmpList(self,salon):
         """
         Args:
-            salons: [str]
+            salon: [str]
         Returns:
             list of employee dictionaries
         """
@@ -202,6 +365,16 @@ class Ai:
             # '|' means combine both dict but crops empty values, best is newDict = {**dict1, **dict2}
             json.dump(data,writer,indent=4,sort_keys=True)
 
+    def updateSalon(self, salonPkt):
+        """
+            This function is mainly to update salon name, login info, and starting check number
+        Args:
+            salonPkt: dictionary of items mentioned above
+        Returns:
+            N/A
+        """
+        self.salons[salonPkt['sname']].updateSalon(salonPkt)
+
     def webscrapeSales(self,salon,sDate,eDate):
         """
         this function will grab each salon object required from
@@ -215,6 +388,7 @@ class Ai:
         salonObj = self.salons[salon]
         # salon is using inherited method dlEmpSales from WebBot
         try:
+
             print(f'[Ai.webscrapeSales]: beginning to retrieve sales for {salon} date range {sDate} - {eDate}')
             path,fname = salonObj.dlEmpSales(salon,salonObj.zotaUname,salonObj.zotaPass,
                                              startDate=sDate,endDate=eDate)
