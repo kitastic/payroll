@@ -133,12 +133,11 @@ class View:
                     ])
                 ]
             ],expand_x=True, vertical_alignment='bottom', element_justification='c')]
-        ], expand_y=True, size=(250))
+        ], expand_y=True, size=(300))
         sTab = [
-            [sg.Image(filename='../images/shop-94.png',pad=(2,2),expand_x=True)],
             [sTabLeftFrame,
              sg.Frame('', [
-                 [sg.Image(filename='../images/settings-40.png', expand_x=True)],
+                 [sg.Image(filename='../images/shop-40.png', expand_x=True)],
                  [sg.Multiline('', key='-sTab_in_display-', horizontal_scroll=True, autoscroll=True, auto_refresh=True, expand_x=True, expand_y=True)]], expand_x=True, expand_y=True)]
         ]
 
@@ -166,7 +165,7 @@ class View:
                           sg.T('Check Deal:',justification='l',expand_x=True),
                           sg.Combo((0,5,6,7),default_value=0,key='-eTab_c_checkdeal-',size=(5,1),disabled=True),
                           ],
-                         [sg.T('Type'), sg.OptionMenu(values=['Cash', 'Checkdeal', 'Janitor'], key='-eTab_om_type-')],
+                         [sg.T('Type'), sg.OptionMenu(values=['Cash', 'Checkdeal', 'Manager', 'Janitor'], key='-eTab_om_type-')],
                          [sg.Checkbox('Print Checks', default=True, key='-eTab_cb_printchecks-'),
                           sg.Checkbox('Owner', default=False, key='-eTab_cb_owner-')],
                          ]
@@ -216,14 +215,6 @@ class View:
         # ------------------------------------------------------------------------------------------
         # main tab
         # ------------------------------------------------------------------------------------------
-        mTab_r1c1 = sg.Frame('Date Range',
-                             [[sg.Button('',image_filename='../images/calendar20.png',button_color='#40444b',
-                                         key='-mTab_cal_sDate-'),
-                               sg.Input('Enter Start Date',key='-mTab_in_sDate-',size=15)],
-                              [sg.Button('',image_filename='../images/calendar20.png',button_color='#40444b',
-                                         key='-mTab_cal_eDate-'),
-                               sg.Input('Enter End Date',key='-mTab_in_eDate-',size=15),],
-                              ], size=(150,90))
         mTab_r1c2 = sg.Frame('Salon',[
                         [sg.Image('../images/shop-30.png',expand_x=True)],
                         [sg.Combo(values=(self.salonNames), size=(12), key='-mTab_c_salon-')],
@@ -243,7 +234,7 @@ class View:
             [sg.T('Status')],[sg.Button(image_filename='../images/in-progress-45.png', key='-mTab_btn_status-',  tooltip='Current week income status for employees')]
         ])
 
-        mainTab = [[mTab_r1c1, mTab_r1c3, mTab_r1c4, mTab_r1c5, mTab_r1c6, mTab_r1c7],
+        mainTab = [[mTab_r1c3, mTab_r1c4, mTab_r1c5, mTab_r1c6, mTab_r1c7],
                    [sg.Frame('', [[sg.Image('../images/shop-30.png',expand_x=True)],
                         [sg.Combo(values=(self.salonNames), size=(12), key='-mTab_c_salon-', enable_events=True),
                          sg.Button(image_filename='../images/refresh24.png', key='-mTab_btn_load-')],
@@ -260,8 +251,17 @@ class View:
         bm1.insert(0, 'a')
         bm2 = [i for i in self.salonNames]
         bm2.insert(0, 'All')
+        menuIconDates = sg.Frame('Date Range',
+                             [[sg.Button('', image_filename='../images/calendar20.png', button_color='#40444b',
+                                         key='-main_cal_sDate-'),
+                               sg.Input('Enter Start Date', key='-main_in_sDate-', size=15)],
+                              [sg.Button('', image_filename='../images/calendar20.png', button_color='#40444b',
+                                         key='-main_cal_eDate-'),
+                               sg.Input('Enter End Date', key='-main_in_eDate-', size=15), ],
+                              ], size=(150, 75))
         self.layout = [[sg.Menubar(menu_def)],
                        [sg.Column([[sg.Image('../images/kp_w40.png', expand_x=True)]]),
+                        menuIconDates,
                         sg.Column([[sg.Button(image_filename='../images/save-50.png',button_color='#40444b', expand_x=True,key='-Save-')]]),
                         sg.Column([[sg.ButtonMenu('', [bm1, bm2], tooltip='Update sales database',
                                                   image_filename='../images/cloud-sync-50.png', key='updateJson', button_color=self.btnColor),
@@ -322,7 +322,7 @@ class View:
             mBar.append(s + '::printpayroll')
             mBar.append(s + '::printpayrollskipwebscrape')
 
-        mTab = ['-mTab_cal_sDate-', '-mTab_in_sDate-', '-mTab_cal_eDate-', '-mTab_in_eDate-', '-mTab_c_salon-',
+        mTab = ['-main_cal_sDate-', '-main_in_sDate-', '-main_cal_eDate-', '-main_in_eDate-', '-mTab_c_salon-',
                 '-mTab_btn_load-', '-mTab_cb_thisweek-', '-mTab_btn_sales-',
                 '-mTab_btn_payroll-', '-mTab_c_salon-', '-mTab_btn_exporttxt-', '-mTab_btn_status-', '-mTab_lb-']
 
@@ -499,10 +499,10 @@ class View:
 
     def listenMTab(self):
         performedPayroll = False
-        sDate = self.values['-mTab_in_sDate-']
-        eDate = self.values['-mTab_in_eDate-']
-        self.verifyDates(sDate,eDate)
-        if self.event == '-mTab_cal_sDate-':
+        sDate = self.values['-main_in_sDate-']
+        eDate = self.values['-main_in_eDate-']
+        self.verifyDates(sDate, eDate)
+        if self.event == '-main_cal_sDate-':
             try:
                 sDate = sg.popup_get_date(title='Choose start date')
                 sdate = '{}/{}/{}'.format(sDate[0],sDate[1],sDate[2])
@@ -510,17 +510,17 @@ class View:
                 # time delta is smarter and know when to increment month
                 edate = datetime.datetime.strptime(sdate, '%m/%d/%Y') + datetime.timedelta(6)
                 e = datetime.datetime.strftime(edate, '%m/%d/%Y')
-                self.gui['-mTab_in_sDate-'].update(sdate)
-                self.gui['-mTab_in_eDate-'].update(e)
+                self.gui['-main_in_sDate-'].update(sdate)
+                self.gui['-main_in_eDate-'].update(e)
             except Exception:
                 self.gui['-notice-'].update('ERROR:(View.listenMTab) failed to get valid date')
 
-        elif self.event == '-mTab_cal_eDate-':
+        elif self.event == '-main_cal_eDate-':
             eDate = sg.popup_get_date(title='Choose start date')
             try:
                 edate = '{}/{}/{}'.format(eDate[0],eDate[1],eDate[2])
                 if edate:
-                    self.gui['-mTab_in_eDate-'].update(edate)
+                    self.gui['-main_in_eDate-'].update(edate)
             except TypeError:
                 pass
 
@@ -561,8 +561,8 @@ class View:
             elif self.event == '-mTab_btn_status-':
                 self.mTab_empStatus = self.ai.getEmpStatus(sname)
                 tmp = ''
-                for name,bundle in self.mTab_empStatus.items():
-                    tmp += '{}:\n {}\n'.format(name,bundle)
+                for name, bundle in self.mTab_empStatus.items():
+                    tmp += '{}:\n {}\n'.format(name, bundle)
                 self.gui['-mTab_in_display-'].update(tmp)
 
         elif self.event == '-mTab_lb-':
@@ -606,7 +606,7 @@ class View:
                 salonName = self.values['-eTab_in_salon-']      # specified when creating employee, not from listbox
                 self.ai.modEmp('save', salonName, employee)
             self.refreshETabList(salonName)
-            self.gui['-notice-'].update('Employee saved')
+            self.gui['-notice-'].update(f'Employee saved: {employee} in {salonName}')
 
         elif self.event == '-eTab_btn_update-':
             employee = self.parseEmp()
@@ -614,7 +614,8 @@ class View:
                 salonName = self.values['-eTab_in_salon-']
                 self.ai.modEmp('update', salonName, employee)
                 self.refreshETabList(salonName)
-                self.gui['-notice-'].update(f'Employee updated')
+
+                self.gui['-notice-'].update(f'Employee updated: {employee} in {salonName}')
 
         elif self.event == '-eTab_btn_remove-':
             try:
@@ -626,7 +627,7 @@ class View:
                     else:
                         self.ai.modEmp('remove',self.values['-eTab_om_salon-'].lower(),eName)
                     self.refreshETabList(salonName)
-                    self.gui['-notice-'].update(f'Employee removed')
+                    self.gui['-notice-'].update(f'Employee removed: {eName} in {salonName}')
             except Exception:
                 self.gui['-notice-'].update('ERROR: View.listenETab cannot remove employee > no name')
 
@@ -833,12 +834,12 @@ class View:
     def getDateRange(self):
         layout = [
             [sg.Frame('Date Range',
-                     [[sg.Input('Enter Start Date',key='-mTab_in_sDate-',size=15),
+                     [[sg.Input('Enter Start Date',key='-main_in_sDate-',size=15),
                        sg.Button('',image_filename='../images/calendar20.png',button_color='#40444b',
-                                 key='-mTab_cal_sDate-')],
-                      [sg.Input('Enter End Date',key='-mTab_in_eDate-',size=15),
+                                 key='-main_cal_sDate-')],
+                      [sg.Input('Enter End Date',key='-main_in_eDate-',size=15),
                        sg.Button('',image_filename='../images/calendar20.png',button_color='#40444b',
-                                 key='-mTab_cal_eDate-')]
+                                 key='-main_cal_eDate-')]
                       ],size=(150,90)),],
         ]
 
@@ -1036,8 +1037,8 @@ class View:
             endday = startday + datetime.timedelta(6)
             self.startDate = startday.strftime('%m/%d/%Y')
             self.endDate = endday.strftime('%m/%d/%Y')
-            self.gui['-mTab_in_sDate-'].update(self.startDate)
-            self.gui['-mTab_in_eDate-'].update(self.endDate)
+            self.gui['-main_in_sDate-'].update(self.startDate)
+            self.gui['-main_in_eDate-'].update(self.endDate)
             self.dates = True
 
         else:
@@ -1051,8 +1052,8 @@ class View:
                     return
             else:
                 try:
-                    sd = datetime.datetime.strptime(self.values['-mTab_in_sDate-'],'%m/%d/%Y')
-                    ed = datetime.datetime.strptime(self.values['-mTab_in_eDate-'],'%m/%d/%Y')
+                    sd = datetime.datetime.strptime(self.values['-main_in_sDate-'],'%m/%d/%Y')
+                    ed = datetime.datetime.strptime(self.values['-main_in_eDate-'],'%m/%d/%Y')
                 except Exception:
                     return
             if sd <= ed:

@@ -3,7 +3,7 @@ import openpyxl
 import os.path
 from selenium import webdriver
 # no longer need to download browser drivers
-import chromedriver_autoinstaller
+import chromedriver_autoinstaller_fix
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 import time
@@ -25,7 +25,7 @@ class WebBot:
         self.activeEmp = bundle[2]
         self.workBook = bundle[3]
         # start web auto
-        chromedriver_autoinstaller.install()
+        chromedriver_autoinstaller_fix.install()
         opts = webdriver.ChromeOptions()
 
 

@@ -264,45 +264,58 @@ def exportToExcel(outputExcel, dfBank):
 
 def main():
     window = makeWindow(sg.theme())
+    bankName = ''
+    book = ''
+    transactions = ''
+    loadedBank = ''
     while True:
         event, values = window.read()
+
         if event not in (sg.TIMEOUT_EVENT, sg.WIN_CLOSED):
             print('============ Event = ', event, ' ==============')
             print('-------- Values Dictionary (key=value) --------')
             for key in values:
                 print(key, ' = ', values[key])
-        if event == '-file-':
-            filepath = sg.popup_get_file('Choose file')
+        if event == '-bank-':
+            continue
+        elif event == '-book-':
+            bankInitial = ''
+            if values['-exchange-']:
+                bankInitial = 't'
+            else:
+                bankInitial = 'y'
+            loadedBank = pd.read_excel(book, )
         else:
             window.close()
             exit(0)
 
-if __name__ == '__main__':
-    sg.theme('dark grey 14')
-    main()
+# if __name__ == '__main__':
+    # sg.theme('dark grey 14')
+    # main()
 
 # bank statement
-bank = "thrivegen11292023.csv"
+bank = "Chase7668_Activity_20240324.csv"
 # excel bookkeeper
-book = "bookThrivegen2023.xlsx"
+book = "book2024.xlsx"
 
 # load bank sheet
-loadedBank = pd.read_excel(book, sheet_name="t.bank", )
+loadedBank = pd.read_excel(book, sheet_name="y.bank", )
 dfBank = loadedBank.copy()
 transactions = pd.read_csv(bank, index_col=False)
 
 bank = {'chase': False, 'exchange': False}
 bankNum = input("press 1 for chase or 2 for exchange bank\n")
 statement = False
-if bankNum == 1:
+if bankNum == '1':
     bank['chase'] = True
 else:
     bank['exchange'] = True
     ask = input('press 1 for statement or 2 for downloaded transactions:')
     statement = True if ask == '1' else False
 
+result = ''
 if bank['chase']:
-    chaseParseTransactions(transactions)
+    result = chaseParseTransactions(transactions, dfBank)
 else:
     if statement:
         exchangeParseStatements()

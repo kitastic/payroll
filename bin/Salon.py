@@ -184,8 +184,12 @@ class Salon(Bot.Bot):
             df = pd.DataFrame(data,)
             reader = pd.read_excel(path, sheet_name=sheet, index_col=False)
             startRow = len(reader.index) + 1
-            with pd.ExcelWriter(path, mode='a', engine='openpyxl', if_sheet_exists='overlay') as writer:
-                df.to_excel(writer, sheet_name=sheet, header=False, index=False, startrow=startRow)
+            try:
+                with pd.ExcelWriter(path, mode='a', engine='openpyxl', if_sheet_exists='overlay') as writer:
+                    df.to_excel(writer, sheet_name=sheet, header=False, index=False, startrow=startRow)
+            except Exception as e:
+                print(f'[Salon.exportPayroll] error: {e}')
+
 
         # create check printouts
         # ----------------------------------------------

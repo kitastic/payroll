@@ -2,7 +2,7 @@ import os.path
 import PySimpleGUI as sg
 from selenium import webdriver
 # no longer need to download browser drivers
-import chromedriver_autoinstaller
+import chromedriver_autoinstaller_fix
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
@@ -132,7 +132,7 @@ class Bot:
         Returns:
             None
         """
-        chromedriver_autoinstaller.install()
+        chromedriver_autoinstaller_fix.install()
         opts = webdriver.ChromeOptions()
         # dlDir = "D:\\pradagy\\projects\\payrollAutomation\\tmp\\"
         prefs = {'download.default_directory': dlDir,
@@ -155,7 +155,7 @@ class Bot:
         helper.waitLoadingPresence('avatar', 10, self.driver)
 
     def printHtml(self, pfname):
-        chromedriver_autoinstaller.install()
+        chromedriver_autoinstaller_fix.install()
         opts = webdriver.ChromeOptions()
         # dlDir = "D:\\pradagy\\projects\\payrollAutomation\\tmp\\"
         prefs = {

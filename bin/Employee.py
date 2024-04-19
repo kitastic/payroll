@@ -31,6 +31,10 @@ class Employee:
         self.owner = data['paygrade']['owner']
         self.regtype = data['paygrade']['regType']
         self.commission = data['paygrade']['regular']['commission']
+        # NEED TO catch and fix sometimes converted to float sometimes remain integer
+        # difference mainly when manually entering or imported from zota?
+        if self.commission > 1:
+            self.commission = self.commission / 10
         self.check = data['paygrade']['regular']['check']
         self.commissionspecial = data['paygrade']['special']['commissionspecial']
         self.checkdeal = data['paygrade']['special']['checkdeal']
@@ -41,7 +45,7 @@ class Employee:
         self.sales = {}
         self.sDate = ''         # m.d.y for saving text purpose
         self.payrollSummary = dict()
-        self.xlreport= {'check': 0, 'checkdeal': 0, 'cash': 0}
+        self.xlreport = {'check': 0, 'checkdeal': 0, 'cash': 0}
 
         self.payrollPrint = ''
 
@@ -58,43 +62,65 @@ class Employee:
             self.sales = sales.copy()
             self.genericCalculate()
 
-
     def genericCalculate(self):
-        tips,commissionSales,totalSales,cleaningFees,daysWorked = [0 for i in range(1,6)]
-        for days,amt in self.sales.items():
+        tips, commissionSales, totalSales, cleaningFees, daysWorked = [0 for i in range(1, 6)]
+        if 'tram' in self.name.lower():
+            pass
+
+        for days, amt in self.sales.items():
             tips += amt[2]
-            commissionSales += amt[1]
+            if self.regtype:
+                commissionSales += (amt[0] * self.commission)
+            else:
+                commissionSales += (amt[0] * self.commissionspecial / 10)
             totalSales += amt[0]
             if amt[0] > 0:
                 daysWorked += 1
 
+        basePayPerDay, basePayPerRange, basePayPerRange, basePayCheck, basePayCash = [0 for i in range(1, 6)]
         # self.commission is an integer 1-10 convert it to decimal percent
-        check = (commissionSales * (self.check / 10))
-        cash = commissionSales * ((10 - self.check) / 10)
-        # check if made enough if worked 6 days
+        if self.regtype:
+            check = (commissionSales * (self.check / 10))
+            cash = commissionSales * ((10 - self.check) / 10)
+        else:
+            check = (commissionSales * self.checkoriginal / 10)
+            cash = commissionSales * ((10 - self.checkoriginal) / 10)
+
+        # this is to keep track daily performance if metgoal
         basePayPerDay = self.basePay / 6
         basePayPerRange = basePayPerDay * daysWorked
-        basePayCheck = (basePayPerRange * (self.check / 10))
-        basePayCash = basePayPerRange * ((10 - self.check) / 10)
 
-        # if daysWorked == 7:
-        #     basePayPerRange = basePayPerRange + 100
-        #     basePayCheck = (basePayPerRange * (self.check / 10))
-        #     basePayCash = basePayPerRange * ((10 - self.check) / 10)
+        if daysWorked == 6:
+            if self.regtype:
+                basePayCheck = (self.basePay * (self.check / 10))
+                basePayCash = self.basePay * ((10 - self.check) / 10)
+            else:
+                check = (commissionSales * self.checkoriginal / 10)
+                cash = commissionSales * ((10 - self.checkoriginal) / 10)
+        elif daysWorked == 7:
+            if 'tram' in self.name.lower():
+                basePayPerRange = self.basePay + 150
+            else:
+                basePayPerRange = self.basePay + 100
+
+
+            if self.regtype:
+                basePayCheck = (basePayPerRange * (self.check / 10))
+                basePayCash = basePayPerRange * ((10 - self.check) / 10)
+            else:
+                basePayCheck = (basePayPerRange * (self.checkoriginal / 10))
+                basePayCash = basePayPerRange * ((10 - self.checkoriginal) / 10)
 
         metgoal = False
-        if daysWorked >= 6 and self.salonName != 'posh':
-            if (commissionSales / daysWorked) >= basePayPerDay:
-                metgoal = True
-        else:
-            if commissionSales > basePayPerRange:
-                metgoal = True
+        if commissionSales > basePayPerRange:
+            metgoal = True
 
         if self.rent >= 0:
             fees = (daysWorked * self.fees) + self.rent
         else:
             fees = daysWorked * self.fees
 
+        # NEED TO add feature to calculate holiday guarantees
         self.payrollSummary = {
             'totalsale':totalSales,
             'commission':commissionSales,
@@ -105,9 +131,11 @@ class Employee:
             'tips':tips,
             'fees':fees,
             'daysworked': daysWorked,
+            'guarantee': False,
             'metGoal': metgoal,
         }
 
+        # this part is the text of the daily summaries based off of regular ticket printout
         output = f'{"  "+string.capwords(self.salonName)+"  ":=^40}\n'
         output += f'{"Name":<10}{" ":10}{self.name:>20}\n'
         output += f'{" Summary ":-^40}\n'
@@ -118,15 +146,15 @@ class Employee:
         output += f'{"Total Pay":<10}{" ":20}{commissionSales + tips:>10.2f}\n'
         output += f'{" Daily ":-^40}\n'
         output += f'{"Day":<10}{"Total":>10}{"Comm":>10}{"Tips":>10}\n'
-        for day,amt in self.sales.items():
+        for day, amt in self.sales.items():
             d = datetime.datetime.strftime(day,'%m/%d:%a')
             output += f'{d:<10}{amt[0]:>10.2f}{amt[1]:>10.2f}{amt[2]:>10.2f}\n'
         output += f'{" ":12}{"-":->8}{" ":2}{"-":->8}{" ":2}{"-":->8}\n'
         output += f'{" ":10}{totalSales:>10.2f}{commissionSales:>10.2f}{tips:>10.2f}\n'
         output += f'{"=":=^40}\n'
         self.payrollPrint = output
-        if self.regtype:
-            self.regTypeSummaryAddOn()
+
+        self.regTypeSummaryAddOn()
 
     def regTypeSummaryAddOn(self):
         """
@@ -137,8 +165,14 @@ class Employee:
         Returns:
             None
         """
-        check = self.payrollSummary['check'] if self.payrollSummary['metGoal'] else self.payrollSummary['basepaycheck']
-        cash = self.payrollSummary['cash'] if self.payrollSummary['metGoal'] else self.payrollSummary['basepaycash']
+
+        if self.payrollSummary['daysworked'] in [6,7]:
+            check = self.payrollSummary['check'] if self.payrollSummary['metGoal'] else self.payrollSummary['basepaycheck']
+            cash = self.payrollSummary['cash'] if self.payrollSummary['metGoal'] else self.payrollSummary['basepaycash']
+        else:
+            check = self.payrollSummary['check']
+            cash = self.payrollSummary['cash']
+
         if self.rent < 0:
             self.xlreport['check'] = math.ceil(check + self.payrollSummary["tips"] - self.rent)
         else:
@@ -154,7 +188,7 @@ class Employee:
             output += f'{check:<10.2f} + {self.payrollSummary["tips"]:<8.2f} = ' \
                       f'${math.ceil(check + self.payrollSummary["tips"]):<10}\n'
         output += f'{"Tien Mat":<10} - {"Le Phi":<8}\n'
-        output += f'{cash:<10.2f} - {self.payrollSummary["fees"]:<8.2f} = ' \
+        output += f'{cash:<8.2f} - {self.payrollSummary["fees"]:<6.2f} = ' \
                   f'${math.ceil(cash - self.payrollSummary["fees"]):<10}\n\n'
         self.payrollPrint += output
 
@@ -268,8 +302,8 @@ class EmployeeSpecial(Employee):
         # add additional info to payroll for special case
         checkdeal = self.payrollSummaryEtc['checkdeal'] if self.payrollSummaryEtc['metGoal'] else self.payrollSummaryEtc['basepaycheckdeal']
         cashdeal = self.payrollSummaryEtc['cashdeal'] if self.payrollSummaryEtc['metGoal'] else self.payrollSummaryEtc['basepaycashdeal']
-        self.xlreport['check'] = math.ceil(checkdeal + self.payrollSummary["tips"])
-        self.xlreport['checkdeal'] = math.ceil(check + self.payrollSummary["tips"])
+        self.xlreport['checkdeal'] = math.ceil(checkdeal + self.payrollSummary["tips"])
+        self.xlreport['check'] = math.ceil(check + self.payrollSummary["tips"])
         self.xlreport['cash'] = math.ceil(cashdeal - self.payrollSummary["fees"])
         output += f'{"*":*^40}\n'
         output += f'{"Check":<10} + {"Tip"}\n'
@@ -293,7 +327,7 @@ class EmployeeCash(Employee):
         # self.commission is an integer 1-10 convert it to decimal percent
         '''
             the next three lines are what makes the difference because check is 
-            deducted 17% and converted to cash 
+            deducted 15% and converted to cash 
         '''
         check = self.payrollSummary['commission'] * (self.checkoriginal / 10)
         cash = self.payrollSummary['commission'] * ((10 - self.checkoriginal) / 10)
@@ -311,22 +345,30 @@ class EmployeeCash(Employee):
             'metGoal': True if cash > basePayCash else False
         }
 
-        # add additional info to payroll for special case
         cash = self.payrollSummaryEtc['cash'] if self.payrollSummaryEtc['metGoal'] else self.payrollSummaryEtc['basepaycash']
         check = self.payrollSummaryEtc['check'] if self.payrollSummaryEtc['metGoal'] else self.payrollSummaryEtc['basepaycheck']
-        cashdeal = float(check + self.payrollSummary['tips']) *  self.payrollSummaryEtc['cashrate']
-        self.xlreport['cash'] = math.ceil(cash + cashdeal - self.payrollSummary["fees"])
-        output = f'{"Check":<10} + {"Tip"}\n'
-        output += f'{check:<10.2f} + {self.payrollSummary["tips"]:<8.2f} = ' \
-                  f'${math.ceil(check + self.payrollSummary["tips"]):<10}\n'
-        output += f'{"Tien Mat":<10} - {"Le Phi":<8}\n'
-        output += f'{cash:<10.2f} - {self.payrollSummary["fees"]:<8.2f} = ' \
-                  f'${math.ceil(cash - self.payrollSummary["fees"]):<10}\n\n'
 
-        output += f'{"*":*^40}\n'
+        if self.payrollSummary['daysworked'] in [6,7]:
+            check = self.payrollSummary['check'] if self.payrollSummary['metGoal'] else self.payrollSummary['basepaycheck']
+            cash = self.payrollSummary['cash'] if self.payrollSummary['metGoal'] else self.payrollSummary['basepaycash']
+        else:
+            check = self.payrollSummary['check']
+            cash = self.payrollSummary['cash']
+
+        cashdeal = float(check + self.payrollSummary['tips']) *  self.payrollSummaryEtc['cashrate']
+        # add additional info to payroll for special case
+        # self.xlreport['cash'] = math.ceil(cash + cashdeal - self.payrollSummary["fees"])
+        # output = f'{"Check":<10} + {"Tip"}\n'
+        # output += f'{check:<10.2f} + {self.payrollSummary["tips"]:<8.2f} = ' \
+        #           f'${math.ceil(check + self.payrollSummary["tips"]):<10}\n'
+        # output += f'{"Tien Mat":<10} - {"Le Phi":<8}\n'
+        # output += f'{cash:<10.2f} - {self.payrollSummary["fees"]:<8.2f} = ' \
+        #           f'${math.ceil(cash - self.payrollSummary["fees"]):<10}\n\n'
+
+        output = f'{"*":*^40}\n'
         output += f'{"Check Qua Tien Mat":<30}:{cashdeal:>10.2f}\n'
         output += f'{"Tien Mat":<10} - {"Le Phi":<8}\n'
-        output += f'{cash:<8.2f} - {self.payrollSummary["fees"]:<6} = ' \
+        output += f'{cash:<10.2f} - {self.payrollSummary["fees"]:<8} = ' \
                              f'{cash - self.payrollSummary["fees"]:>8.2f}\n'
         subTotal = cash + cashdeal - self.payrollSummary["fees"]
         output += f'{"Ca hai cong loi:":<30}{math.ceil(subTotal):>10}\n\n'
