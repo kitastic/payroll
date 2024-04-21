@@ -296,7 +296,7 @@ class Ai:
             with open(pfname, 'r') as reader:
                 self.loadedSettings = json.load(reader)
         else:
-            with open('../db/master.json', 'r') as reader:
+            with open('../db/master.json', 'r', encoding='utf-8') as reader:
                 self.loadedSettings = json.load(reader)
         for name in self.loadedSettings.keys():  # dict keys are iterable BUT NOT subscriptable ie [0]
             self.salons[name] = Salon.Salon(self.loadedSettings[name])  # create salon objects

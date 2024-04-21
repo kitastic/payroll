@@ -10,13 +10,13 @@ class Employee:
         Args:
             data layout: {'active':True,
                       'id': idNum, 'name': nameCapitalized, 'salonName':salon, 'pay':pay,
-                      'fees':fees, 'feeDays':
-                      'rent':rent, 'printchecks': printchecks,
-                      'paygrade':{'regType':regType, 'cashType': cashtype,
-                                  'janitorType': janitortype, 'checkdealType': checkdealtype, 'owner': owner,
-                                  'regular':{'commission': commission, 'check': check},
-                                  'special':{'commissionspecial': comspec, 'checkdeal': checkdeal,
-                                             'checkoriginal': checkoriginal, 'cashrate': cashrate}
+                      'fees':fees, 'rent':rent,
+                      'pay6': pay6, 'pay7': pay7
+                      'printchecks': printchecks,
+                      'type':{'role': role,
+                              'regular':{'commission': commission, 'check': check},
+                              'special':{'commissionspecial': comspec, 'checkdeal': checkdeal,
+                                         'checkoriginal': checkoriginal, 'cashrate': cashrate}
                       }}}
         """
         self.id = data['id']
@@ -26,7 +26,6 @@ class Employee:
         self.pay7 = data['pay7']
         self.rent = data['rent']
         self.fees = data['fees']
-        self.feeDays = data['feeDays']
         self.active = data['active']
         self.role = data['type']['role']
         self.commission = float(data['type']['regular']['commission'])
@@ -34,8 +33,8 @@ class Employee:
         self.commissionspecial = float(data['type']['special']['commissionspecial'])
         self.checkdeal = float(data['type']['special']['checkdeal'])
         self.checkoriginal = float(data['type']['special']['checkoriginal'])
-        self.printchecks = data['printchecks']
         self.cashrate = float(data['type']['special']['cashrate'])
+        self.printchecks = data['printchecks']
 
         self.sales = {}
         self.sDate = ''         # m.d.y for saving text purpose

@@ -50,7 +50,7 @@ class Salon(Bot.Bot):
         self.salonName = bundle['name']
         self.paymentsFnames = bundle['paymentsFnames']
         self.path = bundle['path']
-        self.salesFnames = bundle['salesFnames']    # dict of json files names, key=year
+        self.salesFnames = bundle['salesFnames']  # dict of json files names, key=year
 
         # variables stored during program runtime
         self.salesDict = dict()  # {year: {datetime: {empName: [total, comm, tips]}}
@@ -66,8 +66,8 @@ class Salon(Bot.Bot):
         if self.salesFnames:
             for year, fname in self.salesFnames.items():
                 try:
-                    if os.path.getsize(self.path+fname) > 10:
-                        with open(self.path+fname, 'r') as reader:
+                    if os.path.getsize(self.path + fname) > 10:
+                        with open(self.path + fname, 'r') as reader:
                             self.salesDict = json.load(reader)
                 except FileNotFoundError:
                     print(f'[Salon.setupSalon] {self.salonName} did not find any json')
@@ -80,33 +80,30 @@ class Salon(Bot.Bot):
             else:
                 self.Emps[string.capwords(emp)] = Employee.Employee(info)
 
-    def createEmpFromGui(self,name,empData):
+    def createEmpFromGui(self, name, empData):
         self.Emps[name] = Employee.Employee(empData[name])
 
-    def createEmpReg(self,name):
+    def createEmpReg(self, name):
         newEmp = {
-            name:{'active':True,
-                  'id':0,'name':name,'salonName':self.salonName,'pay':0,'fees':0,'rent':0,
-                  'printchecks': True,
-                  'paygrade':{'regType':True,
-                              'cashType': False,
-                              'janitorType': False,
-                              'checkdealType': False,
-                              'owner': False,
-                              'regular':{'commission':6,'check':6},
-                              'special':{'commissionspecial':0,'checkdeal':0,
-                                         'checkoriginal':0, 'cashrate': 0}
-                              }}}
+            name: {'active': True,
+                   'id': 0, 'name': name, 'salonName': self.salonName,
+                   'pay6': 0, 'pay7': 0, 'fees': 0, 'rent': 0,
+                   'printchecks': True,
+                   'type': {'role': 'regular',
+                            'regular': {'commission': 6, 'check': 6},
+                            'special': {'commissionspecial': 0, 'checkdeal': 0,
+                                        'checkoriginal': 0, 'cashrate': 0}
+                            }}}
         self.Emps[name] = Employee.Employee(newEmp[name])
 
-    def deleteEmp(self,name):
+    def deleteEmp(self, name):
         deletedValue = self.Emps.pop(name)
         print(deletedValue)
 
     def exportPayroll(self, sDate, format):
         empdata = {}
         xldict = dict()
-        for name,obj in self.Emps.items():
+        for name, obj in self.Emps.items():
             printableData = ''
             try:
                 printableData = obj.getPrintOut()
@@ -118,11 +115,12 @@ class Salon(Bot.Bot):
                     empdata[name] = printableData
                 if format == 'txt':
                     # make sure path exists
-                    Path(f'../payroll/{self.salonName}/').mkdir(parents=True,exist_ok=True)
-                    pfname = f'../payroll/{self.salonName}/{self.salonName[0]}.{sDate.replace("/",".")}.{name}.txt'
-                    Path(pfname.replace(f'{self.salonName[0]}.{sDate.replace("/",".")}.{name}.txt','')).mkdir(parents=True,
-                                                                                                              exist_ok=True)
-                    with open(pfname,'w') as f:
+                    Path(f'../payroll/{self.salonName}/').mkdir(parents=True, exist_ok=True)
+                    pfname = f'../payroll/{self.salonName}/{self.salonName[0]}.{sDate.replace("/", ".")}.{name}.txt'
+                    Path(pfname.replace(f'{self.salonName[0]}.{sDate.replace("/", ".")}.{name}.txt', '')).mkdir(
+                        parents=True,
+                        exist_ok=True)
+                    with open(pfname, 'w') as f:
                         f.writelines(printableData)
                     print(f'INFO: ({self.salonName}) finished exporting text files')
         if format == 'html':
@@ -147,7 +145,7 @@ class Salon(Bot.Bot):
             <pre>
             </html>
             """
-            pfname = f'../payroll/{sDate.replace("/",".")}.{self.salonName}.html'
+            pfname = f'../payroll/{sDate.replace("/", ".")}.{self.salonName}.html'
             with open(pfname, 'w+') as write:
                 write.writelines(htmlheader)
                 write.write('\n')
@@ -176,8 +174,9 @@ class Salon(Bot.Bot):
                     xldict[emp]['name'] = re.search('^[^\(]+', emp).group(0)
                     xldict[emp]['date'] = eDate
                     xldict[emp]['memo'] = f'{sDate} - {eDate} PAYROLL'
-                    data.append([sDate, eDate, emp.upper(), xldict[emp]['cash'], xldict[emp]['check'], xldict[emp]['checkdeal']])
-            df = pd.DataFrame(data,)
+                    data.append([sDate, eDate, emp.upper(), xldict[emp]['cash'], xldict[emp]['check'],
+                                 xldict[emp]['checkdeal']])
+            df = pd.DataFrame(data, )
             reader = pd.read_excel(path, sheet_name=sheet, index_col=False)
             startRow = len(reader.index) + 1
             try:
@@ -188,17 +187,15 @@ class Salon(Bot.Bot):
 
     def getDataToSave(self):
         emps = {}
-        for empObjKeys,obj in self.Emps.items():
+        for empObjKeys, obj in self.Emps.items():
             emps[empObjKeys] = obj.getInfo()
-        data = {'name':self.salonName,
-                'login':{'username':self.zotaUname,'password':self.zotaPass},
+        data = {'name': self.salonName,
+                'login': {'username': self.zotaUname, 'password': self.zotaPass},
                 'salesFnames': self.salesFnames,
                 'path': self.path,
-                'employees':emps,
+                'employees': emps,
                 'paymentsFnames': self.paymentsFnames,
-                'startchecknum': self.startCheckNum
                 }
-
         return data
 
     def getEmps(self, name=None):
@@ -231,20 +228,20 @@ class Salon(Bot.Bot):
             Dictionary where keys are datetime and values are dictionaries of
             employees and their income
         """
-        sdate = datetime.datetime.strptime(sDate,'%m/%d/%Y')
-        edate = datetime.datetime.strptime(eDate,'%m/%d/%Y')
-        range = []
+        sdate = datetime.datetime.strptime(sDate, '%m/%d/%Y')
+        edate = datetime.datetime.strptime(eDate, '%m/%d/%Y')
+        date_range = []
         if sdate.year != edate.year:
             start = sdate.year
             while start <= edate.year:
-                range.append(start)
+                date_range.append(start)
                 start += 1
         else:
-            range = [sdate.year]
+            date_range = [sdate.year]
 
         tmpSales = dict()
         # grab all dates from, maybe both years into tmpSales
-        for year in range:
+        for year in date_range:
             if not os.path.isfile(f'{self.path}{self.salonName}Sales{year}.json'):
                 print(f'[Salon.getJsonRange] {self.salonName} file not found')
             else:
@@ -255,12 +252,12 @@ class Salon(Bot.Bot):
             # if there is not any file for any years in range
             return False
 
-        keys = [datetime.datetime.strptime(i,'%m/%d/%Y') for i in tmpSales]
+        keys = [datetime.datetime.strptime(i, '%m/%d/%Y') for i in tmpSales]
         wantedRange = dict()
         for k in keys:
             if k >= sdate and k <= edate:
                 # convert key back to string to match json
-                kstr = datetime.datetime.strftime(k,'%m/%d/%Y')
+                kstr = datetime.datetime.strftime(k, '%m/%d/%Y')
                 wantedRange[k] = tmpSales[kstr]
         return wantedRange
 
@@ -273,23 +270,23 @@ class Salon(Bot.Bot):
         Returns:
             dictionary of employee key and their payroll values
         """
-        week = self.getJsonRange(sDate,eDate)
+        week = self.getJsonRange(sDate, eDate)
         if not week:
             return False
 
         sorted = {}
         # rearrange dictionary keys from days to employees
-        for dates,value in week.items():
+        for dates, value in week.items():
             for e in value:
                 sorted[e.lower()] = {}
-        for dates,value in week.items():
-            for e,total in value.items():
+        for dates, value in week.items():
+            for e, total in value.items():
                 sorted[e.lower()][dates] = total
         # pp.pprint(sorted)
         # compare for extra employees , ie 'anybody*', not currently in settings DB and create new regular ones
         salesEmployees = [string.capwords(n) for n in sorted]
         currentEmployees = []
-        for key,obj in self.Emps.items():
+        for key, obj in self.Emps.items():
             currentEmployees.append(string.capwords(key))
         # create Employees for any extra in sales so they can calculate their sales
         for e in salesEmployees:
@@ -302,8 +299,8 @@ class Salon(Bot.Bot):
                     print(f'INFO: skipping payroll calculations for {e}.')
         # now tell all employees to calculate
         payrollPkt = {}
-        for eName,eObj in self.Emps.items():
-            for e,val in sorted.items():
+        for eName, eObj in self.Emps.items():
+            for e, val in sorted.items():
                 if eName in string.capwords(e):
                     eObj.calculatePayroll(val)
                     payrollPkt[eName] = eObj.getPrintOut()
@@ -324,13 +321,12 @@ class Salon(Bot.Bot):
         }
         niceprint = f'path: {self.path},\nsalesFnames: {self.salesFnames}' \
                     f'\npymentsFnames: {self.paymentsFnames}\n' \
-                    f'startingcheckNum: {self.startCheckNum}\n' \
                     f'employees:\n'
         for names in self.Emps:
             niceprint += f'  {names}\n'
-        return login, niceprint, self.startCheckNum
+        return login, niceprint
 
-    def mergeSheetToBook(self,fname,path,book):
+    def mergeSheetToBook(self, fname, path, book):
         '''
         copy sheet from new downloaded book and merge it with a book that keeps track of weekly amounts
         sheet name is the first day of the week
@@ -343,7 +339,7 @@ class Salon(Bot.Bot):
 
         '''
         tempPathAndFname = path + fname
-        sheetName = fname.replace('.xlsx','')
+        sheetName = fname.replace('.xlsx', '')
 
         # import new workbook sheet to existing book and delete new book
         wb_target = openpyxl.load_workbook(book)
@@ -355,10 +351,11 @@ class Salon(Bot.Bot):
         target_sheet = wb_target.create_sheet(sheetName)
         wb_source = openpyxl.load_workbook(tempPathAndFname)
         source_sheet = wb_source['Sales Summary']
-        xlHelper.copy_sheet(source_sheet,target_sheet)
+        xlHelper.copy_sheet(source_sheet, target_sheet)
         wb_target.save(book)
         # remove temporary downloaded file from zota after extracting info
         os.remove(tempPathAndFname)
+
     def readSalesXltoJson(self, pfName):
         if not os.path.isfile(pfName):
             print(f'[Salon.readSalesXltoJson]: {self.salonName} cannot read {pfName}')
@@ -369,12 +366,12 @@ class Salon(Bot.Bot):
 
         # keys are employee names, values are their totals for the day
         empDict = dict()
-        tmpSales = dict()   # daily sales to be inserted in to sales json which is yearly keyed
+        tmpSales = dict()  # daily sales to be inserted in to sales json which is yearly keyed
         day = ''
         currentYr = False
 
         for row in workSheet.iter_rows(values_only=True):
-            if isinstance(row[0],datetime.datetime):
+            if isinstance(row[0], datetime.datetime):
                 # if employees dictionary has data, copy it to sales dictionary
                 # before setting new day and getting new day data
                 if empDict and day != 0:  # if not False
@@ -383,7 +380,7 @@ class Salon(Bot.Bot):
                 # day is going to be dictionary key, but needs to be
                 # converted to string because datetime is not serializable
                 # by json
-                day = datetime.datetime.strftime(row[0],'%m/%d/%Y')
+                day = datetime.datetime.strftime(row[0], '%m/%d/%Y')
                 year = row[0].year
                 if not currentYr:
                     currentYr = year
@@ -401,7 +398,7 @@ class Salon(Bot.Bot):
                         totalSale = row[4]
                         commission = row[11]
                         tips = row[10]
-                        empDict[tech] = [totalSale,commission,tips]
+                        empDict[tech] = [totalSale, commission, tips]
                 except Exception as e:
                     print('Cannot iterate to find tech')
         # pack any employee data that still in storage because iterater
@@ -411,24 +408,24 @@ class Salon(Bot.Bot):
         empDict.clear()
         tmpSales.clear()
 
-    def updateEmpFromGui(self,name,empData):
+    def updateEmpFromGui(self, name, empData):
         # easiest way is to remove existing dictionary and set new one
         self.Emps.pop(name)
         self.Emps[name] = Employee.Employee(empData[name])
 
-    def updateJsonFileDelXl(self,path):
+    def updateJsonFileDelXl(self, path):
         for year, days in self.salesDict.items():
             fname = f'{self.salonName}Sales{year}.json'
-            if os.path.isfile(self.path+fname):
-                size = os.path.getsize(self.path+fname)
+            if os.path.isfile(self.path + fname):
+                size = os.path.getsize(self.path + fname)
                 if size < 10:
                     # sometimes empty json can have {} and thats 2 bytes
                     # this is an empty file so we can just dump the whole json
-                    with open(self.path+fname,'w+') as writer:
-                        json.dump(self.salesDict[year],writer,indent=4,sort_keys=True)
+                    with open(self.path + fname, 'w+') as writer:
+                        json.dump(self.salesDict[year], writer, indent=4, sort_keys=True)
                     sg.easy_print('Status: Salon.updateJsonFile > is file but considered empty; overwrite')
                 else:
-                    with open(self.path+fname,'r') as reader:
+                    with open(self.path + fname, 'r') as reader:
                         data = json.load(reader)
 
                     # find what day ended in file and append dates greater than that
@@ -436,21 +433,20 @@ class Salon(Bot.Bot):
                     # to add or up update with the right side taking priority to replace left side
                     self.salesDict[year] = data | self.salesDict[year]
 
-                    with open(self.path+fname,'w+') as writer:
-                        json.dump(self.salesDict[year],writer,indent=4,sort_keys=True)
+                    with open(self.path + fname, 'w+') as writer:
+                        json.dump(self.salesDict[year], writer, indent=4, sort_keys=True)
                     print('Status: Salon.updateJsonFile > json exists, merging data')
             else:
-                with open(self.path+fname,'w+') as writer:
-                    json.dump(self.salesDict[year],writer,indent=4,sort_keys=True)
+                with open(self.path + fname, 'w+') as writer:
+                    json.dump(self.salesDict[year], writer, indent=4, sort_keys=True)
                     print('Status: Salon.updateJsonFile > no json exists, creating new one')
         if path:
             # now delete recently downloaded excel from website in tmp folder
             filename = max([f for f in os.listdir(path)],
-                           key=lambda xa:os.path.getctime(os.path.join(path,xa)))
+                           key=lambda xa: os.path.getctime(os.path.join(path, xa)))
             os.remove(path + filename)
 
     def updateSalon(self, salonPkt):
         self.salonName = salonPkt['sname']
         self.zotaUname = salonPkt['login']['username']
         self.zotaPass = salonPkt['login']['password']
-        self.startCheckNum = salonPkt['startchecknum']

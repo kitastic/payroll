@@ -9,10 +9,8 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.chrome.service import Service
 import time
 
-import re
-import glob                     # check if file exists with wildcard
-import datetime
 from pathlib import Path
+
 
 # local files
 import helper
