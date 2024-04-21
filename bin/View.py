@@ -94,7 +94,6 @@ class View:
         rTab_r2 = sg.Frame('', [[sg.Canvas(key='-rTab_canvas-')]] ,expand_x=True, expand_y=True)
         reportsTab = [[rTab_r1],[rTab_r2]]
 
-
         # ---------------------------------------------------------------------
         # salon tab
         # ---------------------------------------------------------------------
@@ -149,25 +148,24 @@ class View:
                           sg.Radio('Special',group_id='-paygrade-',key='-eTab_r_special-',default=False,enable_events=True),],
                          [sg.HorizontalSeparator()],
                          [sg.Text('Commission:'),
-                          sg.Combo((0,5,6,7),default_value=0,key='-eTab_c_commission-',size=(5,1),disabled=True),
+                          sg.Combo((0.5, 0.6, 0.7), default_value=0, key='-eTab_c_commission-', size=(5, 1), disabled=True),
                           sg.Text('Check:'),
-                          sg.Combo((0,5,6,7),default_value=0,key='-eTab_c_check-',size=(5,1),disabled=True)],
+                          sg.Combo((0.5, 0.6, 0.7), default_value=0, key='-eTab_c_check-', size=(5, 1), disabled=True)],
                          [sg.HorizontalSeparator()],
-                         [sg.Text('Commission:',justification='left',expand_x=True),
-                          sg.Combo((5,6,7),default_value=0,key='-eTab_c_commissionspecial-',size=(5,1),
+                         [sg.Text('Commission:',),
+                          sg.Combo((0.5, 0.6, 0.7), default_value=0, key='-eTab_c_commissionspecial-', size=(5, 1),
                                    disabled=True),
                           sg.T('Cash Rate:',justification='l',expand_x=True),
-                          sg.Input(key='-eTab_in_cashrate-',size=(5,1),disabled=True,
-                                   disabled_readonly_background_color=self.btnColor),
+                          sg.Combo((0.85, 0.80, 0.75), default_value=0, key='-eTab_c_cashrate-', size=(5, 1),
+                                   disabled=True),
                           ],
                          [sg.T('Check Original:',justification='l',expand_x=True),
-                          sg.Combo((0,5,6,7),default_value=0,key='-eTab_c_checkoriginal-',size=(5,1),disabled=True,),
+                          sg.Combo((0.5, 0.6, 0.7),default_value=0,key='-eTab_c_checkoriginal-',size=(5,1),disabled=True,),
                           sg.T('Check Deal:',justification='l',expand_x=True),
-                          sg.Combo((0,5,6,7),default_value=0,key='-eTab_c_checkdeal-',size=(5,1),disabled=True),
+                          sg.Combo((0.5, 0.6, 0.7),default_value=0,key='-eTab_c_checkdeal-',size=(5,1),disabled=True),
                           ],
-                         [sg.T('Type'), sg.OptionMenu(values=['Cash', 'Checkdeal', 'Manager', 'Janitor'], key='-eTab_om_type-')],
-                         [sg.Checkbox('Print Checks', default=True, key='-eTab_cb_printchecks-'),
-                          sg.Checkbox('Owner', default=False, key='-eTab_cb_owner-')],
+                         [sg.T('Type'), sg.OptionMenu(values=['Cash', 'Checkdeal', 'Manager', 'Janitor', 'Owner'], key='-eTab_om_type-')],
+                         [sg.Checkbox('Print Checks', default=True, key='-eTab_cb_printchecks-')],
                          ]
 
         empTabLeftCol = sg.Frame('', [
@@ -179,11 +177,12 @@ class View:
                                        button_color=(sg.theme_background_color(), sg.theme_background_color()),
                                        metadata=BtnInfo())],
             [sg.Text('Name:'), sg.Input(key='-eTab_in_empName-', size=20)],
-            [sg.Text('Pay/Wk:'), sg.Input(key='-eTab_in_basePay-', size=13)],
-            [sg.Text('Fees/Day:'), sg.Input(key='-eTab_in_fees-', size=12)],
+            [sg.Text('Pay 6 Day:'), sg.Input(key='-eTab_in_basePay6-', size=10), sg.Text('Pay 7th Day:'),
+             sg.Input(key='-eTab_in_basePay7-', size=10)],
             [sg.Text('Rent/Week:'), sg.Input(key='-eTab_in_rent-', size=10)],
-            [sg.Frame('Pay Grade',paygradeFrame, expand_x=True)],
-            [sg.Frame('',[
+            [sg.Text('Fees/Day:'), sg.Input(key='-eTab_in_fees-', size=10)],
+            [sg.Frame('Pay Grade', paygradeFrame, expand_x=True)],
+            [sg.Frame('', [
                 [sg.Column([
                         [sg.T('Save New')],
                         [sg.Button(image_filename='../images/add-40.png', tooltip='Save New Employee',key='-eTab_btn_save-')]
@@ -329,7 +328,7 @@ class View:
         eTab = ['-eTab_r_regular-', '-eTab_r_special-', '-eTab_in_rent-', '-eTab_in_fees-', '-eTab_in_basePay-',
                 '-eTab_in_empName-', '-eTab_in_empId-', 'eTab_btn_empid', '-eTab_in_salon-', '-eTab_btn_save-',
                 '-eTab_btn_clear-', '-eTab_btn_update-', '-eTab_btn_remove-', '-eTab_btn_load-',
-                '-eTab_lb-', '-eTab_om_salon-', '-eTab_in_cashrate-', '-eTab_cb_printchecks-']
+                '-eTab_lb-', '-eTab_om_salon-', '-eTab_c_cashrate-', '-eTab_cb_printchecks-']
 
         sTab = ['-sTab_c_salon-', '-sTab_btn_load-', '-sTab_in_name-', '-sTab_in_uname-', '-sTab_in_pass-',
                 '-sTab_in_jsonFile-', '-sTab_btn_save-', '-sTab_btn_update-', '-sTab_btn_clear-', '-sTab_btn_remove-',
@@ -633,8 +632,8 @@ class View:
 
         elif '-eTab_btn_status-' in self.event:
             self.gui[self.event].metadata.state = not self.gui[self.event].metadata.state
-            self.gui[self.event].update(image_data=toggle_btn_on if self.gui[self.event].metadata.state else toggle_btn_off,
-                                   image_subsample=2)
+            self.gui[self.event].update(image_data=toggle_btn_on if self.gui[self.event].metadata.state else
+                                        toggle_btn_off, image_subsample=2)
 
         elif self.event == '-eTab_r_special-':
             self.togglePaygrade('special')
@@ -807,7 +806,7 @@ class View:
             self.gui['-eTab_c_commissionspecial-'].update(0)
             self.gui['-eTab_c_checkdeal-'].update(0)
             self.gui['-eTab_c_checkoriginal-'].update(0)
-            self.gui['-eTab_in_cashrate-'].update(0)
+            self.gui['-eTab_c_cashrate-'].update(0)
         else:
             self.gui['-eTab_r_regular-'].update(value=False)
             self.gui['-eTab_r_special-'].update(value=True)
@@ -815,7 +814,7 @@ class View:
             self.gui['-eTab_c_commissionspecial-'].update(emp['paygrade']['special']['commissionspecial'])
             self.gui['-eTab_c_checkdeal-'].update(emp['paygrade']['special']['checkdeal'])
             self.gui['-eTab_c_checkoriginal-'].update(emp['paygrade']['special']['checkoriginal'])
-            self.gui['-eTab_in_cashrate-'].update(emp['paygrade']['special']['cashrate'])
+            self.gui['-eTab_c_cashrate-'].update(emp['paygrade']['special']['cashrate'])
             self.gui['-eTab_c_commission-'].update(0)
             self.gui['-eTab_c_check-'].update(0)
 
@@ -851,7 +850,7 @@ class View:
         Returns:
             formatted employee dict
         """
-        checkpoint = {'salonname':False,'id':False,'name':False, 'paygrade':False}
+        checkpoint = {'salonname': False, 'id': False, 'name': False, 'paygrade': False}
         usedId = []
         currentSalon = self.values['-eTab_in_salon-']
         if self.eTab_lb_Emps[currentSalon]:
@@ -878,9 +877,8 @@ class View:
         pay = self.test(self.values['-eTab_in_basePay-'], 'int')
         fees = self.test(self.values['-eTab_in_fees-'], 'int')
         rent = self.test(self.values['-eTab_in_rent-'], 'int')
-        regType = self.test(self.values['-eTab_r_regular-'],'bool')
-        commission,check,comspec,checkdeal,checkoriginal,cashrate = (0 for i in range(1,7))
-        paytype = ''
+        regType = self.test(self.values['-eTab_r_regular-'], 'bool')
+        commission, check, comspec, checkdeal, checkoriginal, cashrate = (0 for i in range(1, 7))
         cashtype = False
         janitortype = False
         checkdealtype = False
@@ -893,20 +891,15 @@ class View:
             comspec = self.test(self.values['-eTab_c_commissionspecial-'], 'int')
             checkdeal = self.test(self.values['-eTab_c_checkdeal-'], 'int')
             checkoriginal = self.test(self.values['-eTab_c_checkoriginal-'], 'int')
-            cashrate = self.test(self.values['-eTab_in_cashrate-'], 'float')
-        paytype = self.test(self.values['-eTab_om_type-'], 'str')
+            cashrate = self.test(self.values['-eTab_c_cashrate-'], 'float')
+        role = self.test(self.values['-eTab_om_type-'], 'str')
         printchecks = self.values['-eTab_cb_printchecks-']
         owner = self.values['-eTab_cb_owner-']
         # validating paygrades and amounts correspond
         if regType:
             checkpoint['paygrade'] = True
-        if paytype:
-            if paytype == 'Janitor':
-                janitortype = True
-            elif paytype == 'Cash':
-                cashtype = True
-            elif paytype == 'Checkdeal':
-                checkdealtype = True
+        if role:
+            role.lower()
             checkpoint['paygrade'] = True
 
         if all(checkpoint.values()):        # if all data entries are valid or 'True'
@@ -1000,7 +993,7 @@ class View:
 
     def togglePaygrade(self, paytype):
         rkeys = ['-eTab_c_commission-', '-eTab_c_check-']
-        skeys = ['-eTab_c_commissionspecial-', '-eTab_c_checkdeal-', '-eTab_c_checkoriginal-', '-eTab_in_cashrate-']
+        skeys = ['-eTab_c_commissionspecial-', '-eTab_c_checkdeal-', '-eTab_c_checkoriginal-', '-eTab_c_cashrate-']
         if paytype == 'regular':
             [self.gui[i].update(disabled=False) for i in rkeys]
             [self.gui[i].update(disabled=True) for i in skeys]

@@ -9,7 +9,6 @@ import Bot
 import PySimpleGUI as sg
 import Employee
 from pprint import PrettyPrinter
-import num2words
 import string
 from pathlib import Path
 
@@ -22,7 +21,7 @@ pp = PrettyPrinter(
 
 
 class Salon(Bot.Bot):
-    def __init__(self,bundle):
+    def __init__(self, bundle):
         """
 
         Args:
@@ -34,12 +33,12 @@ class Salon(Bot.Bot):
                                 'payments': 'uPayments.xlsx',
                                 'employees': {
                                 name:{'active':True,
-                                      'id': idNum, 'name': nameCapitalized, 'salonName':salon, 'pay':pay,
+                                      'id': idNum, 'name': nameCapitalized, 'salonName':salon,
+                                      'pay6': pay6, 'pay7': pay7
                                       'fees':fees, 'rent':rent, 'printchecks': printchecks,
-                                      'paygrade':{'regType':regType, 'cashType': cashtype,
-                                                  'janitorType': janitortype, 'checkdealType': checkdealtype, 'owner': owner,
-                                      'regular':{'commission': commission, 'check': check},
-                                      'special':{'commissionspecial': comspec, 'checkdeal': checkdeal,
+                                      'type':{'role': 'role'
+                                                 'regular':{'commission': commission, 'check': check},
+                                                 'special':{'commissionspecial': comspec, 'checkdeal': checkdeal,
                                                  'checkoriginal': checkoriginal, 'cashrate': cashrate}
                                       }}}
         """
@@ -52,7 +51,6 @@ class Salon(Bot.Bot):
         self.paymentsFnames = bundle['paymentsFnames']
         self.path = bundle['path']
         self.salesFnames = bundle['salesFnames']    # dict of json files names, key=year
-        self.startCheckNum = bundle['startchecknum']
 
         # variables stored during program runtime
         self.salesDict = dict()  # {year: {datetime: {empName: [total, comm, tips]}}
@@ -69,17 +67,15 @@ class Salon(Bot.Bot):
             for year, fname in self.salesFnames.items():
                 try:
                     if os.path.getsize(self.path+fname) > 10:
-                        with open(self.path+fname,'r') as reader:
+                        with open(self.path+fname, 'r') as reader:
                             self.salesDict = json.load(reader)
                 except FileNotFoundError:
                     print(f'[Salon.setupSalon] {self.salonName} did not find any json')
 
-        for emp,info in self.employees.items():
-            if info['paygrade']['cashType']:
-                self.Emps[string.capwords(emp)] = Employee.EmployeeCash(info)
-            elif info['paygrade']['checkdealType']:
+        for emp, info in self.employees.items():
+            if info['type']['role'] in ['checkdeal', 'cash']:
                 self.Emps[string.capwords(emp)] = Employee.EmployeeSpecial(info)
-            elif info['paygrade']['janitorType']:
+            elif info['type']['role'] == 'janitor':
                 self.Emps[string.capwords(emp)] = Employee.EmployeeJanitor(info)
             else:
                 self.Emps[string.capwords(emp)] = Employee.Employee(info)
@@ -190,55 +186,6 @@ class Salon(Bot.Bot):
             except Exception as e:
                 print(f'[Salon.exportPayroll] error: {e}')
 
-
-        # create check printouts
-        # ----------------------------------------------
-        # first copy template checks from excel sheet and create new sheet
-        # xlHelper preserves column and row sizes which is important
-        # TODO catch error if sheet does not exist create one when opening
-        # sourcepfname = f'../payroll/checksTemplates.xlsx'
-        # sourcesheet = f'{self.salonName[0].lower()}.check'
-        # pfname = f'../payroll/{self.salonName[0].lower()}.checks.xlsx'
-        # targetsheet = f'{sDate[0:5].replace("/", ".")}'
-        # wb_target = openpyxl.Workbook()
-        # target_sheet = wb_target.create_sheet(targetsheet)
-        # wb_source = openpyxl.load_workbook(sourcepfname,data_only=True)
-        # source_sheet = wb_source[sourcesheet]
-        # xlHelper.copy_sheet(source_sheet,target_sheet)
-        #
-        # counter = 0
-        # row = {
-        #         "checkNum": 2,
-        #         "checkDate": 3,
-        #         "name": 5,
-        #         "amtNum": 5,
-        #         "amtWord": 6,
-        #         "memo": 8,
-        #         "micrCheckNum": 10}
-        # nextCheckIndex = 11
-        # nextPageCheckIndex = 23
-        # for emp, values in xldict.items():
-        #     if values['check'] == 0:
-        #         pass
-        #     else:
-        #         target_sheet[f'J{row["checkNum"]}'] = self.startCheckNum
-        #         target_sheet[f'i{row["checkDate"]}'] = datetime.date.today().strftime('%m/%d/%Y')
-        #         target_sheet[f'd{row["name"]}'] = values['name']
-        #         target_sheet[f'i{row["amtNum"]}'] = f'{values["check"]:.2f}'
-        #         target_sheet[f'c{row["amtWord"]}'] = f'{num2words.num2words(values["check"]).replace(",", "").replace(" and", "").upper()}'
-        #         target_sheet[f'd{row["memo"]}'] = values["memo"]
-        #         target_sheet[f'g{row["micrCheckNum"]}'] = self.startCheckNum
-        #         self.startCheckNum += 1
-        #         counter += 1
-        #         if counter % 3 == 0:
-        #             for key in row:
-        #                 row[key] += nextPageCheckIndex
-        #         else:
-        #             for key in row:
-        #                 row[key] += nextCheckIndex
-        # wb_target.save(pfname)
-
-
     def getDataToSave(self):
         emps = {}
         for empObjKeys,obj in self.Emps.items():
@@ -254,21 +201,21 @@ class Salon(Bot.Bot):
 
         return data
 
-    def getEmps(self,name=None):
+    def getEmps(self, name=None):
         emps = {}
-        for name,empObj in self.Emps.items():
+        for name, empObj in self.Emps.items():
             emps[name] = empObj.getInfo()
         return emps
 
     def getEmpStatus(self):
         status = {}
-        for name,obj in self.Emps.items():
+        for name, obj in self.Emps.items():
             result = obj.getStatus()
             if result:
                 status[name] = result
         return status
 
-    def getJsonRange(self,sDate,eDate):
+    def getJsonRange(self, sDate, eDate):
         """
             With the given date range, returns a dictionary of days with their
             respective income for all employees.
@@ -322,7 +269,6 @@ class Salon(Bot.Bot):
             given startdate and enddate, salon will tell each employee to calculate
             their own payroll and return their report back
         Args:
-            request: (list) [startDate, endDate]
 
         Returns:
             dictionary of employee key and their payroll values

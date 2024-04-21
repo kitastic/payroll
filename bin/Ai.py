@@ -4,23 +4,23 @@ import json
 import os
 import re
 import time
-
 import matplotlib
-matplotlib.use('TkAgg')
-import matplotlib.pyplot as plt
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import (
-    FigureCanvasTkAgg, NavigationToolbar2Tk)
 import PySimpleGUI as sg
 import pandas as pd
 
 import Salon
 
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import (
+    FigureCanvasTkAgg, NavigationToolbar2Tk)
+
 
 class Ai:
 
-    def __init__(self,):
-        '''
+    def __init__(self, ):
+        """
             settings = {'upscale': {'name': 'upscale',
                                     'login': {'username': 'upscalemanager', 'password': 'Joeblack334$'},
                                     'salesJson': 'uSales.json',
@@ -37,7 +37,7 @@ class Ai:
                                  'payments': 'pPayments.xlsx',
                                  'employees': {}
                         }}
-        '''
+        """
         self.loadedSettings = dict()
         '''
             salons dict:  {'salon name': salon obj
@@ -47,12 +47,11 @@ class Ai:
         self.employees = dict()
         self.loadSettings(pfname=None)
 
-    def createSalon(self,salonPkt):
+    def createSalon(self, salonPkt):
         self.salons[salonPkt['name']] = Salon.Salon(salonPkt)
 
     def exportPayroll(self, sName, sDate, format):
         self.salons[sName].exportPayroll(sDate, format)
-
 
     def getAllSalonNames(self):
         names = []
@@ -82,10 +81,10 @@ class Ai:
         displayResult = ''
         currentYr = datetime.datetime.now().year
         for i in salon:
-            with open(f'../db/{i}Sales{currentYr}.json','r') as read:
+            with open(f'../db/{i}Sales{currentYr}.json', 'r') as read:
                 for line in reversed(list(read)):
                     line.rstrip()
-                    l = re.search('\d+/\d+/\d+',line)
+                    l = re.search('\d+/\d+/\d+', line)
                     if l:
                         result.append(l.group(0))
                         displayResult += f'{i}: {l.group(0)}\n'
@@ -105,7 +104,7 @@ class Ai:
         """
         return self.salons[sname].getPayroll(sdate, edate)
 
-    def getSalonInfo(self,salonName):
+    def getSalonInfo(self, salonName):
         """
         this will be called by Salon class in order to construct Salon
         Returns:
@@ -134,23 +133,23 @@ class Ai:
 
         if frequency == 'daily':
             x = pd.date_range(datetime.datetime.strptime(sDate, '%m/%d/%Y'),
-                              datetime.datetime.strptime(eDate,'%m/%d/%Y'),
+                              datetime.datetime.strptime(eDate, '%m/%d/%Y'),
                               freq='D')
         elif frequency == 'weekly':
             x = pd.date_range(datetime.datetime.strptime(sDate, '%m/%d/%Y'),
-                              datetime.datetime.strptime(eDate,'%m/%d/%Y'),
+                              datetime.datetime.strptime(eDate, '%m/%d/%Y'),
                               freq='W')
         elif frequency == 'monthly':
             x = pd.date_range(datetime.datetime.strptime(sDate, '%m/%d/%Y'),
-                              datetime.datetime.strptime(eDate,'%m/%d/%Y'),
+                              datetime.datetime.strptime(eDate, '%m/%d/%Y'),
                               freq='M')
         elif frequency == 'yearly':
             x = pd.date_range(datetime.datetime.strptime(sDate, '%m/%d/%Y'),
-                              datetime.datetime.strptime(eDate,'%m/%d/%Y'),
+                              datetime.datetime.strptime(eDate, '%m/%d/%Y'),
                               freq='Y')
         dateRange = pd.date_range(datetime.datetime.strptime(sDate, '%m/%d/%Y'),
-                              datetime.datetime.strptime(eDate,'%m/%d/%Y'),
-                              freq='D')
+                                  datetime.datetime.strptime(eDate, '%m/%d/%Y'),
+                                  freq='D')
         xIndex = 0
         y = {}
         for sname, items in results.items():
@@ -204,26 +203,26 @@ class Ai:
 
         if frequency == 'daily':
             interval = pd.date_range(datetime.datetime.strptime(sDate, '%m/%d/%Y'),
-                              datetime.datetime.strptime(eDate,'%m/%d/%Y'),
-                              freq='D')
+                                     datetime.datetime.strptime(eDate, '%m/%d/%Y'),
+                                     freq='D')
         elif frequency == 'weekly':
             interval = pd.date_range(datetime.datetime.strptime(sDate, '%m/%d/%Y'),
                                      datetime.datetime.strptime(eDate, '%m/%d/%Y'),
-                              # datetime.datetime.strptime(eDate,'%m/%d/%Y') + relativedelta(weeks=1),
-                              freq='W')
+                                     # datetime.datetime.strptime(eDate,'%m/%d/%Y') + relativedelta(weeks=1),
+                                     freq='W')
         elif frequency == 'monthly':
             interval = pd.date_range(datetime.datetime.strptime(sDate, '%m/%d/%Y'),
                                      datetime.datetime.strptime(eDate, '%m/%d/%Y'),
-                              # datetime.datetime.strptime(eDate,'%m/%d/%Y') + relativedelta(months=1),
-                              freq='M')
+                                     # datetime.datetime.strptime(eDate,'%m/%d/%Y') + relativedelta(months=1),
+                                     freq='M')
         elif frequency == 'yearly':
             interval = pd.date_range(datetime.datetime.strptime(sDate, '%m/%d/%Y'),
                                      datetime.datetime.strptime(eDate, '%m/%d/%Y'),
-                              # datetime.datetime.strptime(eDate,'%m/%d/%Y') + relativedelta(years=1),
-                              freq='Y')
+                                     # datetime.datetime.strptime(eDate,'%m/%d/%Y') + relativedelta(years=1),
+                                     freq='Y')
         dateRange = pd.date_range(datetime.datetime.strptime(sDate, '%m/%d/%Y'),
-                              datetime.datetime.strptime(eDate,'%m/%d/%Y'),
-                              freq='D')
+                                  datetime.datetime.strptime(eDate, '%m/%d/%Y'),
+                                  freq='D')
         xIndex = 0
         subtotal = 0
         yearStart = interval[0].year
@@ -256,7 +255,7 @@ class Ai:
                     yearStart = currentYear
                     a = x[y.index(max(y))]
                     b = max(y)
-                    ax.annotate(f'{a}: {b}', xy=(a,b), textcoords='offset points', xytext=(1,1))
+                    ax.annotate(f'{a}: {b}', xy=(a, b), textcoords='offset points', xytext=(1, 1))
                     x.clear()
                     y.clear()
                     subtotal = 0
@@ -281,7 +280,7 @@ class Ai:
         fig.canvas.draw()
         return
 
-    def importJson(self,sname,pfname):
+    def importJson(self, sname, pfname):
         self.salons[sname].readSalesXltoJson(pfname)
         self.salons[sname].updateJsonFileDelXl(path=None)
 
@@ -294,27 +293,27 @@ class Ai:
             None
         '''
         if pfname:
-            with open(pfname,'r') as reader:
+            with open(pfname, 'r') as reader:
                 self.loadedSettings = json.load(reader)
         else:
-            with open('../db/master.json','r') as reader:
+            with open('../db/master.json', 'r') as reader:
                 self.loadedSettings = json.load(reader)
         for name in self.loadedSettings.keys():  # dict keys are iterable BUT NOT subscriptable ie [0]
             self.salons[name] = Salon.Salon(self.loadedSettings[name])  # create salon objects
 
-    def modEmp(self,cmd,salon,employee):
+    def modEmp(self, cmd, salon, employee):
         # employee has its name as the key so we get it from list(dict.keys()) and get the only value in the list
         if cmd == 'save':
-            self.salons[salon].createEmpFromGui(name=list(employee.keys())[0],empData=employee)
+            self.salons[salon].createEmpFromGui(name=list(employee.keys())[0], empData=employee)
         elif cmd == 'update':
-            self.salons[salon].updateEmpFromGui(name=list(employee.keys())[0],empData=employee)
+            self.salons[salon].updateEmpFromGui(name=list(employee.keys())[0], empData=employee)
         elif cmd == 'remove':
             # if remove cmd was sent, employee is a string name
             self.salons[salon].deleteEmp(name=employee)
         else:
             sg.Print('Warning: did not do anything because dont know command regarding Ai.modEmp()')
 
-    def populateEmpList(self,salon):
+    def populateEmpList(self, salon):
         """
         Args:
             salon: [str]
@@ -323,14 +322,14 @@ class Ai:
         """
         return self.salons[salon].getEmps()
 
-    def removeSalon(self,name):
+    def removeSalon(self, name):
         if name in self.salons.keys():
             self.salons.pop(name)
             print(f'[Ai]: {name} removed successfully')
         else:
             print(f'[Ai]: {name} not found to remove')
 
-    def renameFile(self,newName,downloadPath,time_to_wait=60):
+    def renameFile(self, newName, downloadPath, time_to_wait=60):
         '''
             mean to rename recently downloaded file from website
         Args:
@@ -341,7 +340,7 @@ class Ai:
         '''
         time_counter = 0
         filename = max([f for f in os.listdir(downloadPath)],
-                       key=lambda xa:os.path.getctime(os.path.join(downloadPath,xa)))
+                       key=lambda xa: os.path.getctime(os.path.join(downloadPath, xa)))
 
         # check if chrome still attached incomplete suffix
         while '.crdownload' in filename:
@@ -354,16 +353,16 @@ class Ai:
             time.sleep(1)
 
         filename = max([f for f in os.listdir(downloadPath)],
-                       key=lambda xa:os.path.getctime(os.path.join(downloadPath,xa)))
-        os.rename(os.path.join(downloadPath,filename),os.path.join(downloadPath,newName))
+                       key=lambda xa: os.path.getctime(os.path.join(downloadPath, xa)))
+        os.rename(os.path.join(downloadPath, filename), os.path.join(downloadPath, newName))
 
     def saveNewSettings(self):
         data = {}
-        for name,salonObj in self.salons.items():
+        for name, salonObj in self.salons.items():
             data[name] = salonObj.getDataToSave()
-        with open('../db/master.json','+w') as writer:
+        with open('../db/master.json', '+w') as writer:
             # '|' means combine both dict but crops empty values, best is newDict = {**dict1, **dict2}
-            json.dump(data,writer,indent=4,sort_keys=True)
+            json.dump(data, writer, indent=4, sort_keys=True)
 
     def updateSalon(self, salonPkt):
         """
@@ -375,7 +374,7 @@ class Ai:
         """
         self.salons[salonPkt['sname']].updateSalon(salonPkt)
 
-    def webscrapeSales(self,salon,sDate,eDate):
+    def webscrapeSales(self, salon, sDate, eDate):
         """
         this function will grab each salon object required from
         list of salons and send to threads to process each salon one at a time
@@ -390,8 +389,8 @@ class Ai:
         try:
 
             print(f'[Ai.webscrapeSales]: beginning to retrieve sales for {salon} date range {sDate} - {eDate}')
-            path,fname = salonObj.dlEmpSales(salon,salonObj.zotaUname,salonObj.zotaPass,
-                                             startDate=sDate,endDate=eDate)
+            path, fname = salonObj.dlEmpSales(salon, salonObj.zotaUname, salonObj.zotaPass,
+                                              startDate=sDate, endDate=eDate)
             if not path:
                 print(f'[Ai.webscrapeSales]{salon} unable to download file range {sDate} - {eDate}')
                 return False
