@@ -6,7 +6,6 @@ import string
 class Employee:
     def __init__(self, data):
         """
-
         Args:
             data layout: {'active':True,
                       'id': idNum, 'name': nameCapitalized, 'salonName':salon, 'pay':pay,
@@ -16,14 +15,23 @@ class Employee:
                       'type':{'role': role,
                               'regular':{'commission': commission, 'check': check},
                               'special':{'commissionspecial': comspec, 'checkdeal': checkdeal,
-                                         'checkoriginal': checkoriginal, 'cashrate': cashrate}
+                                         'checkoriginal': checkoriginal, 'cashrate': cashrate
+                              }
+                      'workdays': { 'mon': bool,
+                                    'tue': bool,
+                                    'wed': bool,
+                                    'thur': bool,
+                                    'fri': bool,
+                                    'sat': bool,
+                                    'sun': bool
+                                 }
                       }}}
         """
         self.id = data['id']
         self.name = data['name']
         self.salonName = data['salonName']
-        self.pay6 = data['pay6']
-        self.pay7 = data['pay7']
+        self.pay6 = float(data['pay6'])
+        self.pay7 = float(data['pay7'])
         self.rent = data['rent']
         self.fees = data['fees']
         self.active = data['active']
@@ -35,6 +43,8 @@ class Employee:
         self.checkoriginal = float(data['type']['special']['checkoriginal'])
         self.cashrate = float(data['type']['special']['cashrate'])
         self.printchecks = data['printchecks']
+        self.workdays = {}
+        self.workdays.update(data['workdays'])
 
         self.sales = {}
         self.sDate = ''         # m.d.y for saving text purpose
@@ -42,22 +52,40 @@ class Employee:
         self.xlreport = {'check': 0, 'checkdeal': 0, 'cash': 0}
         self.payrollPrint = ''
 
-    def calculatePayroll(self, sales):
+    def calculatePayroll(self, sales, fee_days):
         """
         Args:
             sales: dictionary of daily sales, keys are datetime
+            fee_days: days that janitor work
         Returns:
         """
         if self.role != 'janitor':
             self.sales = sales.copy()
-            self.genericCalculate()
+            self.genericCalculate(fee_days)
 
-    def genericCalculate(self):
-        tips, commissionSales, totalSales, cleaningFees, daysWorked = [0 for i in range(1, 6)]
+    def genericCalculate(self, salon_fee_days):
+        tips, commissionSales, totalSales, daysWorked, personal_fees = [0 for i in range(1, 6)]
 
         for days, amt in self.sales.items():
+            dayName = days.isoweekday()        # monday = 1
+            # this is the part where we compare janitor and employee work days to know if there is a fee
+            if dayName == 1 and salon_fee_days['mon']:
+                personal_fees += self.fees
+            elif dayName == 2 and salon_fee_days['tue']:
+                personal_fees += self.fees
+            elif dayName == 3 and salon_fee_days['wed']:
+                personal_fees += self.fees
+            elif dayName == 4 and salon_fee_days['thu']:
+                personal_fees += self.fees
+            elif dayName == 5 and salon_fee_days['fri']:
+                personal_fees += self.fees
+            elif dayName == 6 and salon_fee_days['sat']:
+                personal_fees += self.fees
+            elif dayName == 7 and salon_fee_days['sun']:
+                personal_fees += self.fees
+
             tips += amt[2]
-            if self.role == 'regular':
+            if self.role.capitalize() in ['Regular', 'Owner']:
                 commissionSales += (amt[0] * self.commission)
             else:
                 commissionSales += (amt[0] * self.commissionspecial)
@@ -84,7 +112,7 @@ class Employee:
         output += f'{"=":=^40}\n'
         self.payrollPrint = output
 
-        if self.role == 'regular':
+        if self.role.capitalize() in ['Regular', 'Owner']:
             check = (commissionSales * self.check)
             cash = commissionSales - check
         else:
@@ -94,25 +122,25 @@ class Employee:
         basepaycheck = 0
         basepaycash = 0
         if daysWorked == 6:
-            if self.role == 'regular':
+            if self.role.capitalize() in ['Regular', 'Owner']:
                 basepaycheck = (self.pay6 * self.check)
                 basepaycash = self.pay6 - basepaycheck
             else:
                 basepaycheck = (self.pay6 * self.checkoriginal)
                 basepaycash = self.pay6 - basepaycheck
         elif daysWorked == 7:
-            if self.role == 'regular':
+            if self.role.capitalize() in ['Regular', 'Owner']:
                 basepaycheck = (self.pay7 * self.check)
                 basepaycash = self.pay7 - basepaycheck
             else:
-                basepaycheck = (self.pay7 * self.checkoriginal)
-                basepaycash = self.pay7 - basepaycheck
+                basepaycheck = (self.pay6 + self.pay7) * (self.checkoriginal)
+                basepaycash = (self.pay6 + self.pay7) - basepaycheck
 
         # this is to keep track daily performance if metgoal
         basePayPerDay = self.pay6 / 6
         basePayPerRange = basePayPerDay * daysWorked
         metgoal = False if commissionSales < basePayPerRange else True
-        fees = ((daysWorked * self.fees) + self.rent) if (self.rent > 0) else (daysWorked * self.fees)
+        fees = personal_fees + self.rent
 
         # NEED TO add feature to calculate holiday guarantees
         self.payrollSummary = {
@@ -194,13 +222,20 @@ class Employee:
         return path + fname
 
     def getInfo(self):
-        return {'type': {'role': self.role,
+        return {'id': self.id, 'active': self.active, 'salonName': self.salonName, 'name': self.name,
+                'rent': self.rent, 'fees': self.fees, 'pay6': self.pay6, 'pay7': self.pay7,
+                'printchecks': self.printchecks,
+                'type': {'role': self.role,
                          'regular': {'commission': self.commission, 'check': self.check},
                          'special': {'commissionspecial': self.commissionspecial, 'checkdeal': self.checkdeal,
-                                     'checkoriginal': self.checkoriginal, 'cashrate': self.cashrate}},
-                'id': self.id, 'active': self.active, 'salonName': self.salonName, 'name': self.name,
-                'rent': self.rent, 'fees': self.fees, 'pay6': self.pay6, 'pay7': self.pay7,
-                'printchecks': self.printchecks}
+                                     'checkoriginal': self.checkoriginal, 'cashrate': self.cashrate}
+                         },
+                'workdays': self.workdays
+                }
+
+
+    def get_active_status(self):
+        return self.active
 
     def getXlReport(self):
         return self.xlreport
@@ -214,24 +249,23 @@ class EmployeeSpecial(Employee):
         super().__init__(data)
         self.payrollSummaryEtc = dict()
 
-    def calculatePayroll(self,sales):
-
-        self.sales = sales.copy()
-        self.genericCalculate()
-
+    def calculatePayroll(self, sales, salon_fee_days):
         '''
-            so tien check ky ra va so tien check deal se co khac biet. 
+            so tien check ky ra va so tien check deal se co khac biet.
             check deal la so ky ra va check binh thuong la ho phai khai cuoi nam
         '''
+        self.sales = sales.copy()
+        self.genericCalculate(salon_fee_days)
+
         if self.role == 'checkdeal':
             checkdeal = self.payrollSummary['commission'] * self.checkdeal
             cashdeal = self.payrollSummary['commission'] - checkdeal
             basepaycheckdeal = 0
             basepaycashdeal = 0
-            if self.payrollSummary['daysWorked'] == 6:
+            if self.payrollSummary['daysworked'] == 6:
                 basepaycheckdeal = self.pay6 * self.checkdeal
                 basepaycashdeal = self.pay6 - basepaycheckdeal
-            elif self.payrollSummary['daysWorked'] == 7:
+            elif self.payrollSummary['daysworked'] == 7:
                 basepaycheckdeal = self.pay7 * self.checkdeal
                 basepaycashdeal = self.pay7 - basepaycheckdeal
 
@@ -257,7 +291,7 @@ class EmployeeSpecial(Employee):
 
         if self.role == 'cash':
             paycheck = self.payrollSummary['paycheck'] + self.payrollSummary['tips']
-            cashdeal = float(paycheck * self.payrollSummaryEtc['cashrate'])
+            cashdeal = float(paycheck * self.cashrate)
 
             output = f'{"*":*^40}\n'
             output += f'{"Check Qua Tien Mat":<30}:{cashdeal:>10.2f}\n'
@@ -274,8 +308,16 @@ class EmployeeJanitor(Employee):
         super().__init__(data)
 
     def calculatePayroll(self, sales=None):
-        self.xlreport['check'] = self.pay6 * self.check
-        self.xlreport['cash'] = self.pay6 - self.xlreport['check']
+        pay_per_day = self.pay6 / 6
+        days_worked = 0
+        for day, work in self.workdays.items():
+            if work:
+                days_worked += 1
+        current_week_pay = pay_per_day * days_worked
+
+        self.xlreport['check'] = current_week_pay * self.check
+        self.xlreport['cash'] = current_week_pay - self.xlreport['check']
+
         if self.xlreport['cash'] == 0:
             self.xlreport['check'] = self.xlreport['check'] - self.rent
         self.payrollPrint = f'Check: {self.xlreport["check"]}    Cash: {self.xlreport["cash"]}'

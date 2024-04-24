@@ -102,7 +102,11 @@ class Ai:
         Returns:
             dictionary of employee key and their payroll values
         """
-        return self.salons[sname].getPayroll(sdate, edate)
+        result = self.salons[sname].getPayroll(sdate, edate)
+        if result:
+            return result
+        else:
+            return False
 
     def getSalonInfo(self, salonName):
         """
@@ -303,24 +307,32 @@ class Ai:
 
     def modEmp(self, cmd, salon, employee):
         # employee has its name as the key so we get it from list(dict.keys()) and get the only value in the list
-        if cmd == 'save':
-            self.salons[salon].createEmpFromGui(name=list(employee.keys())[0], empData=employee)
-        elif cmd == 'update':
-            self.salons[salon].updateEmpFromGui(name=list(employee.keys())[0], empData=employee)
-        elif cmd == 'remove':
-            # if remove cmd was sent, employee is a string name
-            self.salons[salon].deleteEmp(name=employee)
-        else:
-            sg.Print('Warning: did not do anything because dont know command regarding Ai.modEmp()')
+        try:
+            if cmd == 'save':
+                self.salons[salon].createEmpFromGui(name=list(employee.keys())[0], empData=employee)
+            elif cmd == 'update':
+                self.salons[salon].updateEmpFromGui(name=list(employee.keys())[0], empData=employee)
+            elif cmd == 'remove':
+                # if remove cmd was sent, employee is a string name
+                self.salons[salon].deleteEmp(name=employee)
+            else:
+                sg.Print('Warning: did not do anything because dont know command regarding Ai.modEmp()')
+            return True
+        except Exception as e:
+            return e
 
-    def populateEmpList(self, salon):
+
+    def populateEmpList(self, salon, show_active_only):
         """
         Args:
             salon: [str]
         Returns:
             list of employee dictionaries
         """
-        return self.salons[salon].getEmps()
+        if show_active_only:
+            return self.salons[salon].getActiveOnlyEmps()
+        else:
+            return self.salons[salon].getEmps()
 
     def removeSalon(self, name):
         if name in self.salons.keys():

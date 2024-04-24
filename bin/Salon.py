@@ -73,9 +73,11 @@ class Salon(Bot.Bot):
                     print(f'[Salon.setupSalon] {self.salonName} did not find any json')
 
         for emp, info in self.employees.items():
+            if self.salonName.lower() == 'upscale':
+                print()
             if info['type']['role'] in ['checkdeal', 'cash']:
                 self.Emps[string.capwords(emp)] = Employee.EmployeeSpecial(info)
-            elif info['type']['role'] == 'janitor':
+            elif info['type']['role'] == 'Janitor':
                 self.Emps[string.capwords(emp)] = Employee.EmployeeJanitor(info)
             else:
                 self.Emps[string.capwords(emp)] = Employee.Employee(info)
@@ -93,7 +95,16 @@ class Salon(Bot.Bot):
                             'regular': {'commission': 6, 'check': 6},
                             'special': {'commissionspecial': 0, 'checkdeal': 0,
                                         'checkoriginal': 0, 'cashrate': 0}
-                            }}}
+                            },
+                   "workdays": {"fri": False,
+                                "mon": False,
+                                "sat": False,
+                                "sun": False,
+                                "thu": False,
+                                "tue": False,
+                                "wed": False
+                                },
+                   }}
         self.Emps[name] = Employee.Employee(newEmp[name])
 
     def deleteEmp(self, name):
@@ -204,6 +215,13 @@ class Salon(Bot.Bot):
             emps[name] = empObj.getInfo()
         return emps
 
+    def getActiveOnlyEmps(self, name=None):
+        emps = {}
+        for name, empObj in self.Emps.items():
+            if empObj.get_active_status():
+                emps[name] = empObj.getInfo()
+        return emps
+
     def getEmpStatus(self):
         status = {}
         for name, obj in self.Emps.items():
@@ -273,7 +291,8 @@ class Salon(Bot.Bot):
         week = self.getJsonRange(sDate, eDate)
         if not week:
             return False
-
+        # week is dictionary of days as keys and values is all employees income working that day,
+        # sorted rearranges it to  where keys are employees and values are their daily income
         sorted = {}
         # rearrange dictionary keys from days to employees
         for dates, value in week.items():
@@ -285,28 +304,51 @@ class Salon(Bot.Bot):
         # pp.pprint(sorted)
         # compare for extra employees , ie 'anybody*', not currently in settings DB and create new regular ones
         salesEmployees = [string.capwords(n) for n in sorted]
-        currentEmployees = []
-        for key, obj in self.Emps.items():
-            currentEmployees.append(string.capwords(key))
+        currentEmployees = [key for key, obj in self.Emps.items()]
         # create Employees for any extra in sales so they can calculate their sales
-        for e in salesEmployees:
-            if e not in currentEmployees:
+        for employee in salesEmployees:
+            if employee not in currentEmployees:
                 agree = sg.popup_ok_cancel(
-                    f'{e} not found in current employees list.\n\nWould you like to add employee to database?')
+                    f'{employee} not found in current employees list.\n\nWould you like to add employee to database?')
                 if agree == 'OK':
-                    self.createEmpReg(e)
+                    self.createEmpReg(employee)
                 else:
-                    print(f'INFO: skipping payroll calculations for {e}.')
+                    print(f'INFO: skipping payroll calculations for {employee}.')
         # now tell all employees to calculate
         payrollPkt = {}
+        salon_fee_days = {
+            'mon': False,
+            'tue': False,
+            'wed': False,
+            'thu': False,
+            'fri': False,
+            'sat': False,
+            'sun': False
+        }
+        # we find janitor's work days first to calculate which day to have fees
         for eName, eObj in self.Emps.items():
-            for e, val in sorted.items():
-                if eName in string.capwords(e):
-                    eObj.calculatePayroll(val)
-                    payrollPkt[eName] = eObj.getPrintOut()
-            if eObj.janitortype:
+            if eObj.role == 'Janitor':
+                salon_fee_days.update(eObj.workdays)
                 eObj.calculatePayroll(sales=None)
                 payrollPkt[eObj.name] = eObj.getPrintOut()
+
+        for eName, eObj in self.Emps.items():
+            if eObj.role != 'Janitor':
+                found_flag = False
+                while not found_flag:
+                    for e, val in sorted.items():
+                        if eName in string.capwords(e):
+                            eObj.calculatePayroll(val, salon_fee_days)
+                            payrollPkt[eName] = eObj.getPrintOut()
+                            found_flag = True
+                            break
+                        # if end of dictionary reached because employee was not active
+                        # compare current key with last key
+                        last = list(sorted)[-1]
+                        if e == last:
+                            found_flag = True
+                            break
+
         return payrollPkt
 
     def getSalonInfo(self):
@@ -411,7 +453,14 @@ class Salon(Bot.Bot):
     def updateEmpFromGui(self, name, empData):
         # easiest way is to remove existing dictionary and set new one
         self.Emps.pop(name)
-        self.Emps[name] = Employee.Employee(empData[name])
+        if empData[name]['type']['role'] in ['checkdeal', 'cash']:
+            self.Emps[name] = Employee.EmployeeSpecial(empData[name])
+        elif empData[name]['type']['role'] == 'Janitor':
+            self.Emps[name] = Employee.EmployeeJanitor(empData[name])
+        else:
+            self.Emps[name] = Employee.Employee(empData[name])
+
+        # self.Emps[name] = Employee.Employee(empData[name])
 
     def updateJsonFileDelXl(self, path):
         for year, days in self.salesDict.items():

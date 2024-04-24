@@ -71,7 +71,7 @@ class View:
         rTab_r1 = sg.Frame('', [
             [sg.Column([
                 [sg.Image('../images/shop-30.png', expand_x=True)],
-                [sg.OptionMenu(values=(rtabSalons), default_value='all', size=(10), key='-rTab_om_salon-')],
+                [sg.OptionMenu(values=(rtabSalons), default_value='all', size=10, key='-rTab_om_salon-')],
             ]),
                 sg.Column([
                     [sg.Button('', image_filename='../images/calendar20.png', button_color='#40444b',
@@ -84,7 +84,7 @@ class View:
                 sg.Column([
                     [sg.T('Frequency')],
                     [sg.OptionMenu(values=(['Daily', 'Weekly', 'Monthly', 'Yearly']), default_value='monthly',
-                                   size=(10), key='-rTab_om_frequency-')],
+                                   size=10, key='-rTab_om_frequency-')],
                 ]),
                 sg.Column([
                     [sg.Checkbox('Self-comparison', default=False, key='-rTab_cb_selfcompare-')],
@@ -100,7 +100,7 @@ class View:
         # salon tab
         # ---------------------------------------------------------------------
         sTabLeftFrame = sg.Frame('', [
-            [sg.T('Current Salons:'), sg.Combo(values=(self.salonNames), key='-sTab_c_salon-', expand_x=True),
+            [sg.T('Current Salons:'), sg.Combo(values=self.salonNames, key='-sTab_c_salon-', expand_x=True),
              sg.Button(image_filename='../images/refresh24.png', key='-sTab_btn_load-')],
             [sg.T('')],
             [sg.HorizontalSeparator()],
@@ -149,7 +149,7 @@ class View:
         # ------------------------------------------------------------------------------------------
         # employee tab
         # ------------------------------------------------------------------------------------------
-        paygradeFrame = [[sg.T('Type'), sg.OptionMenu(values=['Regular', 'Cash', 'Checkdeal', 'Janitor', 'Owner'],
+        paygradeFrame = [[sg.T('Role'), sg.OptionMenu(values=['Regular', 'Cash', 'Checkdeal', 'Janitor', 'Owner'],
                                                       key='-eTab_om_type-', ),
                           sg.Radio('Regular', group_id='-paygrade-', key='-eTab_r_regular-', default=False,
                                    enable_events=True),
@@ -194,7 +194,15 @@ class View:
              sg.Input(key='-eTab_in_basePay7-', size=10)],
             [sg.Text('Rent/Week:'), sg.Input(key='-eTab_in_rent-', size=10),
              sg.Text('Fees/Day:'), sg.Input(key='-eTab_in_fees-', size=10)],
-            [sg.Frame('Pay Grade', paygradeFrame, expand_x=True)],
+            [sg.Frame('Pay Type', paygradeFrame, expand_x=True)],
+            [sg.T('Work Days (if Janitor)')],
+            [sg.Checkbox('M', key='-eTab_janitor_mon-', default=True),
+             sg.Checkbox('T', key='-eTab_janitor_tue-', default=True),
+             sg.Checkbox('W', key='-eTab_janitor_wed-', default=True),
+             sg.Checkbox('Th', key='-eTab_janitor_thu-', default=True),
+             sg.Checkbox('F', key='-eTab_janitor_fri-', default=True),
+             sg.Checkbox('Sat', key='-eTab_janitor_sat-', default=True),
+             sg.Checkbox('Sun', key='-eTab_janitor_sun-', default=True)],
             [sg.Frame('', [
                 [sg.Column([
                     [sg.T('Save New')],
@@ -219,7 +227,7 @@ class View:
             [sg.T('Choose Salon '),
              sg.OptionMenu(values=self.salonNames, key='-eTab_om_salon-'),
              sg.Button(image_filename='../images/refresh24.png', key='-eTab_btn_load-'),
-             sg.Checkbox('Inactive', enable_events=True, key='-eTab_c_status-', default=True)],
+             sg.Checkbox('Show Active Only', key='-eTab_c_status-', default=True)],
             [sg.Image('../images/staff50.png', expand_x=True, )],
             [sg.Listbox(values=[], select_mode='extended', size=(50, 22), key='-eTab_lb-', enable_events=True,
                         expand_y=True)],
@@ -337,9 +345,9 @@ class View:
         salonLists = ['-mTab_c_salon-', '-eTab_om_salon-', '-sTab_c_salon-', ]
         for l in salonLists:
             self.gui[l].update(value=self.salonNames[0])
-
+        show_all = self.gui['-eTab_c_status-'].get()
         for s in self.salonNames:
-            self.eTab_lb_Emps[s] = self.ai.populateEmpList(s)
+            self.eTab_lb_Emps[s] = self.ai.populateEmpList(s, show_all)
 
         # setup commands to cleanup gui while True loop
         mBar = ['Load Settings', 'Retrieve Payments', 'Get Sales', 'All::sales',
@@ -623,25 +631,29 @@ class View:
             else:
                 self.gui['-notice-'].update('[INFO (]View.listenETab]: choose salon first because id is based on that')
 
-        elif self.event == '-eTab_btn_save-':
+        elif self.event in ['-eTab_btn_save-', '-eTab_btn_update-']:
             # grab employees and gather into dictionary to validate id and etc
             # this step is needed incase the first thing someone does is add employee without
             # populating list first. if not, the first thing throwing error is gathering all
             # ids to make avoid duplicates
             employee = self.parseEmp()
             if employee:
+                task = ''
+                result = ''
                 salonName = self.values['-eTab_in_salon-']  # specified when creating employee, not from listbox
-                self.ai.modEmp('save', salonName, employee)
-            self.refreshETabList(salonName)
-            self.gui['-notice-'].update(f'Employee saved: {employee} in {salonName}')
+                if self.event == '-eTab_btn_save-':
+                    task = 'save'
+                    result = self.ai.modEmp(task, salonName, employee)
+                elif self.event == '-eTab_btn_update-':
+                    task = 'update'
+                    result = self.ai.modEmp(task, salonName, employee)
 
-        elif self.event == '-eTab_btn_update-':
-            employee = self.parseEmp()
-            if employee:
-                salonName = self.values['-eTab_in_salon-']
-                self.ai.modEmp('update', salonName, employee)
-                self.refreshETabList(salonName)
-                self.gui['-notice-'].update(f'Employee updated: {employee} in {salonName}')
+                if result == True:
+                    self.gui['-notice-'].update(f'Employee {task}d: {employee} in {salonName}')
+                    self.refreshETabList(salonName)
+                else:
+                    self.gui['-notice-'].update(f'[View.listenETab] {task} error: {result}\n'
+                                                f'If updating, make sure employee exists first.')
 
         elif self.event == '-eTab_btn_remove-':
             try:
@@ -694,10 +706,9 @@ class View:
             sname = self.values['-sTab_in_name-']
             uname = self.values['-sTab_in_uname-']
             password = self.values['-sTab_in_pass-']
-            checkNum = self.values['-sTab_in_chNum-']
             json = False
             try:
-                json = self.values['Browse']
+                json = self.values['-sTab_in_jsonFile-']
             except Exception:
                 pass
             # create salon first and then import json so that the default
@@ -707,7 +718,6 @@ class View:
                      'salesFnames': {},  # default path and filename of json
                      'path': '../db/',  # might not need yet
                      'paymentsFnames': {},
-                     'startchecknum': checkNum,
                      'employees': {}}
             self.ai.createSalon(salon)
             self.salonNames.append(sname)
@@ -720,17 +730,16 @@ class View:
             sname = self.values['-sTab_in_name-']
             uname = self.values['-sTab_in_uname-']
             password = self.values['-sTab_in_pass-']
-            checkNum = self.values['-sTab_in_chNum-']
             json = False
             try:
-                json = self.values['Browse']
+                json = self.values['-sTab_in_jsonFile-']
             except Exception:
                 pass
             # create salon first and then import json so that the default
             # pfname of json is still default
             salon = {'name': sname,
                      'login': {'username': uname, 'password': password},
-                     'startchecknum': checkNum, }
+                     }
             self.ai.updateSalon(salon)
             self.refreshSalonLists()
             if json:
@@ -748,15 +757,13 @@ class View:
             self.gui['-sTab_in_uname-'].update('')
             self.gui['-sTab_in_pass-'].update('')
             self.gui['-sTab_in_jsonFile-'].update('')
-            self.gui['-sTab_in_chNum-'].update('')
         elif self.event == '-sTab_btn_load-':
             salon = self.values['-sTab_c_salon-']
-            login, niceprint, startchecknum = self.ai.getSalonInfo(salon)
+            login, niceprint = self.ai.getSalonInfo(salon)
             self.gui['-sTab_in_name-'].update(salon)
             self.gui['-sTab_in_uname-'].update(login['username'])
             self.gui['-sTab_in_pass-'].update(login['password'])
             self.gui['-sTab_in_display-'].update(niceprint)
-            self.gui['-sTab_in_chNum-'].update(startchecknum)
 
     def listenRTab(self, fig, ax):
         if self.event == '-rTab_cal_sDate-':
@@ -792,17 +799,20 @@ class View:
                 self.ai.graph(salon, sDate, eDate, frequency, self.gui['-rTab_canvas-'], fig, ax)
 
     def clearBtn(self):
-        inputs = ['-eTab_in_empId-', '-eTab_in_salon-', '-eTab_in_empName-', '-eTab_in_basePay-', '-eTab_in_fees-',
-                  '-eTab_in_rent-',
+        inputs = ['-eTab_in_empId-', '-eTab_in_salon-', '-eTab_in_empName-', '-eTab_in_basePay6-', '-eTab_in_basePay7-',
+                  '-eTab_in_fees-', '-eTab_in_rent-',
                   '-eTab_c_commission-', '-eTab_c_check-', '-eTab_c_commissionspecial-', '-eTab_c_checkdeal-',
-                  '-eTab_c_checkoriginal-',
+                  '-eTab_c_checkoriginal-', '-eTab_om_type-'
                   ]
-        self.gui['-eTab_btn_status-'].metadata.setState(False)
-        self.gui['-eTab_btn_status-'].update(image_data=toggle_btn_off, image_subsample=2)
-        self.gui['-eTab_cb_owner-'].update(value=False)
+        checkboxes = ['-eTab_janitor_mon-', '-eTab_janitor_tue-', '-eTab_janitor_wed-', '-eTab_janitor_thu-',
+                      '-eTab_janitor_fri-', '-eTab_janitor_sat-', '-eTab_janitor_sun-']
+        self.gui['-eTab_btn_status-'].metadata.setState(True)
+        self.gui['-eTab_btn_status-'].update(image_data=toggle_btn_on, image_subsample=2)
         self.gui['-eTab_om_type-'].update(value='')
         for i in inputs:
             self.gui[i].update('')
+        for i in checkboxes:
+            self.gui[i].update(value=False)
         self.togglePaygrade('regular')
 
     def empToGui(self, emp):
@@ -829,7 +839,7 @@ class View:
         self.gui['-eTab_in_rent-'].update(emp['rent'])
         self.gui['-eTab_cb_printchecks-'].update(emp['printchecks'])
         self.gui['-eTab_om_type-'].update(value=emp['type']['role'].capitalize())
-        if emp['type']['role'] in ['regular', 'janitor', 'owner']:
+        if emp['type']['role'].lower() in ['regular', 'janitor', 'owner']:
             self.gui['-eTab_r_regular-'].update(value=True)
             self.gui['-eTab_r_special-'].update(value=False)
             self.togglePaygrade('regular')
@@ -849,6 +859,13 @@ class View:
             self.gui['-eTab_c_cashrate-'].update(emp['type']['special']['cashrate'])
             self.gui['-eTab_c_commission-'].update(0)
             self.gui['-eTab_c_check-'].update(0)
+        self.gui['-eTab_janitor_mon-'].update(value=emp['workdays']['mon'])
+        self.gui['-eTab_janitor_tue-'].update(value=emp['workdays']['tue'])
+        self.gui['-eTab_janitor_wed-'].update(value=emp['workdays']['wed'])
+        self.gui['-eTab_janitor_thu-'].update(value=emp['workdays']['thu'])
+        self.gui['-eTab_janitor_fri-'].update(value=emp['workdays']['fri'])
+        self.gui['-eTab_janitor_sat-'].update(value=emp['workdays']['sat'])
+        self.gui['-eTab_janitor_sun-'].update(value=emp['workdays']['sun'])
 
     def exitProgram(self):
         self.gui.close()
@@ -899,8 +916,8 @@ class View:
         if len(name) >= 1:
             checkpoint['name'] = True
         string.capwords(name)
-        pay6 = self.test(self.values['-eTab_in_basePay6-'], 'int')
-        pay7 = self.test(self.values['-eTab_in_basePay7-'], 'int')
+        pay6 = self.test(self.values['-eTab_in_basePay6-'], 'float')
+        pay7 = self.test(self.values['-eTab_in_basePay7-'], 'float')
         fees = self.test(self.values['-eTab_in_fees-'], 'int')
         rent = self.test(self.values['-eTab_in_rent-'], 'int')
         regType = self.test(self.values['-eTab_r_regular-'], 'bool')
@@ -927,13 +944,22 @@ class View:
         if all(checkpoint.values()):  # if all data entries are valid or 'True'
             newEmp = {
                 name: {'active': status,
-                       'id': idNum, 'name': nameCapitalized, 'salonName': salon, 'pay6': pay6, 'pay7': pay7,
+                       'id': idNum, 'name': nameCapitalized, 'salonName': salon,
+                       'pay6': float(pay6), 'pay7': float(pay7),
                        'fees': fees, 'rent': rent, 'printchecks': printchecks,
                        'type': {'role': role,
-                                    'regular': {'commission': commission, 'check': check},
-                                    'special': {'commissionspecial': comspec, 'checkdeal': checkdeal,
-                                                'checkoriginal': checkoriginal, 'cashrate': cashrate}
-                                    }}}
+                                'regular': {'commission': commission, 'check': check},
+                                'special': {'commissionspecial': comspec, 'checkdeal': checkdeal,
+                                            'checkoriginal': checkoriginal, 'cashrate': cashrate}
+                                },
+                       'workdays': {
+                           'mon': self.values['-eTab_janitor_mon-'], 'tue': self.values['-eTab_janitor_tue-'],
+                           'wed': self.values['-eTab_janitor_wed-'], 'thu': self.values['-eTab_janitor_thu-'],
+                           'fri': self.values['-eTab_janitor_fri-'], 'sat': self.values['-eTab_janitor_sat-'],
+                           'sun': self.values['-eTab_janitor_sun-']
+                       }
+                       }
+            }
             return newEmp
         elif not checkpoint['id']:
             sg.popup_ok('Invalid ID number:\n\nShould be 100 - 999\nOr ID exists already')
@@ -960,12 +986,8 @@ class View:
 
     def refreshETabList(self, salonName):
         # refresh list with employee removed
-        self.eTab_lb_Emps[salonName] = self.ai.populateEmpList(salonName)
-        show_inactive = self.gui['-eTab_c_status-'].get()
-        filtered_list = []
-        for employee, salon in self.eTab_lb_Emps[salonName]:
-            if salon[employee]['active'] == False:
-                filtered_list.append(employee)
+        show_active_only = self.gui['-eTab_c_status-'].get()
+        self.eTab_lb_Emps[salonName] = self.ai.populateEmpList(salonName, show_active_only)
         self.gui['-eTab_lb-'].update(values=self.eTab_lb_Emps[salonName].keys())
 
     def refreshMTabList(self, salonName):
