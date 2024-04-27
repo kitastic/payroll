@@ -279,7 +279,7 @@ class Salon(Bot.Bot):
                 wantedRange[k] = tmpSales[kstr]
         return wantedRange
 
-    def getPayroll(self, sDate, eDate):
+    def getPayroll(self, sDate, eDate, guarantee):
         """
             given startdate and enddate, salon will tell each employee to calculate
             their own payroll and return their report back
@@ -338,7 +338,7 @@ class Salon(Bot.Bot):
                 while not found_flag:
                     for e, val in sorted.items():
                         if eName in string.capwords(e):
-                            eObj.calculatePayroll(val, salon_fee_days)
+                            eObj.calculatePayroll(val, salon_fee_days, guarantee)
                             payrollPkt[eName] = eObj.getPrintOut()
                             found_flag = True
                             break

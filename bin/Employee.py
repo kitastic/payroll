@@ -52,18 +52,19 @@ class Employee:
         self.xlreport = {'check': 0, 'checkdeal': 0, 'cash': 0}
         self.payrollPrint = ''
 
-    def calculatePayroll(self, sales, fee_days):
+    def calculatePayroll(self, sales, fee_days, guarantee):
         """
         Args:
             sales: dictionary of daily sales, keys are datetime
             fee_days: days that janitor work
+            guarantee: [bool] will guarantee base pay regardless of days worked
         Returns:
         """
         if self.role != 'janitor':
             self.sales = sales.copy()
-            self.genericCalculate(fee_days)
+            self.genericCalculate(fee_days, guarantee)
 
-    def genericCalculate(self, salon_fee_days):
+    def genericCalculate(self, salon_fee_days, guarantee):
         tips, commissionSales, totalSales, daysWorked, personal_fees = [0 for i in range(1, 6)]
 
         for days, amt in self.sales.items():
@@ -119,6 +120,13 @@ class Employee:
             check = commissionSales * self.checkoriginal
             cash = commissionSales - check
 
+        # this is to keep track daily performance if metgoal
+        basePayPerDay = self.pay6 / 6
+        basePayPerRange = basePayPerDay * daysWorked
+        metgoal = False if commissionSales < basePayPerRange else True
+        fees = personal_fees + self.rent
+        if 'brandon' in self.name.lower():
+            print()
         basepaycheck = 0
         basepaycash = 0
         if daysWorked == 6:
@@ -135,12 +143,15 @@ class Employee:
             else:
                 basepaycheck = (self.pay6 + self.pay7) * (self.checkoriginal)
                 basepaycash = (self.pay6 + self.pay7) - basepaycheck
+        elif guarantee:
+            if self.role.capitalize() in ['Regular', 'Owner']:
+                basepaycheck = basePayPerRange * self.check
+                basepaycash = basePayPerRange - basepaycheck
+            else:
+                basepaycheck = basePayPerRange * self.checkoriginal
+                basepaycash = basePayPerRange - basepaycheck
 
-        # this is to keep track daily performance if metgoal
-        basePayPerDay = self.pay6 / 6
-        basePayPerRange = basePayPerDay * daysWorked
-        metgoal = False if commissionSales < basePayPerRange else True
-        fees = personal_fees + self.rent
+
 
         # NEED TO add feature to calculate holiday guarantees
         self.payrollSummary = {
@@ -159,7 +170,7 @@ class Employee:
         }
 
         # neu lam du ngay thi check coi can bao luong hay ko
-        if self.payrollSummary['daysworked'] >= 6:
+        if (self.payrollSummary['daysworked'] >= 6) | guarantee:
             self.payrollSummary['paycheck'] = self.payrollSummary['check'] if self.payrollSummary['metGoal'] else self.payrollSummary['basepaycheck']
             self.payrollSummary['paycash'] = self.payrollSummary['cash'] if self.payrollSummary['metGoal'] else self.payrollSummary['basepaycash']
         else:
@@ -249,13 +260,13 @@ class EmployeeSpecial(Employee):
         super().__init__(data)
         self.payrollSummaryEtc = dict()
 
-    def calculatePayroll(self, sales, salon_fee_days):
+    def calculatePayroll(self, sales, salon_fee_days, guarantee):
         '''
             so tien check ky ra va so tien check deal se co khac biet.
             check deal la so ky ra va check binh thuong la ho phai khai cuoi nam
         '''
         self.sales = sales.copy()
-        self.genericCalculate(salon_fee_days)
+        self.genericCalculate(salon_fee_days, guarantee)
 
         if self.role == 'checkdeal':
             checkdeal = self.payrollSummary['commission'] * self.checkdeal
@@ -307,7 +318,7 @@ class EmployeeJanitor(Employee):
     def __init__(self, data):
         super().__init__(data)
 
-    def calculatePayroll(self, sales=None):
+    def calculatePayroll(self, sales=None, fee_days=None):
         pay_per_day = self.pay6 / 6
         days_worked = 0
         for day, work in self.workdays.items():
@@ -315,8 +326,8 @@ class EmployeeJanitor(Employee):
                 days_worked += 1
         current_week_pay = pay_per_day * days_worked
 
-        self.xlreport['check'] = current_week_pay * self.check
-        self.xlreport['cash'] = current_week_pay - self.xlreport['check']
+        self.xlreport['check'] = math.ceil(current_week_pay * self.check)
+        self.xlreport['cash'] = math.ceil(current_week_pay - self.xlreport['check'])
 
         if self.xlreport['cash'] == 0:
             self.xlreport['check'] = self.xlreport['check'] - self.rent

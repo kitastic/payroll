@@ -94,7 +94,7 @@ class Ai:
         elif cmd == 'webscrape':
             return result
 
-    def getPayrollFromSalon(self, sname, sdate, edate):
+    def getPayrollFromSalon(self, sname, sdate, edate, guarantee):
         """
             Retrieves sales from json for given date range and salon name
         Args:
@@ -102,7 +102,7 @@ class Ai:
         Returns:
             dictionary of employee key and their payroll values
         """
-        result = self.salons[sname].getPayroll(sdate, edate)
+        result = self.salons[sname].getPayroll(sdate, edate, guarantee)
         if result:
             return result
         else:

@@ -19,7 +19,7 @@ class View:
         self.gui = None
         self.values = dict()
         self.event = ''
-        self.salonNames = ['upscale', 'posh', 'nails']
+        self.salonNames = ['upscale', 'nails']
         self.currentSalon = ''  # all, upscale, or posh
         self.startDate = ''
         self.endDate = ''
@@ -240,31 +240,37 @@ class View:
         # ------------------------------------------------------------------------------------------
         # main tab
         # ------------------------------------------------------------------------------------------
+        # button menu items based on salon names given and not hardcoded
+        bm1 = [i[0].lower() for i in self.salonNames]
+        bm1.insert(0, 'a')
+        bm2 = [i for i in self.salonNames]
+        bm2.insert(0, 'All')
         mTab_r1c2 = sg.Frame('Salon', [
             [sg.Image('../images/shop-30.png', expand_x=True)],
             [sg.Combo(values=self.salonNames, size=12, key='-mTab_c_salon-')],
             [sg.Button(image_filename='../images/refresh24.png', key='-mTab_btn_load-')]
         ], size=(130, 90), element_justification='c')
-        mTab_r1c3 = sg.Column(
-            [[sg.Checkbox('This\nWeek', default=False, key='-mTab_cb_thisweek-', enable_events=True)]])
         mTab_r1c4 = sg.Column([
-            [sg.T('Sales')], [sg.Button('', image_filename='../images/chart-45.png', key='-mTab_btn_sales-',
-                                        tooltip='Download sales reports')]
+            [sg.T('Export \nw/ Web')], [sg.ButtonMenu('', [bm1, bm2], tooltip='Download sales reports',
+                                                    image_filename='../images/chart-45.png',
+                                                    key='-mTab_btn_export_w_web-')]
         ])
-        mTab_r1c5 = sg.Column([[sg.T('Payroll')],
+        mTab_r1c5 = sg.Column([[sg.T('Payroll\n')],
                                [sg.Button('', image_filename='../images/money-transfer-45.png',
                                           key='-mTab_btn_payroll-')],
                                ])
         mTab_r1c6 = sg.Column([
-            [sg.T("Export")], [sg.Button(image_filename='../images/document-45.png', key='-mTab_btn_exporttxt-',
-                                         tooltip='Export txt files to hard drive')]
+            [sg.T("Export \nw/o web")],
+            [sg.ButtonMenu('', [bm1, bm2], tooltip='Export payroll without webscrape',
+                                      image_filename='../images/document-45.png', key='-mTab_btn_export_wo_web-',
+                                      button_color=self.btnColor)]
         ])
         mTab_r1c7 = sg.Column([
-            [sg.T('Status')], [sg.Button(image_filename='../images/in-progress-45.png', key='-mTab_btn_status-',
+            [sg.T('Status\n')], [sg.Button(image_filename='../images/in-progress-45.png', key='-mTab_btn_status-',
                                          tooltip='Current week income status for employees')]
         ])
 
-        mainTab = [[mTab_r1c3, mTab_r1c4, mTab_r1c5, mTab_r1c6, mTab_r1c7],
+        mainTab = [[mTab_r1c4, mTab_r1c6, mTab_r1c5, mTab_r1c7],
                    [sg.Frame('', [[sg.Image('../images/shop-30.png', expand_x=True)],
                                   [sg.Combo(values=self.salonNames, size=12, key='-mTab_c_salon-',
                                             enable_events=True),
@@ -280,11 +286,7 @@ class View:
         # ------------------------------------------------------------------------------------------
         # menu button bar (located beneath main menu bar)
         # ------------------------------------------------------------------------------------------
-        # button menu items based on salon names given and not hardcoded
-        bm1 = [i[0].lower() for i in self.salonNames]
-        bm1.insert(0, 'a')
-        bm2 = [i for i in self.salonNames]
-        bm2.insert(0, 'All')
+
         menuIconDates = sg.Frame('Date Range',
                                  [[sg.Button('', image_filename='../images/calendar20.png', button_color='#40444b',
                                              key='-main_cal_sDate-'),
@@ -295,6 +297,10 @@ class View:
                                   ], size=(150, 75))
         self.layout = [[sg.Menubar(menu_def)],
                        [sg.Column([[sg.Image('../images/kp_w40.png', expand_x=True)]]),
+                        sg.Column([[sg.Checkbox('Gurantee', default=False, key='-guarantee-')],
+                                   [sg.Checkbox('This\nWeek', default=False, key='-mTab_cb_thisweek-',
+                                                enable_events=True)]
+                                   ]),
                         menuIconDates,
                         sg.Column([[sg.Button(image_filename='../images/save-50.png', button_color='#40444b',
                                               expand_x=True, key='-Save-')]]),
@@ -361,7 +367,8 @@ class View:
 
         mTab = ['-main_cal_sDate-', '-main_in_sDate-', '-main_cal_eDate-', '-main_in_eDate-', '-mTab_c_salon-',
                 '-mTab_btn_load-', '-mTab_cb_thisweek-', '-mTab_btn_sales-',
-                '-mTab_btn_payroll-', '-mTab_c_salon-', '-mTab_btn_exporttxt-', '-mTab_btn_status-', '-mTab_lb-']
+                '-mTab_btn_payroll-', '-mTab_c_salon-', '-mTab_btn_export_wo_web-', '-mTab_btn_export_w_web-',
+                '-mTab_btn_status-', '-mTab_lb-']
 
         eTab = ['-eTab_btn_status-', 'eTab_btn_empid', '-eTab_r_regular-', '-eTab_r_special-', '-eTab_btn_save-',
                 '-eTab_btn_clear-', '-eTab_btn_update-', '-eTab_btn_remove-', '-eTab_btn_load-',
@@ -498,13 +505,15 @@ class View:
                             # update json sales for each salon
                             self.ai.webscrapeSales(s, d, today)
                         # calculate payroll
-                        self.mTab_lb_Emps[s] = self.ai.getPayrollFromSalon(s, self.startDate, self.endDate)
+                        self.mTab_lb_Emps[s] = self.ai.getPayrollFromSalon(s, self.startDate, self.endDate,
+                                                                           self.values['-guarantee-'])
                         # export html format
                         self.ai.exportPayroll(s, self.startDate, 'html')
                 else:
                     if '::printpayrollskipwebscrape' not in self.event:
                         self.ai.webscrapeSales(sname, recentSalonDates[self.salonNames.index(sname)], today)
-                    self.mTab_lb_Emps[sname] = self.ai.getPayrollFromSalon(sname, self.startDate, self.endDate)
+                    self.mTab_lb_Emps[sname] = self.ai.getPayrollFromSalon(sname, self.startDate, self.endDate,
+                                                                           self.values['-guarantee-'])
                     self.ai.exportPayroll(sname, self.startDate, 'html')
                 self.gui['jsonInfo'].update(self.ai.getJsonLatestDates('display'))
                 self.gui['-notice-'].update(f'[View.listenMBar] completed exporting files')
@@ -572,14 +581,15 @@ class View:
                     # each r is [sdate, edate]
                     self.ai.webscrapeSales(sname, r[0], r[1])
 
-        elif self.event in ('-mTab_btn_payroll-', '-mTab_btn_exporttxt-', '-mTab_btn_status-', '-mTab_btn_load-'):
+        elif self.event in ('-mTab_btn_payroll-', '-mTab_btn_export_wo_web-', '-mTab_btn_status-', '-mTab_btn_load-'):
             sname = self.values['-mTab_c_salon-'].lower()
             if not self.dates and self.event != '-mTab_c_salon-':
                 self.gui['-notice-'].update("[View] Dates are not valid")
                 return
             # it is better to perform payroll everytime any request is made because there may be other income
             # updates since last payroll command. ie such as updating json sales after performing payroll
-            self.mTab_lb_Emps[sname] = self.ai.getPayrollFromSalon(sname, self.startDate, self.endDate)
+            self.mTab_lb_Emps[sname] = self.ai.getPayrollFromSalon(sname, self.startDate, self.endDate,
+                                                                   self.values['-guarantee-'])
             if not self.mTab_lb_Emps[sname]:
                 self.gui['-notice-'].update(f'[view.listenMTab] unable to get payroll from salon. check log')
                 return
@@ -587,7 +597,36 @@ class View:
                 # this step performs '-mTab_btn_load-' event
                 self.gui['-mTab_lb-'].update(self.mTab_lb_Emps[sname].keys())
 
-            if self.event == '-mTab_btn_exporttxt-':
+            if self.event == '-mTab_btn_export_wo_web-':
+                salon_name = self.values['-mTab_btn_export_wo_web-'].lower()
+                self.verifyDates()
+                recentSalonDates = self.ai.getJsonLatestDates('webscrape')
+                today = datetime.datetime.today().strftime('%m/%d/%Y')
+                if self.dates:
+                    if salon_name == 'all':
+                        for s, d in zip(self.salonNames, recentSalonDates):
+                            if '::printpayrollskipwebscrape' not in self.event:
+                                # update json sales for each salon
+                                self.ai.webscrapeSales(s, d, today)
+                            # calculate payroll
+                            self.mTab_lb_Emps[s] = self.ai.getPayrollFromSalon(s, self.startDate, self.endDate,
+                                                                               self.values['-guarantee-'])
+                            # export html format
+                            self.ai.exportPayroll(s, self.startDate, 'html')
+                    else:
+                        if '::printpayrollskipwebscrape' not in self.event:
+                            self.ai.webscrapeSales(salon_name,
+                                                   recentSalonDates[self.salonNames.index(salon_name)],
+                                                   today)
+                        self.mTab_lb_Emps[salon_name] = self.ai.getPayrollFromSalon(salon_name,
+                                                                                    self.startDate,
+                                                                                    self.endDate,
+                                                                                    self.values['-guarantee-'])
+                        self.ai.exportPayroll(sname, self.startDate, 'html')
+                    self.gui['jsonInfo'].update(self.ai.getJsonLatestDates('display'))
+                    self.gui['-notice-'].update(f'[View.listenMBar] completed exporting files')
+                else:
+                    self.gui['-notice-'].update(f'[View.listenMBar] {sname} salon cannot determine dates')
                 try:
                     for s in self.salonNames:
                         self.ai.exportPayroll(s, self.startDate, 'txt')
