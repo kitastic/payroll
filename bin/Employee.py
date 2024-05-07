@@ -119,14 +119,13 @@ class Employee:
         else:
             check = commissionSales * self.checkoriginal
             cash = commissionSales - check
+        if "ethan" in self.name.lower():
+            print()
 
         # this is to keep track daily performance if metgoal
         basePayPerDay = self.pay6 / 6
         basePayPerRange = basePayPerDay * daysWorked
-        metgoal = False if commissionSales < basePayPerRange else True
-        fees = personal_fees + self.rent
-        if 'brandon' in self.name.lower():
-            print()
+
         basepaycheck = 0
         basepaycash = 0
         if daysWorked == 6:
@@ -137,11 +136,13 @@ class Employee:
                 basepaycheck = (self.pay6 * self.checkoriginal)
                 basepaycash = self.pay6 - basepaycheck
         elif daysWorked == 7:
+            basePayPerDay = (self.pay6 + self.pay7) / 7
+            basePayPerRange = basePayPerDay * daysWorked
             if self.role.capitalize() in ['Regular', 'Owner']:
-                basepaycheck = (self.pay7 * self.check)
-                basepaycash = self.pay7 - basepaycheck
+                basepaycheck = (self.pay6 + self.pay7) * self.check
+                basepaycash = (self.pay6 + self.pay7) - basepaycheck
             else:
-                basepaycheck = (self.pay6 + self.pay7) * (self.checkoriginal)
+                basepaycheck = (self.pay6 + self.pay7) * self.checkoriginal
                 basepaycash = (self.pay6 + self.pay7) - basepaycheck
         elif guarantee:
             if self.role.capitalize() in ['Regular', 'Owner']:
@@ -151,7 +152,7 @@ class Employee:
                 basepaycheck = basePayPerRange * self.checkoriginal
                 basepaycash = basePayPerRange - basepaycheck
 
-
+        metgoal = False if commissionSales < basePayPerRange else True
 
         # NEED TO add feature to calculate holiday guarantees
         self.payrollSummary = {
@@ -164,7 +165,7 @@ class Employee:
             'paycheck': 0,                  # actual check to be paid before adding tips
             'paycash': 0,                   # actual cash to be paid before subtracting fees
             'tips': tips,
-            'fees': fees,                   # clean up & rent
+            'personalfees': personal_fees,  # clean up fees
             'daysworked': daysWorked,
             'metGoal': metgoal,
         }
@@ -178,20 +179,27 @@ class Employee:
             self.payrollSummary['paycash'] = self.payrollSummary['cash']
 
         self.xlreport['check'] = math.ceil(self.payrollSummary['paycheck'] + self.payrollSummary["tips"])
-        self.xlreport['cash'] = math.ceil(self.payrollSummary['paycash'] - self.payrollSummary["fees"])
+        self.xlreport['cash'] = math.ceil(self.payrollSummary['paycash'] - self.payrollSummary["personalfees"])
 
         outputExtra = ''
         if self.rent < 0:   # when we want to help employee pay rent
             outputExtra += f'{"Check":<10} + {"Tip"} + {"Rent"}\n'
-            outputExtra += f'{self.payrollSummary["paycheck"]:<10.2f} + {self.payrollSummary["tips"]:<8.2f} + {abs(self.rent):<5.0f} = ' \
-                      f'${math.ceil(self.payrollSummary["paycheck"] + self.payrollSummary["tips"] - self.rent):<10}\n'
+            outputExtra += f'{self.payrollSummary["paycheck"]:<10.2f} + {self.payrollSummary["tips"]:<8.2f} + ' \
+                           f'{abs(self.rent):<5.0f} =' \
+                           f'${math.ceil(self.payrollSummary["paycheck"] + self.payrollSummary["tips"] - self.rent):<10}\n'
         else:
             outputExtra += f'{"Check":<10} + {"Tip"}\n'
             outputExtra += f'{self.payrollSummary["paycheck"]:<10.2f} + {self.payrollSummary["tips"]:<8.2f} = ' \
-                      f'${math.ceil(self.payrollSummary["paycheck"] + self.payrollSummary["tips"]):<10}\n'
+                           f'${math.ceil(self.payrollSummary["paycheck"] + self.payrollSummary["tips"]):<10}\n'
+
         outputExtra += f'{"Tien Mat":<10} - {"Le Phi":<8}\n'
-        outputExtra += f'{self.payrollSummary["paycash"]:<8.2f} - {self.payrollSummary["fees"]:<6.2f} = ' \
-                  f'${math.ceil(self.payrollSummary["paycash"] - self.payrollSummary["fees"]):<10}\n\n'
+        if self.rent > 0:
+            outputExtra += f'{self.payrollSummary["paycash"]:<8.2f} - ' \
+                           f'{self.payrollSummary["personalfees"] + self.rent:<6.2f} =' \
+                           f'${math.ceil(self.payrollSummary["paycash"] - self.payrollSummary["personalfees"] - self.rent):<10}\n\n'
+        else:
+            outputExtra += f'{self.payrollSummary["paycash"]:<8.2f} - {self.payrollSummary["personalfees"]:<6.2f} = ' \
+                           f'${math.ceil(self.payrollSummary["paycash"] - self.payrollSummary["personalfees"]):<10}\n\n'
         self.payrollPrint += outputExtra
 
     def getPayrollSummary(self):
@@ -277,8 +285,8 @@ class EmployeeSpecial(Employee):
                 basepaycheckdeal = self.pay6 * self.checkdeal
                 basepaycashdeal = self.pay6 - basepaycheckdeal
             elif self.payrollSummary['daysworked'] == 7:
-                basepaycheckdeal = self.pay7 * self.checkdeal
-                basepaycashdeal = self.pay7 - basepaycheckdeal
+                basepaycheckdeal = (self.pay6 + self.pay7) * self.checkdeal
+                basepaycashdeal = (self.pay6 + self.pay7) - basepaycheckdeal
 
             paycheckdeal = 0
             paycashdeal = 0
@@ -290,26 +298,40 @@ class EmployeeSpecial(Employee):
                 paycashdeal = cashdeal
 
             self.xlreport['checkdeal'] = math.ceil(paycheckdeal + self.payrollSummary["tips"])
-            self.xlreport['cash'] = math.ceil(paycashdeal - self.payrollSummary["fees"])
+            self.xlreport['cash'] = math.ceil(paycashdeal - self.payrollSummary["personalfees"])
             output = f'{"*":*^40}\n'
-            output += f'{"Check Deal":<10} + {"Tip"}\n'
-            output += f'{paycheckdeal:<10.2f} + {self.payrollSummary["tips"]:<10.2f} = ' \
-                      f'{math.ceil(paycheckdeal + self.payrollSummary["tips"]):<10}\n'
+            if self.rent < 0:
+                output += f'{"Check Deal":<10} + {"Tip":<10} + {"Bonus":<10}\n '
+                output += f'{paycheckdeal:<10.2f} + {self.payrollSummary["tips"]:<10.2f} + ' \
+                          f'{self.rent:<10.2f} = ' \
+                          f'{math.ceil(paycheckdeal + self.payrollSummary["tips"] - self.rent):<10}\n'
+                self.xlreport['checkdeal'] = math.ceil(paycheckdeal + self.payrollSummary["tips"] - self.rent)
+            else:
+                output += f'{"Check Deal":<10} + {"Tip"}\n'
+                output += f'{paycheckdeal:<10.2f} + {self.payrollSummary["tips"]:<10.2f} = ' \
+                          f'{math.ceil(paycheckdeal + self.payrollSummary["tips"]):<10}\n'
+                self.xlreport['checkdeal'] = math.ceil(paycheckdeal + self.payrollSummary["tips"])
+
             output += f'{"Tien Mat":<10} - {"Le Phi":<8}\n'
-            output += f'{paycashdeal:<10.2f} - {self.payrollSummary["fees"]:<8} = ' \
-                      f'{math.ceil(paycashdeal - self.payrollSummary["fees"])}\n\n'
+            if self.rent > 0:
+                output += f'{paycashdeal:<10.2f} - {self.payrollSummary["personalfees"] + self.rent:<8} = ' \
+                          f'{math.ceil(paycashdeal - self.payrollSummary["personalfees"] + self.rent)}\n\n'
+                self.xlreport['cash'] = math.ceil(paycashdeal - self.payrollSummary["personalfees"] - self.rent)
+            else:
+                output += f'{paycashdeal:<10.2f} - {self.payrollSummary["personalfees"]:<8} = ' \
+                          f'{math.ceil(paycashdeal - self.payrollSummary["personalfees"])}\n\n'
+                self.xlreport['cash'] = math.ceil(paycashdeal - self.payrollSummary["personalfees"])
             self.payrollPrint += output
 
         if self.role == 'cash':
             paycheck = self.payrollSummary['paycheck'] + self.payrollSummary['tips']
             cashdeal = float(paycheck * self.cashrate)
-
             output = f'{"*":*^40}\n'
             output += f'{"Check Qua Tien Mat":<30}:{cashdeal:>10.2f}\n'
             output += f'{"Tien Mat":<10} - {"Le Phi":<8}\n'
-            output += f'{self.payrollSummary["paycash"]:<10.2f} - {self.payrollSummary["fees"]:<8} = ' \
-                      f'{self.payrollSummary["paycash"] - self.payrollSummary["fees"]:>8.2f}\n'
-            subTotal = self.payrollSummary["paycash"] + cashdeal - self.payrollSummary["fees"]
+            output += f'{self.payrollSummary["paycash"]:<10.2f} - {self.payrollSummary["personalfees"]:<8} = ' \
+                      f'{self.payrollSummary["paycash"] - self.payrollSummary["personalfees"]:>8.2f}\n'
+            subTotal = self.payrollSummary["paycash"] + cashdeal - self.payrollSummary["personalfees"]
             output += f'{"Ca hai cong loi:":<30}{math.ceil(subTotal):>10}\n\n'
             self.payrollPrint += output
 

@@ -1,6 +1,9 @@
 from datetime import datetime
 import pandas as pd
 import PySimpleGUI as sg
+import os
+from PyPDF2 import PdfReader
+import re
 
 officeExpenses = ("samsclub", "sams club", "walmart",
                   'walmart.com', "wal-mart", "amzn",
@@ -38,14 +41,15 @@ def makeWindow(theme):
         [sg.Radio('Exchange', 'bank', default=True, k='-exchange-'), sg.Radio('Chase', 'bank', default=False, k='-chase-')],
         [sg.Radio('Transaction downloads', 'type', default=True, k='-transactions-'), sg.Radio('Bank statements', 'type', k='-statements-')],
         [sg.Button('Bank transactions', k='-bank-')],
-        [sg.Button('Excel bookkeeper', k='-book-')],
+        [sg.Button('Excel bookkeeper', k='-book-'), sg.Column([[]], expand_x=True),
+         sg.Button('Process', k='-process-'), sg.Button('Exit', k='exit')],
         [sg.StatusBar('', size=60, k='-status-')]
     ]
     window = sg.Window('Reports', layout, grab_anywhere=True, finalize=True)
     return window
 
 
-def chaseParseTransactions(transactions):
+def chaseParseTransactions(transactions, dfBank):
     for index, row in transactions.iterrows():
         identified = False
         details = row["Details"]
@@ -73,7 +77,7 @@ def chaseParseTransactions(transactions):
 
         if details.lower() in "debit":
             breakOutFlag = False
-            # now we figure out what category expense
+            # now we figure out what Category expense
             for category in description.keys():
                 values = description[category]
                 if isinstance(values, str):
@@ -106,8 +110,10 @@ def chaseParseTransactions(transactions):
             newRow['Category'] = 'Miscellaneous'
             dfBank.loc[len(dfBank.index)] = newRow
 
+    return dfBank
 
-def exchangeParseTransactions(transactions):
+
+def exchangeParseTransactions(transactions, dfBank):
     for index, row in transactions.iterrows():
         identified = False
         date = datetime.strptime(row[3], "%m/%d/%Y")
@@ -175,15 +181,12 @@ def exchangeParseTransactions(transactions):
             else:
                 newRow['amount'] = row[8]
             dfBank.loc[len(dfBank.index)] = newRow
+    return dfBank
 
 
-def exchangeParseStatements():
-    # importing required modules
-    from PyPDF2 import PdfReader
-    import re
-
+def exchangeParseStatements(statement, dfBank):
     # creating a pdf reader object
-    reader = PdfReader('Enhanced_Customer_Statements_May_2023.pdf')
+    reader = PdfReader(statement)
     parsed = []
     for num in range(len(reader.pages)):
         page = reader.pages[num]
@@ -256,71 +259,88 @@ def exchangeParseStatements():
                 dfBank.loc[len(dfBank.index)] = newRow
                 parsed.append(newRow)
                 identified = True
+    return dfBank
 
-def exportToExcel(outputExcel, dfBank):
+
+def exportToExcel(outputExcel, dfBank, initial):
     with pd.ExcelWriter(outputExcel, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
-        dfBank.to_excel(writer, sheet_name='t.bank', header=None, index=False, startrow=writer.sheets['t.bank'].max_row)
+        dfBank.to_excel(writer, sheet_name=initial+'.bank', header=None, index=False,
+                        startrow=writer.sheets[initial+'.bank'].max_row)
 
 
 def main():
     window = makeWindow(sg.theme())
-    bankName = ''
+    bank = ''
     book = ''
     transactions = ''
-    loadedBank = ''
+    dfBank = pd.DataFrame(columns=['Category', 'type', 'date', 'description', 'amount', 'check#'])
     while True:
         event, values = window.read()
-
-        if event not in (sg.TIMEOUT_EVENT, sg.WIN_CLOSED):
+        if event not in (sg.TIMEOUT_EVENT, sg.WIN_CLOSED, 'exit'):
             print('============ Event = ', event, ' ==============')
             print('-------- Values Dictionary (key=value) --------')
             for key in values:
                 print(key, ' = ', values[key])
         if event == '-bank-':
-            continue
+            bank = sg.popup_get_file('Bank transactions/statements', 'Choose bank info', initial_folder=os.getcwd())
         elif event == '-book-':
-            bankInitial = ''
-            if values['-exchange-']:
-                bankInitial = 't'
-            else:
-                bankInitial = 'y'
-            loadedBank = pd.read_excel(book, )
+            book = sg.popup_get_file('Excel book', 'Choose excel book', initial_folder=os.getcwd())
+        elif event == '-process-':
+            bankInitial = 't' if values['-exchange-'] else 'e'
+            result = ''
+            if values['-transactions-']:
+                transactions = pd.read_csv(bank, index_col=False)
+                if values['-exchange-']:
+                    result = exchangeParseTransactions(transactions, dfBank)
+                else:
+                    result = chaseParseTransactions(transactions, dfBank)
+            elif values['-statements-']:
+                if values['-exchange-']:
+                    result = exchangeParseStatements(bank, dfBank)
+                else:
+                    # result = chaseParseStatements(bank, dfBank)
+                    continue
+
+            exportToExcel(book, result, bankInitial)
+            window['-status-'].update('Process complete')
         else:
             window.close()
             exit(0)
 
-# if __name__ == '__main__':
-    # sg.theme('dark grey 14')
-    # main()
 
-# bank statement
-bank = "Chase7668_Activity_20240324.csv"
-# excel bookkeeper
-book = "book2024.xlsx"
+if __name__ == '__main__':
+    sg.theme('dark grey 14')
+    main()
 
-# load bank sheet
-loadedBank = pd.read_excel(book, sheet_name="y.bank", )
-dfBank = loadedBank.copy()
-transactions = pd.read_csv(bank, index_col=False)
-
-bank = {'chase': False, 'exchange': False}
-bankNum = input("press 1 for chase or 2 for exchange bank\n")
-statement = False
-if bankNum == '1':
-    bank['chase'] = True
-else:
-    bank['exchange'] = True
-    ask = input('press 1 for statement or 2 for downloaded transactions:')
-    statement = True if ask == '1' else False
-
-result = ''
-if bank['chase']:
-    result = chaseParseTransactions(transactions, dfBank)
-else:
-    if statement:
-        exchangeParseStatements()
-    else:
-        exchangeParseTransactions(transactions)
+# # bank statement
+# bank = "Chase7668_Activity_20240324.csv"
+# # excel bookkeeper
+# book = "book2024 - Copy.xlsx"
+#
+# # load bank sheet
+# loadedBank = pd.read_excel(book, sheet_name="y.bank", )
+# dfBank = pd.DataFrame(columns=loadedBank.columns)
+# transactions = pd.read_csv(bank, index_col=False)
+#
+# bank = {'chase': False, 'exchange': False}
+# bankNum = input("press 1 for chase or 2 for exchange bank\n")
+# statement = False
+# if bankNum == '1':
+#     bank['chase'] = True
+# else:
+#     bank['exchange'] = True
+#     ask = input('press 1 for statement or 2 for downloaded transactions:')
+#     statement = True if ask == '1' else False
+#
+# result = ''
+# if bank['chase']:
+#     result = chaseParseTransactions(transactions, dfBank)
+#     exportToExcel(book, result, 'y')
+# else:
+#     if statement:
+#         exchangeParseStatements()
+#     else:
+#         exchangeParseTransactions(transactions)
 
 
 

@@ -252,8 +252,8 @@ class View:
         ], size=(130, 90), element_justification='c')
         mTab_r1c4 = sg.Column([
             [sg.T('Export \nw/ Web')], [sg.ButtonMenu('', [bm1, bm2], tooltip='Download sales reports',
-                                                    image_filename='../images/chart-45.png',
-                                                    key='-mTab_btn_export_w_web-')]
+                                                      image_filename='../images/chart-45.png',
+                                                      key='-mTab_btn_export_w_web-')]
         ])
         mTab_r1c5 = sg.Column([[sg.T('Payroll\n')],
                                [sg.Button('', image_filename='../images/money-transfer-45.png',
@@ -262,12 +262,12 @@ class View:
         mTab_r1c6 = sg.Column([
             [sg.T("Export \nw/o web")],
             [sg.ButtonMenu('', [bm1, bm2], tooltip='Export payroll without webscrape',
-                                      image_filename='../images/document-45.png', key='-mTab_btn_export_wo_web-',
-                                      button_color=self.btnColor)]
+                           image_filename='../images/document-45.png', key='-mTab_btn_export_wo_web-',
+                           button_color=self.btnColor)]
         ])
         mTab_r1c7 = sg.Column([
             [sg.T('Status\n')], [sg.Button(image_filename='../images/in-progress-45.png', key='-mTab_btn_status-',
-                                         tooltip='Current week income status for employees')]
+                                           tooltip='Current week income status for employees')]
         ])
 
         mainTab = [[mTab_r1c4, mTab_r1c6, mTab_r1c5, mTab_r1c7],

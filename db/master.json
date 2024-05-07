@@ -1279,6 +1279,39 @@
                     "wed": true
                 }
             },
+            "Hang Nguyen (hang)": {
+                "active": true,
+                "fees": 5,
+                "id": 0,
+                "name": "Hang Nguyen (hang)",
+                "pay6": 900.0,
+                "pay7": 100.0,
+                "printchecks": true,
+                "rent": 0,
+                "salonName": "upscale",
+                "type": {
+                    "regular": {
+                        "check": 0.6,
+                        "commission": 0.6
+                    },
+                    "role": "Regular",
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0.0,
+                        "checkoriginal": 0.0,
+                        "commissionspecial": 0.0
+                    }
+                },
+                "workdays": {
+                    "fri": false,
+                    "mon": false,
+                    "sat": false,
+                    "sun": false,
+                    "thu": false,
+                    "tue": false,
+                    "wed": false
+                }
+            },
             "Huong Mai (lisa)": {
                 "active": false,
                 "fees": 5,
@@ -1511,13 +1544,13 @@
                 }
             },
             "Quynh Nhu Lam (nhu)": {
-                "active": true,
+                "active": false,
                 "fees": 5,
                 "id": 0,
                 "name": "Quynh Nhu Lam (nhu)",
                 "pay6": 900.0,
                 "pay7": 100.0,
-                "printchecks": true,
+                "printchecks": false,
                 "rent": 70,
                 "salonName": "upscale",
                 "type": {
@@ -1525,7 +1558,7 @@
                         "check": 0.6,
                         "commission": 0.6
                     },
-                    "role": "regular",
+                    "role": "Regular",
                     "special": {
                         "cashrate": 0.0,
                         "checkdeal": 0.0,
@@ -1617,14 +1650,14 @@
                 "pay6": 1100.0,
                 "pay7": 100.0,
                 "printchecks": true,
-                "rent": 0,
+                "rent": -50,
                 "salonName": "upscale",
                 "type": {
                     "regular": {
                         "check": 0.6,
                         "commission": 0.6
                     },
-                    "role": "regular",
+                    "role": "Regular",
                     "special": {
                         "cashrate": 0.0,
                         "checkdeal": 0.0,

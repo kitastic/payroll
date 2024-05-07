@@ -92,7 +92,7 @@ class Salon(Bot.Bot):
                    'pay6': 0, 'pay7': 0, 'fees': 0, 'rent': 0,
                    'printchecks': True,
                    'type': {'role': 'regular',
-                            'regular': {'commission': 6, 'check': 6},
+                            'regular': {'commission': 0.6, 'check': 0.6},
                             'special': {'commissionspecial': 0, 'checkdeal': 0,
                                         'checkoriginal': 0, 'cashrate': 0}
                             },
