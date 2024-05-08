@@ -200,7 +200,7 @@ def exchangeParseStatements(statement, dfBank):
 
         filtered = []
         for l1 in lines2:
-            find = re.match('\d+/\d\d\s[A-Z0-9(/)]+\d+\.\d+(-?)\d+\.\d+', l1)
+            find = re.match('\d+/\d\d[A-Z0-9(/)]+\d+\.\d+(-?)\d+\.\d+', l1)
             if find:
                 filtered.append(find.group(0))
 
