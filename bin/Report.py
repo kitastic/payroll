@@ -10,36 +10,39 @@ officeExpenses = ("samsclub", "sams club", "walmart",
                   'amazon', "best buy", "big lots",
                   "liquor", "hobby-lobby", "bath & body",
                   "staples", "joann", "sally beauty",
-                  'wal sam', 'locked up','bestbuy', 'hobbylobby'
+                  'wal sam', 'locked up', 'bestbuy', 'hobbylobby'
                   )
 description = dict({"Rent": "robson",
-                     "Merchant Fees": ("mthly direct payment", 'direct dps', 'hs group'),
-                     "Bank Fees": "service charge",
-                     "Cable": ("optimum", "suddenlink"),
-                     "Utilities": ("ok natural gas", "city of stillwater"),
-                     "Insurance": "insurance",
-                     "Marketing": ("facebk", "google", "college coupon", 'metaplatfor'),
-                     "Office Expenses": officeExpenses,
-                     "License fees": ("secretary of state", "osbcb"),
-                     "Supplies": {'supply', 'nailsjobs', 'nails plus'},
-                     "Wages": 'check',
-                     "Taxes": ("irs", "tax", 'oklahomataxpmts'),
-                     "Remodel/Maintenance": ("lowe", "heating", 'frontier fire'),
-                     "Miscellaneous": {},
-                     "Depreciation": {},
-                     "Amortization": {},
-                     "Sales": "merch dep",
-                     "Deposit": 'deposit',
-                     "Non Deductible": {}
-                     })
+                    "Merchant Fees": ("mthly direct payment", 'direct dps', 'hs group'),
+                    "Bank Fees": "service charge",
+                    "Cable": ("optimum", "suddenlink"),
+                    "Utilities": ("ok natural gas", "city of stillwater"),
+                    "Insurance": "insurance",
+                    "Marketing": ("facebk", "google", "college coupon", 'metaplatfor'),
+                    "Office Expenses": officeExpenses,
+                    "License fees": ("secretary of state", "osbcb"),
+                    "Supplies": {'supply', 'nailsjobs', 'nails plus'},
+                    "Wages": 'check',
+                    "Taxes": ("irs", "tax", 'oklahomataxpmts'),
+                    "Remodel/Maintenance": ("lowe", "heating", 'frontier fire'),
+                    "Miscellaneous": {},
+                    "Depreciation": {},
+                    "Amortization": {},
+                    "Sales": "merch dep",
+                    "Deposit": 'deposit',
+                    "Non Deductible": {}
+                    })
+
 
 def makeWindow(theme):
     sg.theme(theme)
     layout = [
         [sg.Text('Year End Reporting', size=(35, 1), justification='center', relief=sg.RELIEF_RIDGE)],
         [sg.HorizontalSeparator()],
-        [sg.Radio('Exchange', 'bank', default=True, k='-exchange-'), sg.Radio('Chase', 'bank', default=False, k='-chase-')],
-        [sg.Radio('Transaction downloads', 'type', default=True, k='-transactions-'), sg.Radio('Bank statements', 'type', k='-statements-')],
+        [sg.Radio('Exchange', 'bank', default=True, k='-exchange-'),
+         sg.Radio('Chase', 'bank', default=False, k='-chase-')],
+        [sg.Radio('Transaction downloads', 'type', k='-transactions-'),
+         sg.Radio('Bank statements', 'type', k='-statements-', default=True)],
         [sg.Button('Bank transactions', k='-bank-')],
         [sg.Button('Excel bookkeeper', k='-book-'), sg.Column([[]], expand_x=True),
          sg.Button('Process', k='-process-'), sg.Button('Exit', k='exit')],
@@ -142,7 +145,7 @@ def exchangeParseTransactions(transactions, dfBank):
             # now we figure out what category expense
             for category in description.keys():
                 values = description[category]
-                if isinstance(values, str): # if only one category
+                if isinstance(values, str):  # if only one category
                     if values in desc.lower():
                         newRow['Category'] = category
                         newRow['amount'] = -abs(row[7])
@@ -196,32 +199,34 @@ def exchangeParseStatements(statement, dfBank):
         lines2 = re.split('\n', lines)
 
         filtered = []
-        for line in lines2:
-            find = re.match('\d+/\d\d[A-Z0-9(/)]+\d+\.\d+(-?)\d+\.\d+', line)
+        for l1 in lines2:
+            find = re.match('\d+/\d\d\s[A-Z0-9(/)]+\d+\.\d+(-?)\d+\.\d+', l1)
             if find:
                 filtered.append(find.group(0))
 
-        for line in filtered:
+        for l2 in filtered:
+            if not isinstance(l2, str):
+                continue
             check = None
-            if 'check' in line.lower():
+            l3 = ''
+            if 'check' in l2.lower():
                 # check to see if check number provided
-                l = re.match('(?P<date>\d+/\d+)(?P<desc>\D+)(?P<check>\d\d\d\d)(?P<amt>\d+\.\d\d-?)', line)
-                if l:
-                    check = l.group('check')
+                l3 = re.match('(?P<date>\d+/\d+)(?P<desc>\D+)(?P<check>\d\d\d\d)(?P<amt>\d+\.\d\d-?)', l2)
+                if l3:
+                    check = l3.group('check')
                 else:
-                    l = re.match('(?P<date>\d+/\d+)(?P<desc>\D+)(?P<amt>\d+\.\d\d-?)', line)
+                    l3 = re.match('(?P<date>\d+/\d+)(?P<desc>\D+)(?P<amt>\d+\.\d\d-?)', l2)
+            elif 'cable' in l2.lower():
+                l3 = re.match('(?P<date>\d+/\d+)(?P<desc>\D+)(?P<amt>\d+\.\d\d-?)', l2)
             else:
-                l = re.match('(?P<date>\d+/\d+)(?P<desc>\D+)(?P<amt>\d+\.\d\d-?)', line)
+                l3 = re.match('(?P<date>\d+/\d+)(?P<desc>\D+)(?P<amt>\d+\.\d\d-?)', l2)
 
             # check if amt is negative
-            negative = re.search('-$', l.group('amt'))
+            negative = re.search('-$', l3.group('amt'))
             # convert amount to float from string
-            amt = -float(l.group('amt').replace('-', '')) if negative else float(l.group('amt').replace('-', ''))
-            date = l.group('date')
-            desc = l.group('desc').lower()
-            # l2 = [l.group('date'), l.group('desc'), amt, check]
-            # l2.insert(0, 'debit') if negative else l2.insert(0, 'credit')
-            # parsed.append(l2)
+            amt = -float(l3.group('amt').replace('-', '')) if negative else float(l3.group('amt').replace('-', ''))
+            date = l3.group('date')
+            desc = l3.group('desc').lower()
 
             # create new row template
             newRow = {'Category': '',
@@ -239,14 +244,14 @@ def exchangeParseStatements(statement, dfBank):
             identified = False
             for category in description.keys():
                 values = description[category]
-                if isinstance(values, str):     # if only one value
+                if isinstance(values, str):  # if only one value
                     if values.replace(' ', '') in desc.lower():
                         newRow['Category'] = category
                         dfBank.loc[len(dfBank.index)] = newRow
                         parsed.append(newRow)
                         identified = True
                         break
-                else:   # has a list of values
+                else:  # has a list of values
                     for value in values:
                         if value.replace(' ', '') in desc:
                             newRow['Category'] = category
@@ -264,14 +269,14 @@ def exchangeParseStatements(statement, dfBank):
 
 def exportToExcel(outputExcel, dfBank, initial):
     with pd.ExcelWriter(outputExcel, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
-        dfBank.to_excel(writer, sheet_name=initial+'.bank', header=None, index=False,
-                        startrow=writer.sheets[initial+'.bank'].max_row)
+        dfBank.to_excel(writer, sheet_name=initial + '.bank', header=None, index=False,
+                        startrow=writer.sheets[initial + '.bank'].max_row)
 
 
 def main():
     window = makeWindow(sg.theme())
-    bank = ''
-    book = ''
+    bank = '01.pdf'
+    book = '2024taxCat - Copy.xlsx'
     transactions = ''
     dfBank = pd.DataFrame(columns=['Category', 'type', 'date', 'description', 'amount', 'check#'])
     while True:
@@ -341,7 +346,3 @@ if __name__ == '__main__':
 #         exchangeParseStatements()
 #     else:
 #         exchangeParseTransactions(transactions)
-
-
-
-
