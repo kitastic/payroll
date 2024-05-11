@@ -1,40 +1,36 @@
+#!/usr/bin/env python
 import PySimpleGUI as sg
+import sys
 
-"""
-    Demo - Separator Elements
+'''
+    Usage of  Popups in PSG
 
-    Shows usage of both Horizontal and Vertical Separator Elements
-    Vertical Separators are placed BETWEEN 2 elements ON the same row.  These work well when one
-        of the elements is a Column or the element spans several rows
+    While this is an older demo, it is a good instroduction to a FEW of the popups available to you.
+    Check out the System Call Reference for the full list: http://www.PySimpleGUI.org
 
-    Horizontal separators are placed BETWEEN 2 rows.  They will occupy the entire span of the row they
-        are located on. If that row is constrained within a container, then it will spand the widget of
-        the container.
-
-    Copyright 2020-2023 PySimpleSoft, Inc. and/or its licensors. All rights reserved.
+    Copyright 2022-2023 PySimpleSoft, Inc. and/or its licensors. All rights reserved.
 
     Redistribution, modification, or any other use of PySimpleGUI or any portion thereof is subject to the terms of the PySimpleGUI License Agreement available at https://eula.pysimplegui.com.
 
     You may not redistribute, modify or otherwise use PySimpleGUI or its contents except pursuant to the PySimpleGUI License Agreement.
-"""
 
-left_col = sg.Column([[sg.Listbox((1, 2, 3, 4, 5, 6), size=(6, 4))]])
+'''
+# Here, have some windows on me....
+[sg.popup_no_wait('No-wait Popup', relative_location=(-500 + 100 * x, -500)) for x in range(10)]
+answer = sg.popup_yes_no('Do not worry about all those open windows... they will disappear at the end',
+                         'Are you OK with that?')
 
-right_col = sg.Column([[sg.Input(), sg.Input()],
-                       [sg.HorizontalSeparator()],
-                       [sg.Column([[sg.In()], [sg.HorizontalSeparator()]], pad=(0, 0))], ])
+if answer == 'No':
+    sg.popup_cancel('OK, we will destroy those windows as soon as you close this window')
+    sys.exit()
 
-layout = [
-    [sg.Text('Window with some separators')],
-    [left_col, sg.VerticalSeparator(), right_col],
-    [sg.Button('Go'), sg.Button('Exit')]
-]
-
-window = sg.Window('Window Title', layout)
-
-while True:  # Event Loop
-    event, values = window.read()
-    print(event, values)
-    if event == sg.WIN_CLOSED or event == 'Exit':
-        break
-window.close()
+sg.popup_no_buttons('Your answer was', answer, relative_location=(0, -200), non_blocking=True)
+text = sg.popup_get_text('This is a call to PopopGetText')
+sg.popup_get_file('Get file')
+sg.popup_get_folder('Get folder')
+sg.popup('Simple popup')
+sg.popup_no_titlebar('No titlebar')
+sg.popup_no_border('No border')
+sg.popup_no_frame('No frame')
+sg.popup_cancel('Cancel')
+sg.popup_auto_close('This window will Autoclose and then everything else will close too....')
