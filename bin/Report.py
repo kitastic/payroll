@@ -198,35 +198,67 @@ def exchangeParseStatements(statement, dfBank):
         lines = text.translate({ord(i): None for i in ' ,'})
         lines2 = re.split('\n', lines)
 
-        filtered = []
-        for l1 in lines2:
-            find = re.match('\d+/\d\d[A-Z0-9(/)]+\d+\.\d+(-?)\d+\.\d+', l1)
-            if find:
-                filtered.append(find.group(0))
+        # for l2 in filtered:
+        #     if not isinstance(l2, str):
+        #         continue
+        #     check = None
+        #     l3 = ''
+        #     if 'check' in l2.lower():
+        #         # check to see if check number provided
+        #         l3 = re.match('(?P<date>\d+/\d+)(?P<desc>\D+)(?P<check>\d\d\d\d)(?P<amt>\d+\.\d\d-?)', l2)
+        #         if l3:
+        #             check = l3.group('check')
+        #         else:
+        #             l3 = re.match('(?P<date>\d+/\d+)(?P<desc>\D+)(?P<amt>\d+\.\d\d-?)', l2)
+        #     elif 'cable' in l2.lower():
+        #         l3 = re.match('(?P<date>\d+/\d+)(?P<desc>\D+)(?P<amt>\d+\.\d\d-?)', l2)
+        #     else:
+        #         l3 = re.match('(?P<date>\d+/\d+)(?P<desc>\D+)(?P<amt>\d+\.\d\d-?)', l2)
+        #
+        #     # check if amt is negative
+        #     negative = re.search('-$', l3.group('amt'))
+        #     # convert amount to float from string
+        #     amt = -float(l3.group('amt').replace('-', '')) if negative else float(l3.group('amt').replace('-', ''))
+        #     date = l3.group('date')
+        #     desc = l3.group('desc').lower()
 
-        for l2 in filtered:
-            if not isinstance(l2, str):
+        for l1 in lines:
+            if not isinstance(l1, str):
                 continue
-            check = None
-            l3 = ''
-            if 'check' in l2.lower():
-                # check to see if check number provided
-                l3 = re.match('(?P<date>\d+/\d+)(?P<desc>\D+)(?P<check>\d\d\d\d)(?P<amt>\d+\.\d\d-?)', l2)
-                if l3:
-                    check = l3.group('check')
-                else:
-                    l3 = re.match('(?P<date>\d+/\d+)(?P<desc>\D+)(?P<amt>\d+\.\d\d-?)', l2)
-            elif 'cable' in l2.lower():
-                l3 = re.match('(?P<date>\d+/\d+)(?P<desc>\D+)(?P<amt>\d+\.\d\d-?)', l2)
-            else:
-                l3 = re.match('(?P<date>\d+/\d+)(?P<desc>\D+)(?P<amt>\d+\.\d\d-?)', l2)
+            validTransaction = re.match('^\s*\d\d/\d\d\s\w+', l1)
+            date = ''
+            desc = ''
+            amt = ''
+            checkNum = ''
+            if not validTransaction:
+                continue
+            if 'check' in l1.lower():
+                l2 = re.match(
+                    '\s+(?P<date>\d+/\d\d)\s(?P<desc>.*?(?=\s{4}))\s(?P<checkNum>.*?(?=\s{4}))\s*(?P<amt>\d*,?\d+\.\d\d-?)',
+                    l1)
+                date = l2.group('date')
+                desc = l2.group('desc')
+                checkNum = l2.group('checkNum')
+                if len(checkNum) > 4:
+                    checkNum = checkNum[-4:]
+                amt = l2.group('amt')
+                if amt[-1] == '-':
+                    amt = '-' + amt[:-1]
 
-            # check if amt is negative
-            negative = re.search('-$', l3.group('amt'))
-            # convert amount to float from string
-            amt = -float(l3.group('amt').replace('-', '')) if negative else float(l3.group('amt').replace('-', ''))
-            date = l3.group('date')
-            desc = l3.group('desc').lower()
+            elif 'cable' in l1.lower():
+                filtered = re.match('\s+(?P<date>\d+/\d\d)\s(?P<desc>.*?(?=\s{4}))\s*(?P<amt>\d+\.\d\d-?)', l1)
+                date = filtered.group('date')
+                desc = filtered.group('desc')
+                amt = filtered.group('amt')
+                if amt[-1] == '-':
+                    amt = '-' + amt[0:-1]
+            else:
+                filtered = re.match('\s+(?P<date>\d+/\d\d)\s(?P<desc>.*?(?=\s{4}))\s*(?P<amt>\d+\.\d\d-?)', l1)
+                date = filtered.group('date')
+                desc = filtered.group('desc')
+                amt = filtered.group('amt')
+                if amt[-1] == '-':
+                    amt = '-' + amt[0:-1]
 
             # create new row template
             newRow = {'Category': '',
@@ -234,35 +266,34 @@ def exchangeParseStatements(statement, dfBank):
                       'date': date,
                       'description': desc,
                       'amount': amt,
-                      'check#': check
+                      'check#': checkNum
                       }
+
             # now we figure out what category expense
-            if amt < 0:
-                newRow['type'] = 'Debit'
-            else:
-                newRow['type'] = 'Credit'
+            amt = float('-' + amt[0:-1]) if amt[-1] == '-' else float(amt)
+            newRow['type'] = 'Debit' if amt < 0 else 'Credit'
             identified = False
             for category in description.keys():
                 values = description[category]
                 if isinstance(values, str):  # if only one value
                     if values.replace(' ', '') in desc.lower():
                         newRow['Category'] = category
-                        dfBank.loc[len(dfBank.index)] = newRow
-                        parsed.append(newRow)
+                        # dfBank.loc[len(dfBank.index)] = newRow
+                        dfBank.append(newRow)
                         identified = True
                         break
                 else:  # has a list of values
                     for value in values:
                         if value.replace(' ', '') in desc:
                             newRow['Category'] = category
-                            dfBank.loc[len(dfBank.index)] = newRow
-                            parsed.append(newRow)
+                            # dfBank.loc[len(dfBank.index)] = newRow
+                            dfBank.append(newRow)
                             identified = True
                             break
             if not identified:
                 newRow['Category'] = 'Miscellaneous'
-                dfBank.loc[len(dfBank.index)] = newRow
-                parsed.append(newRow)
+                # dfBank.loc[len(dfBank.index)] = newRow
+                dfBank.append(newRow)
                 identified = True
     return dfBank
 
