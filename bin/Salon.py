@@ -75,7 +75,7 @@ class Salon(Bot.Bot):
         for emp, info in self.employees.items():
             if self.salonName.lower() == 'upscale':
                 print()
-            if info['type']['role'] in ['checkdeal', 'cash']:
+            if info['type']['role'].lower() in ['checkdeal', 'cash']:
                 self.Emps[string.capwords(emp)] = Employee.EmployeeSpecial(info)
             elif info['type']['role'] == 'Janitor':
                 self.Emps[string.capwords(emp)] = Employee.EmployeeJanitor(info)
@@ -91,7 +91,7 @@ class Salon(Bot.Bot):
                    'id': 0, 'name': name, 'salonName': self.salonName,
                    'pay6': 0, 'pay7': 0, 'fees': 0, 'rent': 0,
                    'printchecks': True,
-                   'type': {'role': 'regular',
+                   'type': {'role': 'Regular',
                             'regular': {'commission': 0.6, 'check': 0.6},
                             'special': {'commissionspecial': 0, 'checkdeal': 0,
                                         'checkoriginal': 0, 'cashrate': 0}
@@ -122,7 +122,7 @@ class Salon(Bot.Bot):
                 sg.popup_ok('ERROR: Salon.exportPayroll: employee data is empty\n'
                             'Try to calculate payroll first')
             if len(printableData) > 5:
-                if not obj.janitortype and not obj.owner:
+                if obj.role not in ['Janitor', 'Owner']:
                     empdata[name] = printableData
                 if format == 'txt':
                     # make sure path exists
@@ -150,6 +150,11 @@ class Salon(Bot.Bot):
                         </head>
                         <pre>
                         <body>"""
+            htmllogo = False
+            if self.salonName.lower() == 'upscale' and os.path.isfile('images/ulogo.png'):
+                htmllogo = """&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="G:/My Drive/payrollAutomation/bin/images/ulogo.png" style="width:100px"><br>"""
+            elif self.salonName.lower() == 'nails' and os.path.isfile('images/nlogo.png'):
+                htmllogo = """&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="G:/My Drive/payrollAutomation/bin/images/nlogo.png" style="width:100px"><br>"""
             htmlpagebreak = """<div class="pagebreak"></div>"""
             htmlfooter = """
             </body>
@@ -162,6 +167,8 @@ class Salon(Bot.Bot):
                 write.write('\n')
                 lastValue = list(empdata.values())[-1]
                 for values in empdata.values():
+                    if htmllogo:
+                        write.writelines(htmllogo)
                     write.writelines(values)
                     if values != lastValue:
                         write.writelines(htmlpagebreak)
@@ -175,14 +182,15 @@ class Salon(Bot.Bot):
             sheet = f'{self.salonName[0].lower()}.salary'
             data = []
             for emp, obj in self.Emps.items():
-                if obj.printchecks or obj.cashtype:
+                if obj.printchecks or obj.role == 'Cash':
+                    # cash employee must be explicitly included because there is no check to print
                     xldict = xldict | {emp: {}}
-                    # remove nickname in parentheses
                     xldict[emp] = obj.getXlReport()
                     sdate = datetime.datetime.strptime(sDate, '%m/%d/%Y')
                     edate = sdate + datetime.timedelta(days=6)
                     eDate = datetime.datetime.strftime(edate, '%m/%d/%Y')
-                    xldict[emp]['name'] = re.search('^[^\(]+', emp).group(0)
+                    # remove nickname in parentheses
+                    xldict[emp]['name'] = re.search('^[^(]+', emp).group(0)
                     xldict[emp]['date'] = eDate
                     xldict[emp]['memo'] = f'{sDate} - {eDate} PAYROLL'
                     data.append([sDate, eDate, emp.upper(), xldict[emp]['cash'], xldict[emp]['check'],
@@ -194,7 +202,7 @@ class Salon(Bot.Bot):
                 with pd.ExcelWriter(path, mode='a', engine='openpyxl', if_sheet_exists='overlay') as writer:
                     df.to_excel(writer, sheet_name=sheet, header=False, index=False, startrow=startRow)
             except Exception as e:
-                print(f'[Salon.exportPayroll] error: {e}')
+                print(f'[Salon.exportPayroll.197] error: {e}')
 
     def getDataToSave(self):
         emps = {}
