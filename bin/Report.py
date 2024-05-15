@@ -5,6 +5,12 @@ import os
 from PyPDF2 import PdfReader
 import re
 
+# completed exchange parse statement
+# completed exchange transactions
+# NEXT chase parse statements
+# need to: automatically load all statements and either merge or create new book
+
+
 officeExpenses = ("samsclub", "sams club", "walmart",
                   'walmart.com', "wal-mart", "amzn",
                   'amazon', "best buy", "big lots",
@@ -13,7 +19,7 @@ officeExpenses = ("samsclub", "sams club", "walmart",
                   'wal sam', 'locked up', 'bestbuy', 'hobbylobby'
                   )
 description = dict({"Rent": "robson",
-                    "Merchant Fees": ("mthly direct payment", 'direct dps', 'hs group'),
+                    "Merchant Fees": ("mthly disc direct payment", 'direct dps', 'hs group'),
                     "Bank Fees": "service charge",
                     "Cable": ("optimum", "suddenlink"),
                     "Utilities": ("ok natural gas", "city of stillwater"),
@@ -41,8 +47,8 @@ def makeWindow(theme):
         [sg.HorizontalSeparator()],
         [sg.Radio('Exchange', 'bank', default=True, k='-exchange-'),
          sg.Radio('Chase', 'bank', default=False, k='-chase-')],
-        [sg.Radio('Transaction downloads', 'type', k='-transactions-'),
-         sg.Radio('Bank statements', 'type', k='-statements-', default=True)],
+        [sg.Radio('Transaction downloads', 'type', k='-transactions-', default=True),
+         sg.Radio('Bank statements', 'type', k='-statements-', )],
         [sg.Button('Bank transactions', k='-bank-')],
         [sg.Button('Excel bookkeeper', k='-book-'), sg.Column([[]], expand_x=True),
          sg.Button('Process', k='-process-'), sg.Button('Exit', k='exit')],
@@ -116,185 +122,142 @@ def chaseParseTransactions(transactions, dfBank):
     return dfBank
 
 
-def exchangeParseTransactions(transactions, dfBank):
+def exchangeParseTransactions(bank, dfBank):
+    cols = [' Posted Date', ' Description', ' Debit', ' Credit', ' Check No.']
+    transactions = pd.read_csv(bank, index_col=False, usecols=cols)
+    transactions.columns = ['date', 'desc', 'debit', 'credit', 'checkNum']
+    newDf = []
     for index, row in transactions.iterrows():
         identified = False
-        date = datetime.strptime(row[3], "%m/%d/%Y")
-        desc = row[5]
         # break out of loop when no more row in transactions
-        if isinstance(desc, float):
+        if isinstance(row['desc'], float):
             break
+        desc = row['desc'].lower()
         # create new row template
         newRow = {'Category': '',
-                  'type': desc,
-                  'date': date,
+                  'type': row["desc"],
+                  'date': row["date"],
                   'description': desc,
                   'amount': '',
                   'check#': ''
                   }
-
-        if 'credit' and description["Sales"] in desc.lower():
-            newRow['Category'] = 'Sales'
+        if row['debit'] != row['debit']:
+            # fastest way to check if float equals 'nan' is if it DOES NOT EQUAL itself
+            # in this case check to see if debit value is Nan, if true then row['credit'] has a value
+            newRow['Category'] = 'Sales' if description['Sales'] in desc else 'Deposit'
             newRow['type'] = 'Credit'
-            newRow['amount'] = row[8]
-            # add newRow to the bottom of dfBank, no need to convert row to dataframe
-            dfBank.loc[len(dfBank.index)] = newRow
+            newRow['amount'] = float(row['credit'])
             identified = True
-
-        if 'debit' in desc.lower():
-            # now we figure out what category expense
-            for category in description.keys():
-                values = description[category]
-                if isinstance(values, str):  # if only one category
-                    if values in desc.lower():
-                        newRow['Category'] = category
-                        newRow['amount'] = -abs(row[7])
-                        dfBank.loc[len(dfBank.index)] = newRow
-                        if -abs(row[7]) == -1170:
-                            print('hi')
-                        identified = True
-                else:
-                    for value in values:
-                        if value in desc.lower():
+        else:
+            newRow['type'] = 'Debit'
+            newRow['amount'] = -abs(row['debit'])
+            if 'check' in desc:
+                newRow['Category'] = 'Wages'
+                newRow['check#'] = '' if row['checkNum'] != row['checkNum'] else int(row['checkNum'])
+                identified = True
+            else:
+                for category in description.keys():
+                    values = description[category]
+                    if isinstance(values, str):  # if only one category
+                        if values in desc:
                             newRow['Category'] = category
-                            newRow['amount'] = -abs(row[7])
-                            dfBank.loc[len(dfBank.index)] = newRow
-                            if -abs(row[7]) == -1170:
-                                print('hi')
                             identified = True
                             break
-
-        if "check" in desc.lower():
-            newRow['Category'] = 'Wages'
-            newRow['check#'] = row[10]
-            newRow['amount'] = -abs(row[7])
-            dfBank.loc[len(dfBank.index)] = newRow
-            identified = True
-
-        if 'deposit' in desc.lower():
-            newRow['Category'] = 'Deposits'
-            newRow['amount'] = row[8]
-            dfBank.loc[len(dfBank.index)] = newRow
-            identified = True
-
+                    else:
+                        for value in values:
+                            if value in desc.lower():
+                                newRow['Category'] = category
+                                identified = True
+                                break
         if not identified:
             newRow['Category'] = 'Miscellaneous'
-            if row[7]:
-                newRow['amount'] = -abs(row[7])
+            if row['debit']:
+                newRow['amount'] = -abs(row['debit'])
             else:
-                newRow['amount'] = row[8]
-            dfBank.loc[len(dfBank.index)] = newRow
+                newRow['amount'] = float(row['credit'])
+        newDf.append(pd.DataFrame(newRow, index=[0]))
+    dfBank = pd.concat(newDf, ignore_index=True)
     return dfBank
 
 
 def exchangeParseStatements(statement, dfBank):
     # creating a pdf reader object
     reader = PdfReader(statement)
-    parsed = []
+    newDf = []
+    firstPage = reader.pages[0].extract_text()
+    statementDate = re.search('\d+/\d+/\d+', firstPage).group(0)
+    year = statementDate[-2:]
     for num in range(len(reader.pages)):
         page = reader.pages[num]
-        # extracting text from page
         text = page.extract_text()
-        lines = text.translate({ord(i): None for i in ' ,'})
-        lines2 = re.split('\n', lines)
-
-        # for l2 in filtered:
-        #     if not isinstance(l2, str):
-        #         continue
-        #     check = None
-        #     l3 = ''
-        #     if 'check' in l2.lower():
-        #         # check to see if check number provided
-        #         l3 = re.match('(?P<date>\d+/\d+)(?P<desc>\D+)(?P<check>\d\d\d\d)(?P<amt>\d+\.\d\d-?)', l2)
-        #         if l3:
-        #             check = l3.group('check')
-        #         else:
-        #             l3 = re.match('(?P<date>\d+/\d+)(?P<desc>\D+)(?P<amt>\d+\.\d\d-?)', l2)
-        #     elif 'cable' in l2.lower():
-        #         l3 = re.match('(?P<date>\d+/\d+)(?P<desc>\D+)(?P<amt>\d+\.\d\d-?)', l2)
-        #     else:
-        #         l3 = re.match('(?P<date>\d+/\d+)(?P<desc>\D+)(?P<amt>\d+\.\d\d-?)', l2)
-        #
-        #     # check if amt is negative
-        #     negative = re.search('-$', l3.group('amt'))
-        #     # convert amount to float from string
-        #     amt = -float(l3.group('amt').replace('-', '')) if negative else float(l3.group('amt').replace('-', ''))
-        #     date = l3.group('date')
-        #     desc = l3.group('desc').lower()
-
-        for l1 in lines:
+        lines = re.split('\n', text)
+        for lineNumber, l1 in enumerate(lines):
             if not isinstance(l1, str):
                 continue
-            validTransaction = re.match('^\s*\d\d/\d\d\s\w+', l1)
+            validTransaction = re.match('^\s*\d+/\d+\s\w+', l1)
+            if not validTransaction:
+                continue
+            l1 = l1.lower()
+            l2 = ''
             date = ''
             desc = ''
             amt = ''
             checkNum = ''
-            if not validTransaction:
-                continue
-            if 'check' in l1.lower():
+            merchant = ''
+            if 'check' in l1:
                 l2 = re.match(
                     '\s+(?P<date>\d+/\d\d)\s(?P<desc>.*?(?=\s{4}))\s(?P<checkNum>.*?(?=\s{4}))\s*(?P<amt>\d*,?\d+\.\d\d-?)',
                     l1)
-                date = l2.group('date')
-                desc = l2.group('desc')
                 checkNum = l2.group('checkNum')
                 if len(checkNum) > 4:
                     checkNum = checkNum[-4:]
-                amt = l2.group('amt')
-                if amt[-1] == '-':
-                    amt = '-' + amt[:-1]
-
-            elif 'cable' in l1.lower():
-                filtered = re.match('\s+(?P<date>\d+/\d\d)\s(?P<desc>.*?(?=\s{4}))\s*(?P<amt>\d+\.\d\d-?)', l1)
-                date = filtered.group('date')
-                desc = filtered.group('desc')
-                amt = filtered.group('amt')
-                if amt[-1] == '-':
-                    amt = '-' + amt[0:-1]
+            elif 'cable' in l1:
+                l2 = re.match('\s+(?P<date>\d+/\d+)\s(?P<desc>.*?(?=\s{4}))\s*(?P<amt>\d+\.\d\d-?)', l1)
+            elif ' pos ' in l1 or ' dbt ' in l1:
+                date = re.match('\s+(?P<date>\d+/\d+)', l1).group('date')
+                amt = re.search('\d*,?\d+\.\d\d-?', l1).group(0)
+                merchant = re.match('\s+(?P<merch>.*?(?=\s{2}))', lines[lineNumber + 1])
+            elif 'service charge' in l1:
+                l2 = re.match('\s+(?P<date>\d+/\d+)\s*(?P<desc>.*?(?=\s{4}))\s*(?P<amt>\d*\.\d\d-?)', l1)
             else:
-                filtered = re.match('\s+(?P<date>\d+/\d\d)\s(?P<desc>.*?(?=\s{4}))\s*(?P<amt>\d+\.\d\d-?)', l1)
-                date = filtered.group('date')
-                desc = filtered.group('desc')
-                amt = filtered.group('amt')
-                if amt[-1] == '-':
-                    amt = '-' + amt[0:-1]
+                l2 = re.match('\s+(?P<date>\d+/\d+)\s*(?P<desc>.*?(?=\s{4}))\s*(?P<amt>\d*,?\d+\.\d\d-?)', l1)
+                if not l2:
+                    continue
 
+            if ' pos ' in l1 or ' dbt ' in l1:
+                desc = merchant.group('merch').lower()
+            else:
+                date = l2.group('date')
+                desc = l2.group('desc')
+                amt = l2.group('amt')
+            if amt[-1] == '-':
+                amt = '-' + amt[0:-1]
             # create new row template
             newRow = {'Category': '',
-                      'type': '',
-                      'date': date,
+                      'type': 'Debit' if float(amt.replace(",", "")) < 0 else 'Credit',
+                      'date': date + '/' + year,
                       'description': desc,
-                      'amount': amt,
+                      'amount': float(amt.replace(",", "")),
                       'check#': checkNum
                       }
-
-            # now we figure out what category expense
-            amt = float('-' + amt[0:-1]) if amt[-1] == '-' else float(amt)
-            newRow['type'] = 'Debit' if amt < 0 else 'Credit'
             identified = False
             for category in description.keys():
                 values = description[category]
                 if isinstance(values, str):  # if only one value
-                    if values.replace(' ', '') in desc.lower():
+                    if values in desc:
                         newRow['Category'] = category
-                        # dfBank.loc[len(dfBank.index)] = newRow
-                        dfBank.append(newRow)
                         identified = True
                         break
                 else:  # has a list of values
                     for value in values:
-                        if value.replace(' ', '') in desc:
+                        if value in desc:
                             newRow['Category'] = category
-                            # dfBank.loc[len(dfBank.index)] = newRow
-                            dfBank.append(newRow)
                             identified = True
                             break
             if not identified:
                 newRow['Category'] = 'Miscellaneous'
-                # dfBank.loc[len(dfBank.index)] = newRow
-                dfBank.append(newRow)
-                identified = True
+            newDf.append(pd.DataFrame(newRow, index=[0]))
+    dfBank = pd.concat(newDf, ignore_index=True)
     return dfBank
 
 
@@ -306,7 +269,7 @@ def exportToExcel(outputExcel, dfBank, initial):
 
 def main():
     window = makeWindow(sg.theme())
-    bank = '01.pdf'
+    bank = 'jan-feb.csv'
     book = '2024taxCat - Copy.xlsx'
     transactions = ''
     dfBank = pd.DataFrame(columns=['Category', 'type', 'date', 'description', 'amount', 'check#'])
@@ -325,11 +288,10 @@ def main():
             bankInitial = 't' if values['-exchange-'] else 'e'
             result = ''
             if values['-transactions-']:
-                transactions = pd.read_csv(bank, index_col=False)
                 if values['-exchange-']:
-                    result = exchangeParseTransactions(transactions, dfBank)
+                    result = exchangeParseTransactions(bank, dfBank)
                 else:
-                    result = chaseParseTransactions(transactions, dfBank)
+                    result = chaseParseTransactions(bank, dfBank)
             elif values['-statements-']:
                 if values['-exchange-']:
                     result = exchangeParseStatements(bank, dfBank)
