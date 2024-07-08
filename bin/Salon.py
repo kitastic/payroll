@@ -50,8 +50,8 @@ class Salon(Bot.Bot):
         self.salonName = bundle['name']
         self.paymentsFnames = bundle['paymentsFnames']
         self.path = bundle['path']
-        self.salesFnames = bundle['salesFnames']  # dict of json files names, key=year
-
+        # self.salesFnames = bundle['salesFnames']  # dict of json files names, key=year
+        self.status = bundle['status']
         # variables stored during program runtime
         self.salesDict = dict()  # {year: {datetime: {empName: [total, comm, tips]}}
         self.Emps = dict()  # holds employee objects
@@ -63,14 +63,14 @@ class Salon(Bot.Bot):
         Returns:
             None
         """
-        if self.salesFnames:
-            for year, fname in self.salesFnames.items():
-                try:
-                    if os.path.getsize(self.path + fname) > 10:
-                        with open(self.path + fname, 'r') as reader:
-                            self.salesDict = json.load(reader)
-                except FileNotFoundError:
-                    print(f'[Salon.setupSalon] {self.salonName} did not find any json')
+        # if self.salesFnames:
+        #     for year, fname in self.salesFnames.items():
+        #         try:
+        #             if os.path.getsize(self.path + fname) > 10:
+        #                 with open(self.path + fname, 'r') as reader:
+        #                     self.salesDict = json.load(reader)
+        #         except FileNotFoundError:
+        #             print(f'[Salon.setupSalon] {self.salonName} did not find any json')
 
         for emp, info in self.employees.items():
             if self.salonName.lower() == 'upscale':
@@ -210,7 +210,7 @@ class Salon(Bot.Bot):
             emps[empObjKeys] = obj.getInfo()
         data = {'name': self.salonName,
                 'login': {'username': self.zotaUname, 'password': self.zotaPass},
-                'salesFnames': self.salesFnames,
+                'status': self.status,
                 'path': self.path,
                 'employees': emps,
                 'paymentsFnames': self.paymentsFnames,
@@ -369,7 +369,7 @@ class Salon(Bot.Bot):
             'username': self.zotaUname,
             'password': self.zotaPass,
         }
-        niceprint = f'path: {self.path},\nsalesFnames: {self.salesFnames}' \
+        niceprint = f'path: {self.path},\nstatus: {self.status}' \
                     f'\npymentsFnames: {self.paymentsFnames}\n' \
                     f'employees:\n'
         for names in self.Emps:
@@ -507,3 +507,4 @@ class Salon(Bot.Bot):
         self.salonName = salonPkt['sname']
         self.zotaUname = salonPkt['login']['username']
         self.zotaPass = salonPkt['login']['password']
+        self.status = salonPkt['status']

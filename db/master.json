@@ -199,6 +199,72 @@
                     "wed": false
                 }
             },
+            "Kelly Tran (kelly)": {
+                "active": true,
+                "fees": 0,
+                "id": 0,
+                "name": "Kelly Tran (kelly)",
+                "pay6": 1200.0,
+                "pay7": 100.0,
+                "printchecks": true,
+                "rent": 0,
+                "salonName": "nails",
+                "type": {
+                    "regular": {
+                        "check": 0.5,
+                        "commission": 0.7
+                    },
+                    "role": "Regular",
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0.0,
+                        "checkoriginal": 0.0,
+                        "commissionspecial": 0.0
+                    }
+                },
+                "workdays": {
+                    "fri": false,
+                    "mon": false,
+                    "sat": false,
+                    "sun": false,
+                    "thu": false,
+                    "tue": false,
+                    "wed": false
+                }
+            },
+            "Luan Tran (sammy)": {
+                "active": true,
+                "fees": 5,
+                "id": 0,
+                "name": "Luan Tran (sammy)",
+                "pay6": 1200.0,
+                "pay7": 100.0,
+                "printchecks": true,
+                "rent": 70,
+                "salonName": "nails",
+                "type": {
+                    "regular": {
+                        "check": 0.6,
+                        "commission": 0.6
+                    },
+                    "role": "Regular",
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0.0,
+                        "checkoriginal": 0.0,
+                        "commissionspecial": 0.0
+                    }
+                },
+                "workdays": {
+                    "fri": false,
+                    "mon": false,
+                    "sat": false,
+                    "sun": false,
+                    "thu": false,
+                    "tue": false,
+                    "wed": false
+                }
+            },
             "Ngan 15 Huynh (julie)": {
                 "active": true,
                 "fees": 5,
