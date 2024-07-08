@@ -108,6 +108,7 @@ class View:
             [sg.T('Salon Name:'), sg.Input('', key='-sTab_in_name-')],
             [sg.T('Username:'), sg.Input('', key='-sTab_in_uname-')],
             [sg.T('Password:'), sg.Input('', key='-sTab_in_pass-')],
+            [sg.Checkbox('Active', key='-sTab_cb_active-')],
             [sg.T('')],
             [sg.HorizontalSeparator()],
             [sg.Image(filename='../images/add-file-40.png')],
@@ -745,6 +746,7 @@ class View:
             sname = self.values['-sTab_in_name-']
             uname = self.values['-sTab_in_uname-']
             password = self.values['-sTab_in_pass-']
+            active = self.values['-sTab_cb_active-']
             json = False
             try:
                 json = self.values['-sTab_in_jsonFile-']
@@ -754,7 +756,7 @@ class View:
             # pfname of json is still default
             salon = {'name': sname,
                      'login': {'username': uname, 'password': password},
-                     'salesFnames': {},  # default path and filename of json
+                     'active': active,
                      'path': '../db/',  # might not need yet
                      'paymentsFnames': {},
                      'employees': {}}
@@ -769,6 +771,7 @@ class View:
             sname = self.values['-sTab_in_name-']
             uname = self.values['-sTab_in_uname-']
             password = self.values['-sTab_in_pass-']
+            active = self.values['-sTab_cb_active-']
             json = False
             try:
                 json = self.values['-sTab_in_jsonFile-']
@@ -802,6 +805,7 @@ class View:
             self.gui['-sTab_in_name-'].update(salon)
             self.gui['-sTab_in_uname-'].update(login['username'])
             self.gui['-sTab_in_pass-'].update(login['password'])
+            self.gui['-sTab_cb_active-'].update(login['active'])
             self.gui['-sTab_in_display-'].update(niceprint)
 
     def listenRTab(self, fig, ax):

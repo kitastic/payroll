@@ -289,13 +289,13 @@ class Ai:
         self.salons[sname].updateJsonFileDelXl(path=None)
 
     def loadSettings(self, pfname):
-        '''
+        """
         This function will get information from one big dictionary in the form
          of json and parse that information and divide them into separate salon dictionaries,
         salonsBundle. Key is salon name and values are settings
         Returns:
             None
-        '''
+        """
         if pfname:
             with open(pfname, 'r') as reader:
                 self.loadedSettings = json.load(reader)

@@ -193,8 +193,22 @@ class Salon(Bot.Bot):
                     xldict[emp]['name'] = re.search('^[^(]+', emp).group(0)
                     xldict[emp]['date'] = eDate
                     xldict[emp]['memo'] = f'{sDate} - {eDate} PAYROLL'
-                    data.append([sDate, eDate, emp.upper(), xldict[emp]['cash'], xldict[emp]['check'],
-                                 xldict[emp]['checkdeal']])
+                    # this is where we change aliases for writing checks
+                    if 'kayla' in emp.lower():
+                        data.append([sDate, eDate, 'LINH CHAU', xldict[emp]['cash'], xldict[emp]['check'],
+                                     xldict[emp]['checkdeal']])
+                    elif 'cindy' in emp.lower():
+                        data.append([sDate, eDate, 'HAI T NGUYEN', xldict[emp]['cash'], xldict[emp]['check'],
+                                     xldict[emp]['checkdeal']])
+                    elif 'matthew' in emp.lower():
+                        data.append([sDate, eDate, 'DONG TRINH', xldict[emp]['cash'], xldict[emp]['check'],
+                                     xldict[emp]['checkdeal']])
+                    elif 'anh' in emp.lower():
+                        data.append([sDate, eDate, 'PHUONG NGUYEN', xldict[emp]['cash'], xldict[emp]['check'],
+                                     xldict[emp]['checkdeal']])
+                    else:
+                        data.append([sDate, eDate, emp.upper(), xldict[emp]['cash'], xldict[emp]['check'],
+                                    xldict[emp]['checkdeal']])
             df = pd.DataFrame(data, )
             reader = pd.read_excel(path, sheet_name=sheet, index_col=False)
             startRow = len(reader.index) + 1
@@ -210,7 +224,7 @@ class Salon(Bot.Bot):
             emps[empObjKeys] = obj.getInfo()
         data = {'name': self.salonName,
                 'login': {'username': self.zotaUname, 'password': self.zotaPass},
-                'status': self.status,
+                'active': self.active,
                 'path': self.path,
                 'employees': emps,
                 'paymentsFnames': self.paymentsFnames,
@@ -368,8 +382,9 @@ class Salon(Bot.Bot):
         login = {
             'username': self.zotaUname,
             'password': self.zotaPass,
+            'active': self.active
         }
-        niceprint = f'path: {self.path},\nstatus: {self.status}' \
+        niceprint = f'path: {self.path},\nactive: {self.active}' \
                     f'\npymentsFnames: {self.paymentsFnames}\n' \
                     f'employees:\n'
         for names in self.Emps:
@@ -507,4 +522,4 @@ class Salon(Bot.Bot):
         self.salonName = salonPkt['sname']
         self.zotaUname = salonPkt['login']['username']
         self.zotaPass = salonPkt['login']['password']
-        self.status = salonPkt['status']
+        self.active = salonPkt['active']
