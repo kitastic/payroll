@@ -603,7 +603,7 @@
         "name": "nails",
         "path": "../db/",
         "paymentsFnames": {},
-        "salesFnames": {}
+        "active": true
     },
     "posh": {
         "employees": {
@@ -1143,7 +1143,7 @@
         "name": "posh",
         "path": "../db/",
         "paymentsFnames": {},
-        "salesFnames": {}
+        "active": false
     },
     "upscale": {
         "employees": {
@@ -1749,6 +1749,6 @@
         "name": "upscale",
         "path": "../db/",
         "paymentsFnames": {},
-        "salesFnames": {}
+        "active": true
     }
 }

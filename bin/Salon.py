@@ -29,7 +29,7 @@ class Salon(Bot.Bot):
                     bundle =  { 'name': 'upscale',
                                 'login': {'username': 'upscalemanager', 'password': 'Joeblack334$'},
                                 'salesJson':
-                                'salesXl':    # might not need yet
+                                'active': bool   # might not need yet
                                 'payments': 'uPayments.xlsx',
                                 'employees': {
                                 name:{'active':True,
@@ -51,7 +51,7 @@ class Salon(Bot.Bot):
         self.paymentsFnames = bundle['paymentsFnames']
         self.path = bundle['path']
         # self.salesFnames = bundle['salesFnames']  # dict of json files names, key=year
-        self.status = bundle['status']
+        self.active = bundle['active']
         # variables stored during program runtime
         self.salesDict = dict()  # {year: {datetime: {empName: [total, comm, tips]}}
         self.Emps = dict()  # holds employee objects
