@@ -1,8 +1,9 @@
 {
     "nails": {
+        "active": true,
         "employees": {
             "Brandon 11 Nguyen (brandon)": {
-                "active": true,
+                "active": false,
                 "fees": 5,
                 "id": 0,
                 "name": "Brandon 11 Nguyen (brandon)",
@@ -34,15 +35,81 @@
                     "wed": false
                 }
             },
-            "Cat Lam 9 (michael)": {
+            "Cat Lam (michael)": {
                 "active": true,
+                "fees": 5,
+                "id": 0,
+                "name": "Cat Lam (michael)",
+                "pay6": 1200.0,
+                "pay7": 100.0,
+                "printchecks": true,
+                "rent": 0,
+                "salonName": "nails",
+                "type": {
+                    "regular": {
+                        "check": 0.6,
+                        "commission": 0.6
+                    },
+                    "role": "Regular",
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0.0,
+                        "checkoriginal": 0.0,
+                        "commissionspecial": 0.0
+                    }
+                },
+                "workdays": {
+                    "fri": false,
+                    "mon": false,
+                    "sat": false,
+                    "sun": false,
+                    "thu": false,
+                    "tue": false,
+                    "wed": false
+                }
+            },
+            "Cat Lam 9 (michael)": {
+                "active": false,
                 "fees": 5,
                 "id": 0,
                 "name": "Cat Lam 9 (michael)",
                 "pay6": 1200.0,
                 "pay7": 100.0,
-                "printchecks": true,
+                "printchecks": false,
                 "rent": 0,
+                "salonName": "nails",
+                "type": {
+                    "regular": {
+                        "check": 0.6,
+                        "commission": 0.6
+                    },
+                    "role": "Regular",
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0.0,
+                        "checkoriginal": 0.0,
+                        "commissionspecial": 0.0
+                    }
+                },
+                "workdays": {
+                    "fri": false,
+                    "mon": false,
+                    "sat": false,
+                    "sun": false,
+                    "thu": false,
+                    "tue": false,
+                    "wed": false
+                }
+            },
+            "Cong Nguyen (brandon)": {
+                "active": true,
+                "fees": 5,
+                "id": 0,
+                "name": "Cong Nguyen (brandon)",
+                "pay6": 1200.0,
+                "pay7": 100.0,
+                "printchecks": true,
+                "rent": 70,
                 "salonName": "nails",
                 "type": {
                     "regular": {
@@ -107,7 +174,7 @@
                 "name": "Huong Mai (lisa)",
                 "pay6": 900.0,
                 "pay7": 100.0,
-                "printchecks": true,
+                "printchecks": false,
                 "rent": 70,
                 "salonName": "nails",
                 "type": {
@@ -140,7 +207,7 @@
                 "name": "Huy Nguyen (sumo)",
                 "pay6": 1200.0,
                 "pay7": 100.0,
-                "printchecks": true,
+                "printchecks": false,
                 "rent": 60,
                 "salonName": "nails",
                 "type": {
@@ -173,7 +240,7 @@
                 "name": "Jackie 6 My (jackie)",
                 "pay6": 1300.0,
                 "pay7": 100.0,
-                "printchecks": true,
+                "printchecks": false,
                 "rent": 70,
                 "salonName": "nails",
                 "type": {
@@ -266,13 +333,13 @@
                 }
             },
             "Ngan 15 Huynh (julie)": {
-                "active": true,
+                "active": false,
                 "fees": 5,
                 "id": 0,
                 "name": "Ngan 15 Huynh (julie)",
                 "pay6": 1200.0,
                 "pay7": 100.0,
-                "printchecks": true,
+                "printchecks": false,
                 "rent": 0,
                 "salonName": "nails",
                 "type": {
@@ -298,14 +365,47 @@
                     "wed": false
                 }
             },
-            "Phat(6) Truong (paul)": {
+            "Phat Truong (paul)": {
                 "active": true,
+                "fees": 5,
+                "id": 0,
+                "name": "Phat Truong (paul)",
+                "pay6": 900.0,
+                "pay7": 100.0,
+                "printchecks": true,
+                "rent": 60,
+                "salonName": "nails",
+                "type": {
+                    "regular": {
+                        "check": 0.6,
+                        "commission": 0.6
+                    },
+                    "role": "Regular",
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0.0,
+                        "checkoriginal": 0.0,
+                        "commissionspecial": 0.0
+                    }
+                },
+                "workdays": {
+                    "fri": false,
+                    "mon": false,
+                    "sat": false,
+                    "sun": false,
+                    "thu": false,
+                    "tue": false,
+                    "wed": false
+                }
+            },
+            "Phat(6) Truong (paul)": {
+                "active": false,
                 "fees": 5,
                 "id": 0,
                 "name": "Phat(6) Truong (paul)",
                 "pay6": 900.0,
                 "pay7": 100.0,
-                "printchecks": true,
+                "printchecks": false,
                 "rent": 60,
                 "salonName": "nails",
                 "type": {
@@ -358,20 +458,20 @@
                     "fri": true,
                     "mon": true,
                     "sat": true,
-                    "sun": false,
+                    "sun": true,
                     "thu": true,
                     "tue": true,
                     "wed": true
                 }
             },
             "Thao 14 Huynh (ricky)": {
-                "active": true,
+                "active": false,
                 "fees": 5,
                 "id": 0,
                 "name": "Thao 14 Huynh (ricky)",
                 "pay6": 1200.0,
                 "pay7": 100.0,
-                "printchecks": true,
+                "printchecks": false,
                 "rent": 70,
                 "salonName": "nails",
                 "type": {
@@ -464,13 +564,13 @@
                 }
             },
             "Thy 3 Tran (chris)": {
-                "active": true,
+                "active": false,
                 "fees": 5,
                 "id": 0,
                 "name": "Thy 3 Tran (chris)",
                 "pay6": 1000.0,
                 "pay7": 100.0,
-                "printchecks": true,
+                "printchecks": false,
                 "rent": 70,
                 "salonName": "nails",
                 "type": {
@@ -496,11 +596,11 @@
                     "wed": false
                 }
             },
-            "Tram(1) Lam (kate)": {
+            "Tram Lam (kate)": {
                 "active": true,
                 "fees": 0,
-                "id": 739,
-                "name": "Tram(1) Lam (kate)",
+                "id": 0,
+                "name": "Tram Lam (kate)",
                 "pay6": 1500.0,
                 "pay7": 150.0,
                 "printchecks": true,
@@ -529,14 +629,80 @@
                     "wed": false
                 }
             },
-            "Tuoi(5) Vu (tina)": {
+            "Tram(1) Lam (kate)": {
+                "active": false,
+                "fees": 0,
+                "id": 739,
+                "name": "Tram(1) Lam (kate)",
+                "pay6": 1500.0,
+                "pay7": 150.0,
+                "printchecks": false,
+                "rent": 0,
+                "salonName": "nails",
+                "type": {
+                    "regular": {
+                        "check": 0.6,
+                        "commission": 0.7
+                    },
+                    "role": "Regular",
+                    "special": {
+                        "cashrate": 0.0,
+                        "checkdeal": 0.0,
+                        "checkoriginal": 0.0,
+                        "commissionspecial": 0.0
+                    }
+                },
+                "workdays": {
+                    "fri": false,
+                    "mon": false,
+                    "sat": false,
+                    "sun": false,
+                    "thu": false,
+                    "tue": false,
+                    "wed": false
+                }
+            },
+            "Tuoi Vu (tina)": {
                 "active": true,
+                "fees": 5,
+                "id": 0,
+                "name": "Tuoi Vu (tina)",
+                "pay6": 900.0,
+                "pay7": 100.0,
+                "printchecks": true,
+                "rent": 0,
+                "salonName": "nails",
+                "type": {
+                    "regular": {
+                        "check": 0.0,
+                        "commission": 0.0
+                    },
+                    "role": "Cash",
+                    "special": {
+                        "cashrate": 1.0,
+                        "checkdeal": 0.0,
+                        "checkoriginal": 0.0,
+                        "commissionspecial": 0.6
+                    }
+                },
+                "workdays": {
+                    "fri": false,
+                    "mon": false,
+                    "sat": false,
+                    "sun": false,
+                    "thu": false,
+                    "tue": false,
+                    "wed": false
+                }
+            },
+            "Tuoi(5) Vu (tina)": {
+                "active": false,
                 "fees": 5,
                 "id": 0,
                 "name": "Tuoi(5) Vu (tina)",
                 "pay6": 900.0,
                 "pay7": 100.0,
-                "printchecks": true,
+                "printchecks": false,
                 "rent": 0,
                 "salonName": "nails",
                 "type": {
@@ -589,7 +755,7 @@
                     "fri": true,
                     "mon": true,
                     "sat": true,
-                    "sun": false,
+                    "sun": true,
                     "thu": true,
                     "tue": true,
                     "wed": true
@@ -602,10 +768,10 @@
         },
         "name": "nails",
         "path": "../db/",
-        "paymentsFnames": {},
-        "active": true
+        "paymentsFnames": {}
     },
     "posh": {
+        "active": false,
         "employees": {
             "Hai Tang (hai)": {
                 "active": true,
@@ -1142,10 +1308,10 @@
         },
         "name": "posh",
         "path": "../db/",
-        "paymentsFnames": {},
-        "active": false
+        "paymentsFnames": {}
     },
     "upscale": {
+        "active": true,
         "employees": {
             "Ai Nguyen (ai)": {
                 "active": true,
@@ -1286,20 +1452,20 @@
                 "name": "Cindy Pham (cindy)",
                 "pay6": 900.0,
                 "pay7": 100.0,
-                "printchecks": false,
+                "printchecks": true,
                 "rent": 70,
                 "salonName": "upscale",
                 "type": {
                     "regular": {
-                        "check": 0.0,
-                        "commission": 0.0
+                        "check": 0.6,
+                        "commission": 0.6
                     },
-                    "role": "Cash",
+                    "role": "Regular",
                     "special": {
-                        "cashrate": 0.85,
+                        "cashrate": 0.0,
                         "checkdeal": 0.0,
-                        "checkoriginal": 0.6,
-                        "commissionspecial": 0.6
+                        "checkoriginal": 0.0,
+                        "commissionspecial": 0.0
                     }
                 },
                 "workdays": {
@@ -1336,13 +1502,13 @@
                     }
                 },
                 "workdays": {
-                    "fri": true,
+                    "fri": false,
                     "mon": true,
                     "sat": true,
                     "sun": true,
-                    "thu": true,
-                    "tue": true,
-                    "wed": true
+                    "thu": false,
+                    "tue": false,
+                    "wed": false
                 }
             },
             "Hang Nguyen (hang)": {
@@ -1647,7 +1813,7 @@
                 "fees": 5,
                 "id": 195,
                 "name": "Trung Tao (ethan)",
-                "pay6": 1300.0,
+                "pay6": 1400.0,
                 "pay7": 100.0,
                 "printchecks": true,
                 "rent": 0,
@@ -1748,7 +1914,6 @@
         },
         "name": "upscale",
         "path": "../db/",
-        "paymentsFnames": {},
-        "active": true
+        "paymentsFnames": {}
     }
 }
