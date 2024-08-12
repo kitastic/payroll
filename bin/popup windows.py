@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import PySimpleGUI as psg
 text = psg.popup_get_text('Enter your name', title="Textbox")
 print ("You entered: ", text)

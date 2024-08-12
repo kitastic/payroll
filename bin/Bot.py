@@ -1,8 +1,11 @@
 import os.path
+from urllib.request import urlopen
+from zipfile import ZipFile
+
 import PySimpleGUI as sg
 from selenium import webdriver
 # no longer need to download browser drivers
-import chromedriver_autoinstaller_fix
+# import chromedriver_autoinstaller_fix
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
@@ -14,6 +17,7 @@ from pathlib import Path
 
 # local files
 import helper
+import re
 
 
 class Bot:
@@ -130,14 +134,35 @@ class Bot:
         Returns:
             None
         """
-        chromedriver_autoinstaller_fix.install()
+        # chromedriver_autoinstaller_fix.install()
         opts = webdriver.ChromeOptions()
         # dlDir = "D:\\pradagy\\projects\\payrollAutomation\\tmp\\"
         prefs = {'download.default_directory': dlDir,
                  'directory_upgrade': True,
                  }
         opts.add_experimental_option('prefs',prefs)
-        self.driver = webdriver.Chrome(options=opts, service=Service('chromedriver.exe'))
+        try:
+            self.driver = webdriver.Chrome(options=opts, service=Service('chromedriver-win64\\chromedriver.exe'))
+        except:
+            print('updating chromedriver')
+            # file usually https://storage.googleapis.com/
+            # chrome-for-testing-public/127.0.6533.72/win64/chromedriver-win64.zip
+            url = 'https://googlechromelabs.github.io/chrome-for-testing/'
+            with urlopen(url) as response:
+                body = response.read().decode()
+            flag = re.search(
+                'https:\/\/storage\.googleapis\.com\/chrome-for-testing-public'
+                '\/\d+\.\d+\.\d+\.\d+\/win64\/chromedriver-win64\.zip',
+                body)
+            print(flag.group(0))
+            with urlopen(flag.group(0)) as response:
+                body = response.read()
+            with open('chrome.zip', mode='wb') as html_file:
+                html_file.write(body)
+            with ZipFile('chrome.zip', mode='r') as zObject:
+                zObject.extractall()
+            print('chromedriver updated')
+            self.driver = webdriver.Chrome(options=opts, service=Service('chromedriver-win64\\chromedriver.exe'))
 
         self.driver.get("https://pos2.zota.us/#/login")
         # self.driver.maximize_window()
@@ -153,7 +178,7 @@ class Bot:
         helper.waitLoadingPresence('avatar', 10, self.driver)
 
     def printHtml(self, pfname):
-        chromedriver_autoinstaller_fix.install()
+        # chromedriver_autoinstaller_fix.install()
         opts = webdriver.ChromeOptions()
         # dlDir = "D:\\pradagy\\projects\\payrollAutomation\\tmp\\"
         prefs = {

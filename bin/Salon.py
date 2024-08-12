@@ -194,16 +194,16 @@ class Salon(Bot.Bot):
                     xldict[emp]['date'] = eDate
                     xldict[emp]['memo'] = f'{sDate} - {eDate} PAYROLL'
                     # this is where we change aliases for writing checks
-                    if 'kayla' in emp.lower():
+                    if 'kayla mai' in emp.lower():
                         data.append([sDate, eDate, 'LINH CHAU', xldict[emp]['cash'], xldict[emp]['check'],
                                      xldict[emp]['checkdeal']])
-                    elif 'cindy' in emp.lower():
-                        data.append([sDate, eDate, 'HAI T NGUYEN', xldict[emp]['cash'], xldict[emp]['check'],
+                    elif 'cindy pham' in emp.lower():
+                        data.append([sDate, eDate, 'ARIANN MAI', xldict[emp]['cash'], xldict[emp]['check'],
                                      xldict[emp]['checkdeal']])
                     elif 'matthew' in emp.lower():
                         data.append([sDate, eDate, 'DONG TRINH', xldict[emp]['cash'], xldict[emp]['check'],
                                      xldict[emp]['checkdeal']])
-                    elif 'anh' in emp.lower():
+                    elif 'anh nguyen' in emp.lower():
                         data.append([sDate, eDate, 'PHUONG NGUYEN', xldict[emp]['cash'], xldict[emp]['check'],
                                      xldict[emp]['checkdeal']])
                     else:
@@ -461,9 +461,8 @@ class Salon(Bot.Bot):
                     if row[1] == 'S':
                         tech = row[0]
                         totalSale = row[4]
-                        commission = row[11]
                         tips = row[10]
-                        empDict[tech] = [totalSale, commission, tips]
+                        empDict[tech] = [totalSale, tips]
                 except Exception as e:
                     print('Cannot iterate to find tech')
         # pack any employee data that still in storage because iterater

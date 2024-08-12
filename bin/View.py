@@ -19,7 +19,7 @@ class View:
         self.gui = None
         self.values = dict()
         self.event = ''
-        self.salonNames = ['upscale', 'nails']
+        self.salonNames = ['upscale', 'nails', 'deluxe']
         self.currentSalon = ''  # all, upscale, or posh
         self.startDate = ''
         self.endDate = ''

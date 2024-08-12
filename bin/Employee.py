@@ -73,8 +73,14 @@ class Employee:
         else:
             tmpCommissionForOutput = self.commissionspecial
 
-        for days, amt in self.sales.items():
-            dayName = days.isoweekday()        # monday = 1
+        # this part is the text of the daily summaries based off of regular ticket printout
+        output = f'{"  " + string.capwords(self.salonName) + "  ":=^40}\n'
+        output += f'{"Name":<10}{" ":10}{self.name:>20}\n'
+        output += f'{" Daily ":-^40}\n'
+        output += f'{"Day":<10}{"Total":>10}{"Comm":>10}{"Tips":>10}\n'
+
+        for day, amt in self.sales.items():
+            dayName = day.isoweekday()  # monday = 1
             # this is the part where we compare janitor and employee work days to know if there is a fee
             if dayName == 1 and salon_fee_days['mon']:
                 personal_fees += self.fees
@@ -91,29 +97,30 @@ class Employee:
             elif dayName == 7 and salon_fee_days['sun']:
                 personal_fees += self.fees
 
-            tips += amt[2]
+            # older json db files saved commission column from zota into amt[1] and tips for in amt[2]
+            # which new versions of software do not need anymore
+            try:
+                tipForDay = amt[2]
+                tips += amt[2]
+            except IndexError:
+                tipForDay = amt[1]
+                tips += amt[1]
             commissionSales += (amt[0] * tmpCommissionForOutput)
             totalSales += amt[0]
             if amt[0] > 0:
                 daysWorked += 1
 
+            d = datetime.datetime.strftime(day, '%m/%d:%a')
+            output += f'{d:<10}{amt[0]:>10.2f}{amt[0] * tmpCommissionForOutput:>10.2f}{tipForDay:>10.2f}\n'
 
-        # this part is the text of the daily summaries based off of regular ticket printout
-        output = f'{"  " + string.capwords(self.salonName) + "  ":=^40}\n'
-        output += f'{"Name":<10}{" ":10}{self.name:>20}\n'
+        output += f'{" ":12}{"-":->8}{" ":2}{"-":->8}{" ":2}{"-":->8}\n'
+        output += f'{" ":10}{totalSales:>10.2f}{commissionSales:>10.2f}{tips:>10.2f}\n\n'
         output += f'{" Summary ":-^40}\n'
         output += f'{"Total Sale":<10}{" ":20}{totalSales:>10.2f}\n'
         output += f'{"Commission":<10}{" ":20}{commissionSales:>10.2f}\n'
         output += f'{"Tips":<10}{" ":20}{tips:>10.2f}\n'
         output += f'{" ":30}{"-":->10}\n'
         output += f'{"Total Pay":<10}{" ":20}{commissionSales + tips:>10.2f}\n'
-        output += f'{" Daily ":-^40}\n'
-        output += f'{"Day":<10}{"Total":>10}{"Comm":>10}{"Tips":>10}\n'
-        for day, amt in self.sales.items():
-            d = datetime.datetime.strftime(day, '%m/%d:%a')
-            output += f'{d:<10}{amt[0]:>10.2f}{amt[0] * tmpCommissionForOutput:>10.2f}{amt[2]:>10.2f}\n'
-        output += f'{" ":12}{"-":->8}{" ":2}{"-":->8}{" ":2}{"-":->8}\n'
-        output += f'{" ":10}{totalSales:>10.2f}{commissionSales:>10.2f}{tips:>10.2f}\n'
         output += f'{"=":=^40}\n'
         self.payrollPrint = output
 
