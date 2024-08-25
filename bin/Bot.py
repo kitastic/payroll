@@ -35,7 +35,9 @@ class Bot:
             endDate: (str) 'mm/dd/yyyy'
 
         Returns:
-            (str): path+filename of downloaded file relative to main project's bin folder
+            path, filename: of downloaded file relative to main project's bin folder if function was successful
+            bool, error msg: if function failed
+
         """
         dlDir = r'{}\{}\\'.format(os.getcwd(),salonName)
         # make sure path exists
@@ -83,7 +85,7 @@ class Bot:
             if counter == 60:
                 print('WARNING: {}s out of 10s - Cannot find link even after refreshing'.format(counter))
                 self.driver.quit()
-                return False
+                return False, False
         time_counter = 0
         time_to_wait = 8
         downloadedFileName = ''
@@ -99,9 +101,8 @@ class Bot:
                 except ValueError as e:
                     print('{}: waiting {} sec more'.format(e, time_counter))
             if time_counter == time_to_wait:
-                sg.Print('ERROR: file never found')
                 self.driver.quit()
-                return False
+                return False, '[Bot.dlEmpSales] file never found'
 
         self.driver.quit()
         time.sleep(2)
@@ -112,12 +113,13 @@ class Bot:
             time.sleep(1)
             time_counter += 1
             if time_counter > time_to_wait:
-                print('Waited too long for file to download')
-                return False
+                return False, '[Bot.dlEmpSales] Waited too long for file to download'
 
         downloadedFileName = max([f for f in os.listdir(dlDir)],
                        key=lambda xa: os.path.getctime(os.path.join(dlDir,xa)))
+
         newDownloadedFname = f'{salonName[0]}Sales{endDate[-4:]}.xlsx'
+
         try:
             os.rename(os.path.join(dlDir,downloadedFileName),os.path.join(dlDir, newDownloadedFname))
         except FileExistsError:
@@ -151,8 +153,8 @@ class Bot:
             with urlopen(url) as response:
                 body = response.read().decode()
             flag = re.search(
-                'https:\/\/storage\.googleapis\.com\/chrome-for-testing-public'
-                '\/\d+\.\d+\.\d+\.\d+\/win64\/chromedriver-win64\.zip',
+                r'https://storage\.googleapis\.com/chrome-for-testing-public'
+                r'/\d+\.\d+\.\d+\.\d+/win64/chromedriver-win64\.zip',
                 body)
             print(flag.group(0))
             with urlopen(flag.group(0)) as response:
@@ -178,6 +180,11 @@ class Bot:
         helper.waitLoadingPresence('avatar', 10, self.driver)
 
     def printHtml(self, pfname):
+        """
+        Open and send print command for exported html file
+        Args:
+            pfname: path and file name of file to be printed
+        """
         # chromedriver_autoinstaller_fix.install()
         opts = webdriver.ChromeOptions()
         # dlDir = "D:\\pradagy\\projects\\payrollAutomation\\tmp\\"
@@ -199,3 +206,4 @@ class Bot:
         actions.key_down(Keys.CONTROL).send_keys('P').key_up(Keys.CONTROL).perform()
         time.sleep(1)
         actions.send_keys(Keys.ENTER).perform()
+

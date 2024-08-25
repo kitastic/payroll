@@ -54,7 +54,9 @@ class Salon(Bot.Bot):
         self.active = bundle['active']
         # variables stored during program runtime
         self.salesDict = dict()  # {year: {datetime: {empName: [total, comm, tips]}}
+        self.modifiedSalesDict = dict()
         self.Emps = dict()  # holds employee objects
+        self.modFlag = False # to know whether working with regular sales or modified sales
         self.setupSalon()
 
     def setupSalon(self):
@@ -73,8 +75,6 @@ class Salon(Bot.Bot):
         #             print(f'[Salon.setupSalon] {self.salonName} did not find any json')
 
         for emp, info in self.employees.items():
-            if self.salonName.lower() == 'upscale':
-                print()
             if info['type']['role'].lower() in ['checkdeal', 'cash']:
                 self.Emps[string.capwords(emp)] = Employee.EmployeeSpecial(info)
             elif info['type']['role'] == 'Janitor':
@@ -88,7 +88,7 @@ class Salon(Bot.Bot):
     def createEmpReg(self, name):
         newEmp = {
             name: {'active': True,
-                   'id': 0, 'name': name, 'salonName': self.salonName,
+                   'name': name, 'checkName': '', 'salonName': self.salonName,
                    'pay6': 0, 'pay7': 0, 'fees': 0, 'rent': 0,
                    'printchecks': True,
                    'type': {'role': 'Regular',
@@ -124,99 +124,79 @@ class Salon(Bot.Bot):
             if len(printableData) > 5:
                 if obj.role not in ['Janitor', 'Owner']:
                     empdata[name] = printableData
-                if format == 'txt':
-                    # make sure path exists
-                    Path(f'../payroll/{self.salonName}/').mkdir(parents=True, exist_ok=True)
-                    pfname = f'../payroll/{self.salonName}/{self.salonName[0]}.{sDate.replace("/", ".")}.{name}.txt'
-                    Path(pfname.replace(f'{self.salonName[0]}.{sDate.replace("/", ".")}.{name}.txt', '')).mkdir(
-                        parents=True,
-                        exist_ok=True)
-                    with open(pfname, 'w') as f:
-                        f.writelines(printableData)
-                    print(f'INFO: ({self.salonName}) finished exporting text files')
-        if format == 'html':
-            htmlheader = """
-                        <!DOCTYPE html>
-                        <html>
-                        <head>
-                        <style>
-                        @media print {
-                            .pagebreak {
-                                clear: both;
-                                page-break-before: always;
-                            }
-                        }
-                        </style>
-                        </head>
-                        <pre>
-                        <body>"""
-            htmllogo = False
-            if self.salonName.lower() == 'upscale' and os.path.isfile('images/ulogo.png'):
-                htmllogo = """&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="G:/My Drive/payrollAutomation/bin/images/ulogo.png" style="width:100px"><br>"""
-            elif self.salonName.lower() == 'nails' and os.path.isfile('images/nlogo.png'):
-                htmllogo = """&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="G:/My Drive/payrollAutomation/bin/images/nlogo.png" style="width:100px"><br>"""
-            htmlpagebreak = """<div class="pagebreak"></div>"""
-            htmlfooter = """
-            </body>
-            <pre>
-            </html>
-            """
-            pfname = f'../payroll/{sDate.replace("/", ".")}.{self.salonName}.html'
-            with open(pfname, 'w+') as write:
-                write.writelines(htmlheader)
-                write.write('\n')
-                lastValue = list(empdata.values())[-1]
-                for values in empdata.values():
-                    if htmllogo:
-                        write.writelines(htmllogo)
-                    write.writelines(values)
-                    if values != lastValue:
-                        write.writelines(htmlpagebreak)
-                write.writelines(htmlfooter)
-            print(f'[Salon.exportPayroll]: {self.salonName} finished exporting {pfname}')
-            # self.printHtml(pfname)
 
-            # now update yearly excel book for 1099
-            # pass path, salon prefix for sheetname, data
-            path = f'../payroll/{sDate[-4:]}.xlsx'
-            sheet = f'{self.salonName[0].lower()}.salary'
-            data = []
-            for emp, obj in self.Emps.items():
-                if obj.printchecks or obj.role == 'Cash':
-                    # cash employee must be explicitly included because there is no check to print
-                    xldict = xldict | {emp: {}}
-                    xldict[emp] = obj.getXlReport()
-                    sdate = datetime.datetime.strptime(sDate, '%m/%d/%Y')
-                    edate = sdate + datetime.timedelta(days=6)
-                    eDate = datetime.datetime.strftime(edate, '%m/%d/%Y')
-                    # remove nickname in parentheses
-                    xldict[emp]['name'] = re.search('^[^(]+', emp).group(0)
-                    xldict[emp]['date'] = eDate
-                    xldict[emp]['memo'] = f'{sDate} - {eDate} PAYROLL'
-                    # this is where we change aliases for writing checks
-                    if 'kayla mai' in emp.lower():
-                        data.append([sDate, eDate, 'LINH CHAU', xldict[emp]['cash'], xldict[emp]['check'],
-                                     xldict[emp]['checkdeal']])
-                    elif 'cindy pham' in emp.lower():
-                        data.append([sDate, eDate, 'ARIANN MAI', xldict[emp]['cash'], xldict[emp]['check'],
-                                     xldict[emp]['checkdeal']])
-                    elif 'matthew' in emp.lower():
-                        data.append([sDate, eDate, 'DONG TRINH', xldict[emp]['cash'], xldict[emp]['check'],
-                                     xldict[emp]['checkdeal']])
-                    elif 'anh nguyen' in emp.lower():
-                        data.append([sDate, eDate, 'PHUONG NGUYEN', xldict[emp]['cash'], xldict[emp]['check'],
-                                     xldict[emp]['checkdeal']])
-                    else:
-                        data.append([sDate, eDate, emp.upper(), xldict[emp]['cash'], xldict[emp]['check'],
-                                    xldict[emp]['checkdeal']])
-            df = pd.DataFrame(data, )
-            reader = pd.read_excel(path, sheet_name=sheet, index_col=False)
-            startRow = len(reader.index) + 1
-            try:
-                with pd.ExcelWriter(path, mode='a', engine='openpyxl', if_sheet_exists='overlay') as writer:
-                    df.to_excel(writer, sheet_name=sheet, header=False, index=False, startrow=startRow)
-            except Exception as e:
-                print(f'[Salon.exportPayroll.197] error: {e}')
+        htmlheader = """
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                    <style>
+                    @media print {
+                        .pagebreak {
+                            clear: both;
+                            page-break-before: always;
+                        }
+                    }
+                    </style>
+                    </head>
+                    <pre>
+                    <body>"""
+        htmllogo = False
+        if self.salonName.lower() == 'upscale' and os.path.isfile('images/ulogo.png'):
+            htmllogo = """&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="G:/My Drive/payrollAutomation/bin/images/ulogo.png" style="width:100px"><br>"""
+        elif self.salonName.lower() == 'nails' and os.path.isfile('images/nlogo.png'):
+            htmllogo = """&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="G:/My Drive/payrollAutomation/bin/images/nlogo.png" style="width:100px"><br>"""
+        htmlpagebreak = """<div class="pagebreak"></div>"""
+        htmlfooter = """
+        </body>
+        <pre>
+        </html>
+        """
+        pfname = f'../payroll/{sDate.replace("/", ".")}.{self.salonName}.html'
+        with open(pfname, 'w+') as write:
+            write.writelines(htmlheader)
+            write.write('\n')
+            lastValue = list(empdata.values())[-1]
+            for values in empdata.values():
+                if htmllogo:
+                    write.writelines(htmllogo)
+                write.writelines(values)
+                if values != lastValue:
+                    write.writelines(htmlpagebreak)
+            write.writelines(htmlfooter)
+        print(f'[Salon.exportPayroll]: {self.salonName} finished exporting {pfname}')
+
+        # now update yearly excel book for 1099
+        # pass path, salon prefix for sheetname, data
+        path = f'../payroll/{sDate[-4:]}.xlsx'
+        sheet = f'{self.salonName[0].lower()}.salary'
+        data = []
+        for emp, obj in self.Emps.items():
+            if obj.printchecks or obj.role == 'Cash':
+                # cash employee must be explicitly included because there is no check to print
+                xldict = xldict | {emp: {}}
+                xldict[emp] = obj.getXlReport()
+                sdate = datetime.datetime.strptime(sDate, '%m/%d/%Y')
+                edate = sdate + datetime.timedelta(days=6)
+                eDate = datetime.datetime.strftime(edate, '%m/%d/%Y')
+                # remove nickname in parentheses
+                xldict[emp]['name'] = re.search('^[^(]+', emp).group(0)
+                xldict[emp]['date'] = eDate
+                xldict[emp]['memo'] = f'{sDate} - {eDate} PAYROLL'
+                # this is where we change aliases for writing checks
+                if len(obj.checkName) > 1:
+                    data.append([sDate, eDate, obj.checkName, xldict[emp]['cash'], xldict[emp]['check'],
+                                 xldict[emp]['checkdeal']])
+                else:
+                    data.append([sDate, eDate, emp.upper(), xldict[emp]['cash'], xldict[emp]['check'],
+                                xldict[emp]['checkdeal']])
+        df = pd.DataFrame(data, )
+        reader = pd.read_excel(path, sheet_name=sheet, index_col=False)
+        startRow = len(reader.index) + 1
+        try:
+            with pd.ExcelWriter(path, mode='a', engine='openpyxl', if_sheet_exists='overlay') as writer:
+                df.to_excel(writer, sheet_name=sheet, header=False, index=False, startrow=startRow)
+        except Exception as e:
+            print(f'[Salon.exportPayroll.197] error: {e}')
 
     def getDataToSave(self):
         emps = {}
@@ -252,7 +232,7 @@ class Salon(Bot.Bot):
                 status[name] = result
         return status
 
-    def getJsonRange(self, sDate, eDate):
+    def getJsonRange(self, sDate, eDate, type):
         """
             With the given date range, returns a dictionary of days with their
             respective income for all employees.
@@ -264,9 +244,10 @@ class Salon(Bot.Bot):
         Args:
             sDate: (string)
             eDate: (string)
+            type: (string) 'regular' or 'modified'
         Returns:
-            Dictionary where keys are datetime and values are dictionaries of
-            employees and their income
+            bool, data: boolean to signal operation status, and either error msg or Dictionary where keys are
+            datetime and values are dictionaries of employees and their income
         """
         sdate = datetime.datetime.strptime(sDate, '%m/%d/%Y')
         edate = datetime.datetime.strptime(eDate, '%m/%d/%Y')
@@ -280,17 +261,20 @@ class Salon(Bot.Bot):
             date_range = [sdate.year]
 
         tmpSales = dict()
+        file_name = f'{self.path}{self.salonName}'
+        file_name += 'Sales' if type == 'regular' else 'ModifiedSales'
+
         # grab all dates from, maybe both years into tmpSales
         for year in date_range:
-            if not os.path.isfile(f'{self.path}{self.salonName}Sales{year}.json'):
-                print(f'[Salon.getJsonRange] {self.salonName} file not found')
+            tmp_file_name = f'{file_name}{str(year)}.json'
+            if not os.path.isfile(tmp_file_name):
+                return False, f'[Salon.getJsonRange] {self.salonName} file not found'
             else:
-                with open(f'{self.path}{self.salonName}Sales{year}.json', 'r') as reader:
-                    tmpSales = tmpSales | json.load(reader)
-
-        if not tmpSales:
-            # if there is not any file for any years in range
-            return False
+                try:
+                    with open(tmp_file_name, 'r') as reader:
+                        tmpSales = tmpSales | json.load(reader)
+                except Exception as e:
+                    return False, f'[Salon.getJsonRange] {self.salonName} {e}'
 
         keys = [datetime.datetime.strptime(i, '%m/%d/%Y') for i in tmpSales]
         wantedRange = dict()
@@ -299,7 +283,7 @@ class Salon(Bot.Bot):
                 # convert key back to string to match json
                 kstr = datetime.datetime.strftime(k, '%m/%d/%Y')
                 wantedRange[k] = tmpSales[kstr]
-        return wantedRange
+        return True, wantedRange
 
     def getPayroll(self, sDate, eDate, guarantee):
         """
@@ -310,9 +294,10 @@ class Salon(Bot.Bot):
         Returns:
             dictionary of employee key and their payroll values
         """
-        week = self.getJsonRange(sDate, eDate)
-        if not week:
-            return False
+        status, week  = self.getJsonRange(sDate, eDate, 'regular')
+        if not status:
+            return False, week  # week is now error msg
+
         # week is dictionary of days as keys and values is all employees income working that day,
         # sorted rearranges it to  where keys are employees and values are their daily income
         sorted = {}
@@ -371,7 +356,7 @@ class Salon(Bot.Bot):
                             found_flag = True
                             break
 
-        return payrollPkt
+        return True, payrollPkt
 
     def getSalonInfo(self):
         """
@@ -421,14 +406,22 @@ class Salon(Bot.Bot):
         # remove temporary downloaded file from zota after extracting info
         os.remove(tempPathAndFname)
 
-    def readSalesXltoJson(self, pfName):
+    def readSalesXltoJson(self, pfName, type):
+        """
+        Read downloaded sales from webscraping and parse it into a local variable sales dictionary
+        Args:
+            pfName: path and filename
+            type:   'regular' or 'modified' to signal working with original sales or modified sales
+
+        Returns:
+
+        """
+        self.toggleStatus(type)
         if not os.path.isfile(pfName):
-            print(f'[Salon.readSalesXltoJson]: {self.salonName} cannot read {pfName}')
-            return
+            return False, f'[Salon.readSalesXltoJson]: {self.salonName} cannot read {pfName}'
 
         workBook = openpyxl.load_workbook(pfName)
         workSheet = workBook.active
-
         # keys are employee names, values are their totals for the day
         empDict = dict()
         tmpSales = dict()  # daily sales to be inserted in to sales json which is yearly keyed
@@ -451,7 +444,10 @@ class Salon(Bot.Bot):
                     currentYr = year
                 else:
                     if year != currentYr:
-                        self.salesDict[currentYr] = tmpSales.copy()
+                        if self.modFlag:
+                            self.modifiedSalesDict[currentYr] = tmpSales.copy()
+                        else:
+                            self.salesDict[currentYr] = tmpSales.copy()
                         tmpSales.clear()
                         currentYr = year
             elif not row[0]:
@@ -464,13 +460,21 @@ class Salon(Bot.Bot):
                         tips = row[10]
                         empDict[tech] = [totalSale, tips]
                 except Exception as e:
-                    print('Cannot iterate to find tech')
+                    print('[Salon.readSalesXltoJson] Cannot iterate to find tech')
+
         # pack any employee data that still in storage because iterater
         # has not reached a row with datetime
         tmpSales[day] = empDict.copy()
-        self.salesDict[currentYr] = tmpSales.copy()
+        if self.modFlag:
+            self.modifiedSalesDict[currentYr] = tmpSales.copy()
+        else:
+            self.salesDict[currentYr] = tmpSales.copy()
         empDict.clear()
         tmpSales.clear()
+        return True, False
+
+    def toggleStatus(self, stat):
+        self.modFlag = 'Modified' if stat == 'modified' else False
 
     def updateEmpFromGui(self, name, empData):
         # easiest way is to remove existing dictionary and set new one
@@ -484,38 +488,35 @@ class Salon(Bot.Bot):
 
         # self.Emps[name] = Employee.Employee(empData[name])
 
-    def updateJsonFileDelXl(self, path):
-        for year, days in self.salesDict.items():
-            fname = f'{self.salonName}Sales{year}.json'
+    def updateJsonFileDelXl(self, path, type):
+        self.toggleStatus(type)
+        currentDict = self.modifiedSalesDict if self.modFlag else self.salesDict
+        for year, days in currentDict.items():
+            fname = f'{self.salonName}ModifiedSales{str(year)}.json' if self.modFlag \
+                    else f'{self.salonName}Sales{str(year)}.json'
             if os.path.isfile(self.path + fname):
                 size = os.path.getsize(self.path + fname)
-                if size < 10:
-                    # sometimes empty json can have {} and thats 2 bytes
-                    # this is an empty file so we can just dump the whole json
-                    with open(self.path + fname, 'w+') as writer:
-                        json.dump(self.salesDict[year], writer, indent=4, sort_keys=True)
-                    sg.easy_print('Status: Salon.updateJsonFile > is file but considered empty; overwrite')
-                else:
+                if size > 10:
                     with open(self.path + fname, 'r') as reader:
                         data = json.load(reader)
 
                     # find what day ended in file and append dates greater than that
                     # or another way, just jump and do a '|' (straight line up not slash)
                     # to add or up update with the right side taking priority to replace left side
-                    self.salesDict[year] = data | self.salesDict[year]
-
-                    with open(self.path + fname, 'w+') as writer:
-                        json.dump(self.salesDict[year], writer, indent=4, sort_keys=True)
-                    print('Status: Salon.updateJsonFile > json exists, merging data')
-            else:
-                with open(self.path + fname, 'w+') as writer:
+                    if self.modFlag:
+                        self.modifiedSalesDict[year] = data | self.modifiedSalesDict[year]
+                    else:
+                        self.salesDict[year] = data | self.salesDict[year]
+            with open(self.path + fname, 'w+') as writer:
+                if self.modFlag:
+                    json.dump(self.modifiedSalesDict[year], writer, indent=4, sort_keys=True)
+                else:
                     json.dump(self.salesDict[year], writer, indent=4, sort_keys=True)
-                    print('Status: Salon.updateJsonFile > no json exists, creating new one')
-        if path:
-            # now delete recently downloaded excel from website in tmp folder
-            filename = max([f for f in os.listdir(path)],
-                           key=lambda xa: os.path.getctime(os.path.join(path, xa)))
-            os.remove(path + filename)
+
+        # now delete recently downloaded excel from website in tmp folder
+        filename = max([f for f in os.listdir(path)],
+                       key=lambda xa: os.path.getctime(os.path.join(path, xa)))
+        os.remove(path + filename)
 
     def updateSalon(self, salonPkt):
         self.salonName = salonPkt['sname']

@@ -8,7 +8,7 @@ class Employee:
         """
         Args:
             data layout: {'active':True,
-                      'id': idNum, 'name': nameCapitalized, 'salonName':salon, 'pay':pay,
+                      'name': nameCapitalized, 'salonName':salon, 'pay':pay,
                       'fees':fees, 'rent':rent,
                       'pay6': pay6, 'pay7': pay7
                       'printchecks': printchecks,
@@ -27,28 +27,29 @@ class Employee:
                                  }
                       }}}
         """
-        self.id = data['id']
-        self.name = data['name']
-        self.salonName = data['salonName']
-        self.pay6 = float(data['pay6'])
-        self.pay7 = float(data['pay7'])
-        self.rent = data['rent']
-        self.fees = data['fees']
-        self.active = data['active']
-        self.role = data['type']['role']
-        self.commission = float(data['type']['regular']['commission'])
-        self.check = float(data['type']['regular']['check'])
-        self.commissionspecial = float(data['type']['special']['commissionspecial'])
-        self.checkdeal = float(data['type']['special']['checkdeal'])
-        self.checkoriginal = float(data['type']['special']['checkoriginal'])
-        self.cashrate = float(data['type']['special']['cashrate'])
-        self.printchecks = data['printchecks']
-        self.workdays = {}
-        self.workdays.update(data['workdays'])
+        self.name = self.check_element(data['name'], 'str', specific=None)
+        self.checkName = self.check_element(data['checkName'], 'str', specific=None)
+        self.salonName = self.check_element(data['salonName'], 'str', specific=None)
+        self.pay6 = self.check_element(data['pay6'], 'float', specific=None)
+        self.pay7 = self.check_element(data['pay7'], 'float', specific=None)
+        self.rent = self.check_element(data['rent'], 'int', specific=None)
+        self.fees = self.check_element(data['fees'], 'int', specific=None)
+        self.active = self.check_element(data['active'], 'bool', specific=True)
+        self.role = self.check_element(data['type']['role'], 'str', specific='regular')
+        self.commission = self.check_element(data['type']['regular']['commission'], 'float', specific=0.6)
+        self.check = self.check_element(data['type']['regular']['check'], 'float', specific=0.6)
+        self.commissionspecial = self.check_element(data['type']['special']['commissionspecial'],
+                                                    'float', specific=None)
+        self.checkdeal = self.check_element(data['type']['special']['checkdeal'], 'float', specific=None)
+        self.checkoriginal = self.check_element(data['type']['special']['checkoriginal'], 'float', specific=None)
+        self.cashrate = self.check_element(data['type']['special']['cashrate'], 'float', specific=None)
+        self.printchecks = self.check_element(data['printchecks'], 'bool', specific=True)
+        self.workdays = self.check_element(data['workdays'], 'workdays', specific=None)
 
         self.sales = {}
-        self.sDate = ''         # m.d.y for saving text purpose
+        self.sDate = ''  # m.d.y for saving text purpose
         self.payrollSummary = dict()
+        self.modifiedPayrollSummary = dict()
         self.xlreport = {'check': 0, 'checkdeal': 0, 'cash': 0}
         self.payrollPrint = ''
 
@@ -64,11 +65,46 @@ class Employee:
             self.sales = sales.copy()
             self.genericCalculate(fee_days, guarantee)
 
+    def check_element(self, imported, element_type, specific):
+        """
+        Makes sure new employee information fields are added to existing employee database.
+        Software will first import existing employee data and if program is looking for a newly added
+        field of information that is not yet available in old database, it will create a new
+         find and assign default values.
+        Args:
+            imported: data from salon package for each employee
+            element_type: variable type
+            specific: generally not needed, but can be assigned to a specific value
+
+        Returns:
+            newly created variable with correct element type and specific value
+        """
+        try:
+            local_variable = imported
+        except KeyError:
+            if specific:
+                local_variable = specific
+            elif element_type == 'bool':
+                local_variable = True
+            elif element_type in ['float', 'int']:
+                local_variable = 0
+            elif element_type == 'workdays':
+                local_variable = {"fri": False,
+                                  "mon": False,
+                                  "sat": False,
+                                  "sun": False,
+                                  "thu": False,
+                                  "tue": False,
+                                  "wed": False}
+            else:
+                local_variable = ''
+        return local_variable
+
     def genericCalculate(self, salon_fee_days, guarantee):
         tips, commissionSales, totalSales, daysWorked, personal_fees = [0 for i in range(1, 6)]
 
         tmpCommissionForOutput = 0
-        if self.role.capitalize() in ['Regular','Owner']:
+        if self.role.capitalize() in ['Regular', 'Owner']:
             tmpCommissionForOutput = self.commission
         else:
             tmpCommissionForOutput = self.commissionspecial
@@ -166,12 +202,12 @@ class Employee:
         self.payrollSummary = {
             'totalsale': totalSales,
             'commission': commissionSales,
-            'check': check,                 # raw check amount
-            'cash': cash,                   # raw cash amount
-            'basepaycheck': basepaycheck,   #
+            'check': check,  # raw check amount
+            'cash': cash,  # raw cash amount
+            'basepaycheck': basepaycheck,  #
             'basepaycash': basepaycash,
-            'paycheck': 0,                  # actual check to be paid before adding tips
-            'paycash': 0,                   # actual cash to be paid before subtracting fees
+            'paycheck': 0,  # actual check to be paid before adding tips
+            'paycash': 0,  # actual cash to be paid before subtracting fees
             'tips': tips,
             'personalfees': personal_fees,  # clean up fees
             'daysworked': daysWorked,
@@ -180,15 +216,18 @@ class Employee:
 
         # neu lam du ngay thi check coi can bao luong hay ko
         if (self.payrollSummary['daysworked'] >= 6) | guarantee:
-            self.payrollSummary['paycheck'] = self.payrollSummary['check'] if self.payrollSummary['metGoal'] else self.payrollSummary['basepaycheck']
-            self.payrollSummary['paycash'] = self.payrollSummary['cash'] if self.payrollSummary['metGoal'] else self.payrollSummary['basepaycash']
+            self.payrollSummary['paycheck'] = self.payrollSummary['check'] if self.payrollSummary['metGoal'] else \
+            self.payrollSummary['basepaycheck']
+            self.payrollSummary['paycash'] = self.payrollSummary['cash'] if self.payrollSummary['metGoal'] else \
+            self.payrollSummary['basepaycash']
         else:
             self.payrollSummary['paycheck'] = self.payrollSummary['check']
             self.payrollSummary['paycash'] = self.payrollSummary['cash']
 
         outputExtra = ''
-        if self.rent < 0:   # when we want to help employee pay rent or give bonus
-            self.xlreport['check'] = math.ceil(self.payrollSummary['paycheck'] + self.payrollSummary['tips'] - self.rent)
+        if self.rent < 0:  # when we want to help employee pay rent or give bonus
+            self.xlreport['check'] = math.ceil(
+                self.payrollSummary['paycheck'] + self.payrollSummary['tips'] - self.rent)
             outputExtra += f'{"Option 1":<10} + {"Tip":<10} + {"Bonus"}\n'
             outputExtra += f'{self.payrollSummary["paycheck"]:<10.2f} + {self.payrollSummary["tips"]:<10.2f} + '
             outputExtra += f'{abs(self.rent):<5.0f} = ${self.xlreport["check"]:<10}\n'
@@ -201,7 +240,8 @@ class Employee:
             outputExtra += f'{"Option 1":<10} + {"Tip":<10}\n'
             outputExtra += f'{self.payrollSummary["paycheck"]:<10.2f} + {self.payrollSummary["tips"]:<10.2f} = '
             outputExtra += f'${self.xlreport["check"]:<10}\n'
-            self.xlreport['cash'] = math.ceil(self.payrollSummary["paycash"] - self.payrollSummary["personalfees"] - self.rent)
+            self.xlreport['cash'] = math.ceil(
+                self.payrollSummary["paycash"] - self.payrollSummary["personalfees"] - self.rent)
             outputExtra += f'{"Option 2":<10} - {"Le Phi":<8}\n{self.payrollSummary["paycash"]:<10.2f} - '
             outputExtra += f'{self.payrollSummary["personalfees"] + self.rent:<10.2f} = ${self.xlreport["cash"]:<10}\n\n'
         self.payrollPrint += outputExtra
@@ -245,7 +285,7 @@ class Employee:
         return path + fname
 
     def getInfo(self):
-        return {'id': self.id, 'active': self.active, 'salonName': self.salonName, 'name': self.name,
+        return {'active': self.active, 'salonName': self.salonName, 'name': self.name, 'checkName': self.checkName,
                 'rent': self.rent, 'fees': self.fees, 'pay6': self.pay6, 'pay7': self.pay7,
                 'printchecks': self.printchecks,
                 'type': {'role': self.role,
@@ -255,7 +295,6 @@ class Employee:
                          },
                 'workdays': self.workdays
                 }
-
 
     def get_active_status(self):
         return self.active
@@ -268,6 +307,7 @@ class EmployeeSpecial(Employee):
     """
         Nguoi nay can phai khai income thap cho nen ky check it ma khai so thiet
     """
+
     def __init__(self, data):
         super().__init__(data)
         self.payrollSummaryEtc = dict()
@@ -286,7 +326,7 @@ class EmployeeSpecial(Employee):
             paycheckdeal = totalpay * self.checkdeal
             paycashdeal = totalpay - paycheckdeal
             output = ''
-            if self.rent < 0:   # if there was a bonus or rent help
+            if self.rent < 0:  # if there was a bonus or rent help
                 self.xlreport['checkdeal'] = math.ceil(paycheckdeal + self.payrollSummary["tips"] - self.rent)
                 output += f'{"Check Deal":<10} + {"Tip":<10} + {"Bonus":<10}\n '
                 output += f'{paycheckdeal:<10.2f} + {self.payrollSummary["tips"]:<10.2f} '

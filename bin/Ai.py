@@ -43,24 +43,30 @@ class Ai:
             salons dict:  {'salon name': salon obj
                               'salon name2: salon obj }
         '''
-        self.salons = dict()  # keys are salon names and values are salon class objects
+        self.allSalons = dict()  # keys are salon names and values are salon class objects
+        self.activeSalons = dict()
         self.employees = dict()
         self.loadSettings(pfname=None)
 
     def createSalon(self, salonPkt):
-        self.salons[salonPkt['name']] = Salon.Salon(salonPkt)
+        self.allSalons[salonPkt['name']] = Salon.Salon(salonPkt)
 
     def exportPayroll(self, sName, sDate, format):
-        self.salons[sName].exportPayroll(sDate, format)
+        self.allSalons[sName].exportPayroll(sDate, format)
 
     def getAllSalonNames(self):
         names = []
-        for s in self.salons:
+        for s in self.allSalons:
             names.append(s)
+        return names
+    def getActiveSalonNames(self):
+        names = []
+        for salon in self.activeSalons:
+            names.append(salon)
         return names
 
     def getEmpStatus(self, sname):
-        return self.salons[sname].getEmpStatus()
+        return self.allSalons[sname].getEmpStatus()
 
     def getJsonRange(self, salon, sDate, eDate):
         """
@@ -70,25 +76,35 @@ class Ai:
             sDate: str
             eDate: str
         Returns:
-            list with first element indicating how many nestic dict layers and
+            list with first element indicating how many nested dict layers and
             dictionary with salon names as keys and values is dictionary
         """
-        return [2, {salon: {self.salons[salon].getJsonRange(sDate, eDate)}}]
+        return [2, {salon: {self.allSalons[salon].getJsonRange(sDate, eDate)}}]
 
-    def getJsonLatestDates(self, cmd):
-        salon = [s for s in self.salons]
+    def getJsonLatestDates(self, cmd, type):
+        salon = [s for s in self.activeSalons]
         result = []
         displayResult = ''
         currentYr = datetime.datetime.now().year
         for i in salon:
-            with open(f'../db/{i}Sales{currentYr}.json', 'r') as read:
-                for line in reversed(list(read)):
-                    line.rstrip()
-                    l = re.search('\d+/\d+/\d+', line)
-                    if l:
-                        result.append(l.group(0))
-                        displayResult += f'{i}: {l.group(0)}\n'
-                        break
+            file_name = f'../db/{i}Sales{currentYr}.json' if type == 'regular' \
+                else f'../db/{i}ModifiedSales{currentYr}.json'
+            exists = os.path.isfile(file_name)
+            if exists:
+                with open(file_name, 'r') as read:
+                    for line in reversed(list(read)):
+                        line.rstrip()
+                        line_query = re.search(r'\d+/\d+/\d+', line)
+                        if line_query:
+                            result.append(line_query.group(0))
+                            displayResult += f'{i}: {line_query.group(0)}\n'
+                            break
+            else:
+                with open(file_name, 'w') as fp:
+                    pass
+                result.append('none')
+                displayResult += f'{i}: none\n'
+
         if cmd == 'display':
             return displayResult
         elif cmd == 'webscrape':
@@ -100,13 +116,13 @@ class Ai:
         Args:
 
         Returns:
-            dictionary of employee key and their payroll values
+            boolean, data: dictionary of employee key and their payroll values
         """
-        result = self.salons[sname].getPayroll(sdate, edate, guarantee)
+        result, data = self.allSalons[sname].getPayroll(sdate, edate, guarantee)
         if result:
-            return result
+            return True, data
         else:
-            return False
+            return False, data
 
     def getSalonInfo(self, salonName):
         """
@@ -114,11 +130,11 @@ class Ai:
         Returns:
             (list of lists): salon's list of settings
         """
-        salonNames = list(self.salons.keys())
+        salonNames = list(self.allSalons.keys())
         if salonName not in salonNames:
             print('Salon name not found in settings: check name or update settings with new salon')
         else:
-            return self.salons[salonName].getSalonInfo()
+            return self.allSalons[salonName].getSalonInfo()
 
     def getSettings(self):
         return self.loadedSettings
@@ -130,10 +146,10 @@ class Ai:
         # fig.add_subplot(111).plot(t,2 * np.sin(2 * np.pi * t))
         results = {}
         if salon == 'all':
-            for s, obj in self.salons.items():
+            for s, obj in self.allSalons.items():
                 results[s] = obj.getJsonRange(sDate, eDate)
         else:
-            results[salon] = self.salons[salon].getJsonRange(sDate, eDate)
+            results[salon] = self.allSalons[salon].getJsonRange(sDate, eDate)
 
         if frequency == 'daily':
             x = pd.date_range(datetime.datetime.strptime(sDate, '%m/%d/%Y'),
@@ -203,7 +219,7 @@ class Ai:
         ax.cla()
         # t = np.arange(0,3,.01)
         # fig.add_subplot(111).plot(t,2 * np.sin(2 * np.pi * t))
-        results = {salon: self.salons[salon].getJsonRange(sDate, eDate)}
+        results = {salon: self.allSalons[salon].getJsonRange(sDate, eDate)}
 
         if frequency == 'daily':
             interval = pd.date_range(datetime.datetime.strptime(sDate, '%m/%d/%Y'),
@@ -284,9 +300,9 @@ class Ai:
         fig.canvas.draw()
         return
 
-    def importJson(self, sname, pfname):
-        self.salons[sname].readSalesXltoJson(pfname)
-        self.salons[sname].updateJsonFileDelXl(path=None)
+    def importJson(self, sname, pfname, type):
+        self.allSalons[sname].readSalesXltoJson(pfname, type=type)
+        self.allSalons[sname].updateJsonFileDelXl(path=None, type=type)
 
     def loadSettings(self, pfname):
         """
@@ -303,18 +319,21 @@ class Ai:
             with open('../db/master.json', 'r', encoding='utf-8') as reader:
                 self.loadedSettings = json.load(reader)
         for name in self.loadedSettings.keys():  # dict keys are iterable BUT NOT subscriptable ie [0]
-            self.salons[name] = Salon.Salon(self.loadedSettings[name])  # create salon objects
+            salonObj = Salon.Salon(self.loadedSettings[name])
+            self.allSalons[name] = salonObj  # create salon objects
+            if salonObj.active:
+                self.activeSalons[name] = salonObj
 
     def modEmp(self, cmd, salon, employee):
         # employee has its name as the key so we get it from list(dict.keys()) and get the only value in the list
         try:
             if cmd == 'save':
-                self.salons[salon].createEmpFromGui(name=list(employee.keys())[0], empData=employee)
+                self.allSalons[salon].createEmpFromGui(name=list(employee.keys())[0], empData=employee)
             elif cmd == 'update':
-                self.salons[salon].updateEmpFromGui(name=list(employee.keys())[0], empData=employee)
+                self.allSalons[salon].updateEmpFromGui(name=list(employee.keys())[0], empData=employee)
             elif cmd == 'remove':
                 # if remove cmd was sent, employee is a string name
-                self.salons[salon].deleteEmp(name=employee)
+                self.allSalons[salon].deleteEmp(name=employee)
             else:
                 sg.Print('Warning: did not do anything because dont know command regarding Ai.modEmp()')
             return True
@@ -330,13 +349,14 @@ class Ai:
             list of employee dictionaries
         """
         if show_active_only:
-            return self.salons[salon].getActiveOnlyEmps()
+            result = self.activeSalons[salon].getActiveOnlyEmps()
+            return result
         else:
-            return self.salons[salon].getEmps()
+            return self.activeSalons[salon].getEmps()
 
     def removeSalon(self, name):
-        if name in self.salons.keys():
-            self.salons.pop(name)
+        if name in self.allSalons.keys():
+            self.allSalons.pop(name)
             print(f'[Ai]: {name} removed successfully')
         else:
             print(f'[Ai]: {name} not found to remove')
@@ -370,7 +390,7 @@ class Ai:
 
     def saveNewSettings(self):
         data = {}
-        for name, salonObj in self.salons.items():
+        for name, salonObj in self.allSalons.items():
             data[name] = salonObj.getDataToSave()
         with open('../db/master.json', '+w') as writer:
             # '|' means combine both dict but crops empty values, best is newDict = {**dict1, **dict2}
@@ -384,9 +404,9 @@ class Ai:
         Returns:
             N/A
         """
-        self.salons[salonPkt['sname']].updateSalon(salonPkt)
+        self.allSalons[salonPkt['sname']].updateSalon(salonPkt)
 
-    def webscrapeSales(self, salon, sDate, eDate):
+    def webscrapeSales(self, salon, sDate, eDate, type):
         """
         this function will grab each salon object required from
         list of salons and send to threads to process each salon one at a time
@@ -394,24 +414,27 @@ class Ai:
             salon: (string) salon name
             sDate: string format mm/dd/yyyy
             eDate: string format mm/dd/yyyy
+            type: string 'regular' or 'modified'
         Returns:
+            status, msg: boolean of status and msg if failure
         """
-        salonObj = self.salons[salon]
-        # salon is using inherited method dlEmpSales from WebBot
+        salonObj = self.allSalons[salon]
+        # salon is using inherited method dlEmpSales from Bot
         try:
-
-            print(f'[Ai.webscrapeSales]: beginning to retrieve sales for {salon} date range {sDate} - {eDate}')
+            print(f'STATUS: [Ai.webscrapeSales]: beginning to retrieve sales for {salon} date range {sDate} - {eDate}')
             path, fname = salonObj.dlEmpSales(salon, salonObj.zotaUname, salonObj.zotaPass,
                                               startDate=sDate, endDate=eDate)
             if not path:
-                print(f'[Ai.webscrapeSales]{salon} unable to download file range {sDate} - {eDate}')
-                return False
-            salonObj.readSalesXltoJson(path + fname)
-            time.sleep(2)
-            salonObj.updateJsonFileDelXl(path)
-            return True
+                msg = f'ERROR: [Ai.webscrapeSales]{salon} unable to download file range {sDate} - {eDate}\n' \
+                      f'{fname}'
+                return False, msg
+            sucess, msg = salonObj.readSalesXltoJson(path + fname, type=type)
+            if not sucess:
+                return False, msg
+            salonObj.updateJsonFileDelXl(path, type=type)
+            return True, False
         except Exception:
-            print('[Ai.webscrapeSales]ERROR: Failed to get sales.\nPossible problems:\n-date range too long and '
-                  'browser took too long to load\n-maybe there is no sales data for the salon within'
-                  'date range (erased data by zota?)\n-or zota connection is slow and retry')
-            return False
+            return False, 'ERROR: [Ai.webscrapeSales] Failed to get sales.\nPossible problems:\n' \
+                          '-date range too long and browser took too long to load\n-maybe there is no sales data ' \
+                          'for the salon within date range (erased data by zota?)\n' \
+                          '-or zota connection is slow and retry'
