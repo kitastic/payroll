@@ -13,7 +13,7 @@ class Employee:
                       'pay6': pay6, 'pay7': pay7
                       'printchecks': printchecks,
                       'type':{'role': role,
-                              'regular':{'commission': commission, 'check': check},
+                              'regular':{'commission': commission, 'check': check, 'commissionbooth': commissionbooth},
                               'special':{'commissionspecial': comspec, 'checkdeal': checkdeal,
                                          'checkoriginal': checkoriginal, 'cashrate': cashrate
                               }
@@ -27,82 +27,80 @@ class Employee:
                                  }
                       }}}
         """
-        self.name = self.check_element(data['name'], 'str', specific=None)
-        self.checkName = self.check_element(data['checkName'], 'str', specific=None)
-        self.salonName = self.check_element(data['salonName'], 'str', specific=None)
-        self.pay6 = self.check_element(data['pay6'], 'float', specific=None)
-        self.pay7 = self.check_element(data['pay7'], 'float', specific=None)
-        self.rent = self.check_element(data['rent'], 'int', specific=None)
-        self.fees = self.check_element(data['fees'], 'int', specific=None)
-        self.active = self.check_element(data['active'], 'bool', specific=True)
-        self.role = self.check_element(data['type']['role'], 'str', specific='regular')
-        self.commission = self.check_element(data['type']['regular']['commission'], 'float', specific=0.6)
-        self.check = self.check_element(data['type']['regular']['check'], 'float', specific=0.6)
-        self.commissionspecial = self.check_element(data['type']['special']['commissionspecial'],
-                                                    'float', specific=None)
-        self.checkdeal = self.check_element(data['type']['special']['checkdeal'], 'float', specific=None)
-        self.checkoriginal = self.check_element(data['type']['special']['checkoriginal'], 'float', specific=None)
-        self.cashrate = self.check_element(data['type']['special']['cashrate'], 'float', specific=None)
-        self.printchecks = self.check_element(data['printchecks'], 'bool', specific=True)
-        self.workdays = self.check_element(data['workdays'], 'workdays', specific=None)
+        # dict.get(key, valueifkeyerror) If dict is nested attach additional .get() for each level
+        self.name = data.get('name', '')
+        self.checkName = data.get('checkName', '')
+        self.salonName = data.get('salonName', '')
+        self.pay6 = data.get('pay6', 0)
+        self.pay7 = data.get('pay7', 0)
+        self.rent = data.get('rent', 0)
+        self.fees = data.get('fees', 0)
+        self.active = data.get('active', True)
+        self.role = data.get('type', {}).get('role', 'regular')
+        self.commission = data.get('type', {}).get('regular', {}).get('commission', 0)
+        self.commissionspecial = data.get('type', {}).get('special', {}).get('commissionspecial', 0)
+        self.boothrent = data.get('type', {}).get('regular', {}).get('boothrent', 0)
+        self.check = data.get('type', {}).get('regular', {}).get('check', 0.6)
+
+        self.checkdeal = data.get('type', {}).get('special', {}).get('checkdeal', 0)
+        self.checkoriginal = data.get('type', {}).get('special', {}).get('checkoriginal', 0.6)
+        self.cashrate = data.get('type', {}).get('special', {}).get('cashrate', 0)
+
+        self.printchecks = data.get('printchecks', True)
+        self.workdays = data.get('workdays', {"fri": False,
+                                              "mon": False,
+                                              "sat": False,
+                                              "sun": False,
+                                              "thu": False,
+                                              "tue": False,
+                                              "wed": False
+                                              })
 
         self.sales = {}
+        self.modifiedSales = {}
         self.sDate = ''  # m.d.y for saving text purpose
+        self.manualBooth = 0
         self.payrollSummary = dict()
         self.modifiedPayrollSummary = dict()
-        self.xlreport = {'check': 0, 'checkdeal': 0, 'cash': 0}
+        self.xlreport = {'check': 0, 'checkdeal': '', 'cash': 0, 'booth': 0, 'bcheck': 0, 'bcash': 0}
         self.payrollPrint = ''
 
-    def calculatePayroll(self, sales, fee_days, guarantee):
+    def calculatePayroll(self, sales, modified_sales, fee_days, guarantee, booth):
         """
         Args:
             sales: dictionary of daily sales, keys are datetime
+            modified_sales: same as sales but modified data
             fee_days: days that janitor work
             guarantee: [bool] will guarantee base pay regardless of days worked
+            booth: integer of how much booth rent is set manually
         Returns:
         """
         if self.role != 'janitor':
             self.sales = sales.copy()
-            self.genericCalculate(fee_days, guarantee)
+            boothFlag = False
+            if booth:
+                try:
+                    self.manualBooth = int(booth)
+                    boothFlag = True
+                except ValueError:
+                    self.manualBooth = 0
+            if modified_sales:
+                self.modifiedSales = modified_sales.copy()
+            self.genericCalculate(fee_days, guarantee, boothFlag)
 
-    def check_element(self, imported, element_type, specific):
+    def genericCalculate(self, fee_days, guarantee, boothFlag):
         """
-        Makes sure new employee information fields are added to existing employee database.
-        Software will first import existing employee data and if program is looking for a newly added
-        field of information that is not yet available in old database, it will create a new
-         find and assign default values.
+        Generic calculation of payroll and generates a payroll printout saved locally in self.payrollPrint.
         Args:
-            imported: data from salon package for each employee
-            element_type: variable type
-            specific: generally not needed, but can be assigned to a specific value
-
+            fee_days: days that janitor work
+            guarantee: [bool] will guarantee base pay regardless of days worked
+            boothFlag: [bool] will signal manual booth rent
         Returns:
-            newly created variable with correct element type and specific value
         """
-        try:
-            local_variable = imported
-        except KeyError:
-            if specific:
-                local_variable = specific
-            elif element_type == 'bool':
-                local_variable = True
-            elif element_type in ['float', 'int']:
-                local_variable = 0
-            elif element_type == 'workdays':
-                local_variable = {"fri": False,
-                                  "mon": False,
-                                  "sat": False,
-                                  "sun": False,
-                                  "thu": False,
-                                  "tue": False,
-                                  "wed": False}
-            else:
-                local_variable = ''
-        return local_variable
-
-    def genericCalculate(self, salon_fee_days, guarantee):
         tips, commissionSales, totalSales, daysWorked, personal_fees = [0 for i in range(1, 6)]
-
+        boothSales = 0
+        boothTips = 0
+        commissionBoothSales = 0
         tmpCommissionForOutput = 0
         if self.role.capitalize() in ['Regular', 'Owner']:
             tmpCommissionForOutput = self.commission
@@ -110,54 +108,62 @@ class Employee:
             tmpCommissionForOutput = self.commissionspecial
 
         # this part is the text of the daily summaries based off of regular ticket printout
-        output = f'{"  " + string.capwords(self.salonName) + "  ":=^40}\n'
-        output += f'{"Name":<10}{" ":10}{self.name:>20}\n'
-        output += f'{" Daily ":-^40}\n'
-        output += f'{"Day":<10}{"Total":>10}{"Comm":>10}{"Tips":>10}\n'
+        output = f'{"  " + string.capwords(self.salonName) + "  ":=^60}\n'
+        output += f'{self.name:<60}\n'
+        output += f'{" Daily ":-^60}\n'
+        output += f'{"Day":<17}{"Tips":>10}{"Sales":>10}{" | "}{"B Tips":>10}{"B Sales":>10}\n'
 
         for day, amt in self.sales.items():
             dayName = day.isoweekday()  # monday = 1
             # this is the part where we compare janitor and employee work days to know if there is a fee
-            if dayName == 1 and salon_fee_days['mon']:
+            if dayName == 1 and fee_days['mon']:
                 personal_fees += self.fees
-            elif dayName == 2 and salon_fee_days['tue']:
+            elif dayName == 2 and fee_days['tue']:
                 personal_fees += self.fees
-            elif dayName == 3 and salon_fee_days['wed']:
+            elif dayName == 3 and fee_days['wed']:
                 personal_fees += self.fees
-            elif dayName == 4 and salon_fee_days['thu']:
+            elif dayName == 4 and fee_days['thu']:
                 personal_fees += self.fees
-            elif dayName == 5 and salon_fee_days['fri']:
+            elif dayName == 5 and fee_days['fri']:
                 personal_fees += self.fees
-            elif dayName == 6 and salon_fee_days['sat']:
+            elif dayName == 6 and fee_days['sat']:
                 personal_fees += self.fees
-            elif dayName == 7 and salon_fee_days['sun']:
+            elif dayName == 7 and fee_days['sun']:
                 personal_fees += self.fees
 
-            # older json db files saved commission column from zota into amt[1] and tips for in amt[2]
-            # which new versions of software do not need anymore
-            try:
-                tipForDay = amt[2]
-                tips += amt[2]
-            except IndexError:
-                tipForDay = amt[1]
-                tips += amt[1]
-            commissionSales += (amt[0] * tmpCommissionForOutput)
-            totalSales += amt[0]
-            if amt[0] > 0:
+            bDailySales = 0
+            bDailyTip = 0
+            # instead of multiplying by self.commissionbooth, get value directly from zota because of
+            # percentage rounding discrepancies
+            bDailyCommission = 0
+            if self.modifiedSales:
+                bDailySales = self.modifiedSales.get(day, {}).get('sales', 0)
+                bDailyTip = self.modifiedSales.get(day, {}).get('tips', 0)
+                bDailyCommission = self.modifiedSales.get(day, {}).get('commission', 0)
+
+            tipForDay = amt['tips']
+            tips += amt['tips']
+            commissionSales += (amt['sales'] * tmpCommissionForOutput)  # no need
+            commissionBoothSales += bDailyCommission
+            totalSales += amt['sales']
+            boothSales += bDailySales
+            boothTips += bDailyTip
+            if amt['sales'] > 0:
                 daysWorked += 1
-
             d = datetime.datetime.strftime(day, '%m/%d:%a')
-            output += f'{d:<10}{amt[0]:>10.2f}{amt[0] * tmpCommissionForOutput:>10.2f}{tipForDay:>10.2f}\n'
+            output += (f'{d:<17}{tipForDay:>10.2f}{amt["sales"]:>10.2f}{" | "}{bDailyTip:>10.2f}{bDailySales:>10.2f}\n')
 
-        output += f'{" ":12}{"-":->8}{" ":2}{"-":->8}{" ":2}{"-":->8}\n'
-        output += f'{" ":10}{totalSales:>10.2f}{commissionSales:>10.2f}{tips:>10.2f}\n\n'
-        output += f'{" Summary ":-^40}\n'
-        output += f'{"Total Sale":<10}{" ":20}{totalSales:>10.2f}\n'
-        output += f'{"Commission":<10}{" ":20}{commissionSales:>10.2f}\n'
-        output += f'{"Tips":<10}{" ":20}{tips:>10.2f}\n'
-        output += f'{" ":30}{"-":->10}\n'
-        output += f'{"Total Pay":<10}{" ":20}{commissionSales + tips:>10.2f}\n'
-        output += f'{"=":=^40}\n'
+        output += f'{" ":17}{"-":->20}{" | "}{"-":->20}\n'
+        output += f'{" ":17}{tips:>10.2f}{totalSales:>10.2f}{" | "}{boothTips:>10.2f}{boothSales:>10.2f}\n\n\n'
+        output += f'{"":*^60}\n'
+        output += f'{" Summary ":-^60}\n'
+        output += f'{"Total Sale":<10}{" ":5}{totalSales:>10.2f}{" ":10}{"Booth Sale":10}{" ":5}{boothSales:>10.2f}\n'
+        output += f'{"Commission":<10}{" ":5}{commissionSales:>10.2f}{" ":10}{"Booth Comm":10}{" ":5}{commissionBoothSales:>10.2f}\n'
+        output += f'{"Tips":<10}{" ":5}{tips:>10.2f}{" ":10}{"Tips":<10}{" ":5}{boothTips:>10.2f}\n'
+        output += f'{" ":15}{"-":->10}{" ":25}{"-":->10}\n'
+        output += (f'{"Sales Pay":<10}{" ":5}{commissionSales + tips:>10.2f}{" ":10}'
+                   f'{"Booth Pay":10}{" ":5}{commissionBoothSales + boothTips:>10.2f}\n')
+        output += f'{"=":=^60}\n\n\n'
         self.payrollPrint = output
 
         if self.role.capitalize() in ['Regular', 'Owner']:
@@ -212,38 +218,69 @@ class Employee:
             'personalfees': personal_fees,  # clean up fees
             'daysworked': daysWorked,
             'metGoal': metgoal,
+            'boothrent': self.manualBooth if boothFlag else 0,
+            'boothcheck': commissionBoothSales + boothTips
         }
 
         # neu lam du ngay thi check coi can bao luong hay ko
         if (self.payrollSummary['daysworked'] >= 6) | guarantee:
             self.payrollSummary['paycheck'] = self.payrollSummary['check'] if self.payrollSummary['metGoal'] else \
-            self.payrollSummary['basepaycheck']
+                self.payrollSummary['basepaycheck']
             self.payrollSummary['paycash'] = self.payrollSummary['cash'] if self.payrollSummary['metGoal'] else \
-            self.payrollSummary['basepaycash']
+                self.payrollSummary['basepaycash']
         else:
             self.payrollSummary['paycheck'] = self.payrollSummary['check']
             self.payrollSummary['paycash'] = self.payrollSummary['cash']
 
         outputExtra = ''
         if self.rent < 0:  # when we want to help employee pay rent or give bonus
-            self.xlreport['check'] = math.ceil(
-                self.payrollSummary['paycheck'] + self.payrollSummary['tips'] - self.rent)
-            outputExtra += f'{"Option 1":<10} + {"Tip":<10} + {"Bonus"}\n'
+            if not boothFlag:
+                # when there is no manual setting for booth rent
+                self.payrollSummary['boothrent'] = 0 if not self.modifiedSales else (
+                                                math.ceil(self.payrollSummary["paycheck"]
+                                                          + self.payrollSummary["tips"]
+                                                          + abs(self.rent)
+                                                          - self.payrollSummary["boothcheck"]))
+            self.xlreport['booth'] = abs(self.payrollSummary['boothrent'])
+            self.xlreport['check'] = math.ceil(self.payrollSummary['paycheck']
+                                               + self.payrollSummary['tips']
+                                               + abs(self.rent))
+            self.xlreport['bcheck'] = math.ceil(self.payrollSummary["boothcheck"])
+            self.xlreport['cash'] = math.ceil(self.payrollSummary["paycash"]
+                                              - self.payrollSummary["personalfees"])
+            self.xlreport['bcash'] = math.ceil(self.payrollSummary["paycash"]
+                                               - self.payrollSummary["personalfees"]
+                                               - abs(self.payrollSummary["boothrent"]))
+            outputExtra += f'{"Option 1":<10} + {"Tip":<10} + {"Bonus":<5} = {"Opt1 Total":<10} + {"Booth Rent":<10} = {"Booth Pay":<10}\n'
             outputExtra += f'{self.payrollSummary["paycheck"]:<10.2f} + {self.payrollSummary["tips"]:<10.2f} + '
-            outputExtra += f'{abs(self.rent):<5.0f} = ${self.xlreport["check"]:<10}\n'
-            self.xlreport['cash'] = math.ceil(self.payrollSummary["paycash"] - self.payrollSummary["personalfees"])
-            outputExtra += f'{"Option 2":<10} - {"Le Phi":<8}\n'
+            outputExtra += f'{abs(self.rent):<5d} = {self.xlreport["check"]:<10.2f} + {self.xlreport["booth"]:<10.2f} = ${self.xlreport["bcheck"]:<10}\n\n'
+            outputExtra += f'{"Option 2":<10} - {"Le Phi":<10} - {"Booth Rent":<10} = {"Opt2 Total":<10}\n'
             outputExtra += f'{self.payrollSummary["paycash"]:<10.2f} - {self.payrollSummary["personalfees"]:<10.2f}'
-            outputExtra += f' = ${self.xlreport["cash"]:<10}\n\n'
+            outputExtra += f' - {self.xlreport["booth"]:<10} = ${self.xlreport["bcash"]:<10}\n\n'
         else:
+            if not boothFlag:
+                self.payrollSummary['boothrent'] = 0 if not self.modifiedSales else (
+                                                math.ceil(self.payrollSummary["paycheck"]
+                                                          + self.payrollSummary["tips"]
+                                                          - self.payrollSummary["boothcheck"]))
+            self.xlreport['booth'] = abs(self.payrollSummary['boothrent'])
             self.xlreport['check'] = math.ceil(self.payrollSummary["paycheck"] + self.payrollSummary["tips"])
-            outputExtra += f'{"Option 1":<10} + {"Tip":<10}\n'
-            outputExtra += f'{self.payrollSummary["paycheck"]:<10.2f} + {self.payrollSummary["tips"]:<10.2f} = '
-            outputExtra += f'${self.xlreport["check"]:<10}\n'
-            self.xlreport['cash'] = math.ceil(
-                self.payrollSummary["paycash"] - self.payrollSummary["personalfees"] - self.rent)
-            outputExtra += f'{"Option 2":<10} - {"Le Phi":<8}\n{self.payrollSummary["paycash"]:<10.2f} - '
-            outputExtra += f'{self.payrollSummary["personalfees"] + self.rent:<10.2f} = ${self.xlreport["cash"]:<10}\n\n'
+            self.xlreport['bcheck'] = math.ceil(self.payrollSummary["boothcheck"])
+            self.xlreport['cash'] = math.ceil(self.payrollSummary["paycash"]
+                                              - self.payrollSummary["personalfees"]
+                                              - self.rent)
+            self.xlreport['bcash'] = math.ceil(self.payrollSummary["paycash"]
+                                               - self.payrollSummary["personalfees"]
+                                               - self.rent
+                                               - abs(self.payrollSummary["boothrent"]))
+
+            outputExtra += f'{"Option 1":<10} + {"Tip":<10} = {"Opt1 Total":<10} + {"Booth Rent":<10} = {"Booth Pay":<10}\n'
+            outputExtra += f'{self.payrollSummary["paycheck"]:<10.2f} + {self.payrollSummary["tips"]:<10.2f} '
+            outputExtra += f'= {self.xlreport["check"]:<10.2f} + {self.xlreport["booth"]:<10.2f} = ${self.xlreport["bcheck"]:<10}\n\n'
+            outputExtra += f'{"Option 2":<10} - {"Le Phi":<10} = {"Opt2 Total":<10} - {"Booth Rent":<10} = {"Opt2 Pay"}\n'
+            outputExtra += f'{self.payrollSummary["paycash"]:<10.2f} - {self.payrollSummary["personalfees"] + self.rent:<10.2f} '
+            outputExtra += (f'= {self.xlreport["cash"]:<10} - {self.xlreport["booth"]:<10} = '
+                            f'{self.xlreport["bcash"]}\n\n')
         self.payrollPrint += outputExtra
 
     def getPayrollSummary(self):
@@ -289,7 +326,8 @@ class Employee:
                 'rent': self.rent, 'fees': self.fees, 'pay6': self.pay6, 'pay7': self.pay7,
                 'printchecks': self.printchecks,
                 'type': {'role': self.role,
-                         'regular': {'commission': self.commission, 'check': self.check},
+                         'regular': {'commission': self.commission, 'check': self.check,
+                                     'boothrent': self.boothrent},
                          'special': {'commissionspecial': self.commissionspecial, 'checkdeal': self.checkdeal,
                                      'checkoriginal': self.checkoriginal, 'cashrate': self.cashrate}
                          },
@@ -312,13 +350,22 @@ class EmployeeSpecial(Employee):
         super().__init__(data)
         self.payrollSummaryEtc = dict()
 
-    def calculatePayroll(self, sales, salon_fee_days, guarantee):
+    def calculatePayroll(self, sales, modified_sales, fee_days, guarantee, booth):
         '''
             so tien check ky ra va so tien check deal se co khac biet.
             check deal la so ky ra va check binh thuong la ho phai khai cuoi nam
         '''
         self.sales = sales.copy()
-        self.genericCalculate(salon_fee_days, guarantee)
+        boothFlag = False
+        if booth:
+            try:
+                self.manualBooth = int(booth)
+                boothFlag = True
+            except ValueError:
+                self.manualBooth = 0
+        if modified_sales:
+            self.modifiedSales = modified_sales.copy()
+        self.genericCalculate(fee_days, guarantee, boothFlag)
         output = f'{"*":*^40}\n'
 
         if self.role.lower() == 'checkdeal':
@@ -360,7 +407,7 @@ class EmployeeJanitor(Employee):
     def __init__(self, data):
         super().__init__(data)
 
-    def calculatePayroll(self, sales=None, fee_days=None, guarantee=None):
+    def calculatePayroll(self, sales=None, modified_sales=None, fee_days=None, guarantee=None):
         pay_per_day = self.pay6 / 6
         days_worked = 0
         for day, work in self.workdays.items():

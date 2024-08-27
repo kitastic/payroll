@@ -51,8 +51,8 @@ class Ai:
     def createSalon(self, salonPkt):
         self.allSalons[salonPkt['name']] = Salon.Salon(salonPkt)
 
-    def exportPayroll(self, sName, sDate, format):
-        self.allSalons[sName].exportPayroll(sDate, format)
+    def exportPayroll(self, sName, sDate, eDate, format):
+        self.allSalons[sName].exportPayroll(sDate, eDate, format)
 
     def getAllSalonNames(self):
         names = []
@@ -82,6 +82,16 @@ class Ai:
         return [2, {salon: {self.allSalons[salon].getJsonRange(sDate, eDate)}}]
 
     def getJsonLatestDates(self, cmd, type):
+        """
+        Opens json file (for each salon) and find from end of line the first appearance of a date
+        Args:
+            cmd: wether for webscraping or gui display
+            type: regular or modified
+
+        Returns:
+            If cmd is display, it will return a string format to show in gui. If cmd is webscrape,
+             it will return a list of date strings.
+        """
         salon = [s for s in self.activeSalons]
         result = []
         displayResult = ''
@@ -100,6 +110,7 @@ class Ai:
                             displayResult += f'{i}: {line_query.group(0)}\n'
                             break
             else:
+                # by opening it, a file will be created
                 with open(file_name, 'w') as fp:
                     pass
                 result.append('none')
@@ -110,7 +121,7 @@ class Ai:
         elif cmd == 'webscrape':
             return result
 
-    def getPayrollFromSalon(self, sname, sdate, edate, guarantee):
+    def getPayrollFromSalon(self, sname, sdate, edate, guarantee, booth):
         """
             Retrieves sales from json for given date range and salon name
         Args:
@@ -118,7 +129,7 @@ class Ai:
         Returns:
             boolean, data: dictionary of employee key and their payroll values
         """
-        result, data = self.allSalons[sname].getPayroll(sdate, edate, guarantee)
+        result, data = self.allSalons[sname].getPayroll(sdate, edate, guarantee, booth)
         if result:
             return True, data
         else:

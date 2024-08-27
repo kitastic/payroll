@@ -92,7 +92,7 @@ class Salon(Bot.Bot):
                    'pay6': 0, 'pay7': 0, 'fees': 0, 'rent': 0,
                    'printchecks': True,
                    'type': {'role': 'Regular',
-                            'regular': {'commission': 0.6, 'check': 0.6},
+                            'regular': {'commission': 0.6, 'check': 0.6, 'boothrent': 0},
                             'special': {'commissionspecial': 0, 'checkdeal': 0,
                                         'checkoriginal': 0, 'cashrate': 0}
                             },
@@ -111,7 +111,7 @@ class Salon(Bot.Bot):
         deletedValue = self.Emps.pop(name)
         print(deletedValue)
 
-    def exportPayroll(self, sDate, format):
+    def exportPayroll(self, sDate, eDate, format):
         empdata = {}
         xldict = dict()
         for name, obj in self.Emps.items():
@@ -142,7 +142,8 @@ class Salon(Bot.Bot):
                     <body>"""
         htmllogo = False
         if self.salonName.lower() == 'upscale' and os.path.isfile('images/ulogo.png'):
-            htmllogo = """&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="G:/My Drive/payrollAutomation/bin/images/ulogo.png" style="width:100px"><br>"""
+            htmllogo = """&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        <img src="G:/My Drive/payrollAutomation/bin/images/ulogo.png" style="width:100px"><br>"""
         elif self.salonName.lower() == 'nails' and os.path.isfile('images/nlogo.png'):
             htmllogo = """&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="G:/My Drive/payrollAutomation/bin/images/nlogo.png" style="width:100px"><br>"""
         htmlpagebreak = """<div class="pagebreak"></div>"""
@@ -176,19 +177,18 @@ class Salon(Bot.Bot):
                 xldict = xldict | {emp: {}}
                 xldict[emp] = obj.getXlReport()
                 sdate = datetime.datetime.strptime(sDate, '%m/%d/%Y')
-                edate = sdate + datetime.timedelta(days=6)
-                eDate = datetime.datetime.strftime(edate, '%m/%d/%Y')
+                # edate = sdate + datetime.timedelta(days=6)
+                # eDate = datetime.datetime.strftime(eDate, '%m/%d/%Y')
                 # remove nickname in parentheses
                 xldict[emp]['name'] = re.search('^[^(]+', emp).group(0)
                 xldict[emp]['date'] = eDate
                 xldict[emp]['memo'] = f'{sDate} - {eDate} PAYROLL'
-                # this is where we change aliases for writing checks
                 if len(obj.checkName) > 1:
                     data.append([sDate, eDate, obj.checkName, xldict[emp]['cash'], xldict[emp]['check'],
-                                 xldict[emp]['checkdeal']])
+                                 xldict[emp]['checkdeal'], xldict[emp]['booth'], xldict[emp]['bcash'], xldict[emp]['bcheck']])
                 else:
                     data.append([sDate, eDate, emp.upper(), xldict[emp]['cash'], xldict[emp]['check'],
-                                xldict[emp]['checkdeal']])
+                                xldict[emp]['checkdeal'], xldict[emp]['booth'], xldict[emp]['bcash'], xldict[emp]['bcheck']])
         df = pd.DataFrame(data, )
         reader = pd.read_excel(path, sheet_name=sheet, index_col=False)
         startRow = len(reader.index) + 1
@@ -274,7 +274,7 @@ class Salon(Bot.Bot):
                     with open(tmp_file_name, 'r') as reader:
                         tmpSales = tmpSales | json.load(reader)
                 except Exception as e:
-                    return False, f'[Salon.getJsonRange] {self.salonName} {e}'
+                    return False, f'[Salon.getJsonRange] {self.salonName} {type} > {e}'
 
         keys = [datetime.datetime.strptime(i, '%m/%d/%Y') for i in tmpSales]
         wantedRange = dict()
@@ -283,9 +283,14 @@ class Salon(Bot.Bot):
                 # convert key back to string to match json
                 kstr = datetime.datetime.strftime(k, '%m/%d/%Y')
                 wantedRange[k] = tmpSales[kstr]
+
+        if not wantedRange and type == 'regular':
+            # must at least have original sales data to continue
+            return False, f'[Salon.getJsonRange] {self.salonName} {type} > No data within date range'
+
         return True, wantedRange
 
-    def getPayroll(self, sDate, eDate, guarantee):
+    def getPayroll(self, sDate, eDate, guarantee, booth):
         """
             given startdate and enddate, salon will tell each employee to calculate
             their own payroll and return their report back
@@ -298,16 +303,36 @@ class Salon(Bot.Bot):
         if not status:
             return False, week  # week is now error msg
 
-        # week is dictionary of days as keys and values is all employees income working that day,
+        status, modifiedWeek = self.getJsonRange(sDate, eDate, 'modified')
+        '''
+        At this point, modifiedWeek may be an empty dictionary because there is no available 
+        modified sales yet. But that's okay, we can still continue.
+        Week is dictionary of days as keys and values is all employees income working that day,
+        sorted rearranges it to  where keys are employees and values are their daily income
+        '''
         # sorted rearranges it to  where keys are employees and values are their daily income
         sorted = {}
+        sortedModified = {}
         # rearrange dictionary keys from days to employees
         for dates, value in week.items():
-            for e in value:
-                sorted[e.lower()] = {}
+            for emp in value:
+                # string.capwords() was added because sometimes names from zota can have extra spaces at end
+                # we validate the name to make sure it matches with what we have saved already
+                name = string.capwords(emp)
+                sorted[name.lower()] = {}
         for dates, value in week.items():
-            for e, total in value.items():
-                sorted[e.lower()][dates] = total
+            for emp, total in value.items():
+                name = string.capwords(emp)
+                sorted[name.lower()][dates] = total
+
+        if status:
+            for dates, value in modifiedWeek.items():
+                for e in value:
+                    sortedModified[e.lower()] = {}
+            for dates, value in modifiedWeek.items():
+                for e, total in value.items():
+                    sortedModified[e.lower()][dates] = total
+
         # pp.pprint(sorted)
         # compare for extra employees , ie 'anybody*', not currently in settings DB and create new regular ones
         salesEmployees = [string.capwords(n) for n in sorted]
@@ -332,30 +357,28 @@ class Salon(Bot.Bot):
             'sat': False,
             'sun': False
         }
-        # we find janitor's work days first to calculate which day to have fees
+        # we Must find janitor's work days first to calculate which day to have fees
         for eName, eObj in self.Emps.items():
             if eObj.role == 'Janitor':
                 salon_fee_days.update(eObj.workdays)
                 eObj.calculatePayroll(sales=None)
                 payrollPkt[eObj.name] = eObj.getPrintOut()
-
-        for eName, eObj in self.Emps.items():
-            if eObj.role != 'Janitor':
-                found_flag = False
-                while not found_flag:
-                    for e, val in sorted.items():
-                        if eName in string.capwords(e):
-                            eObj.calculatePayroll(val, salon_fee_days, guarantee)
-                            payrollPkt[eName] = eObj.getPrintOut()
-                            found_flag = True
-                            break
-                        # if end of dictionary reached because employee was not active
-                        # compare current key with last key
-                        last = list(sorted)[-1]
-                        if e == last:
-                            found_flag = True
-                            break
-
+        # iterate again after calculating fee days from janitor
+        for empSorted, valSorted in sorted.items():
+            for emp, empObj in self.Emps.items():
+                if empObj.role == 'Janitor':
+                    continue    # continues to next item in this loop
+                if emp.lower() == empSorted:
+                    if 'tina' in emp.lower():
+                        print()
+                    if status:
+                        msales = sortedModified[empSorted]
+                    else:
+                        msales = None
+                    empObj.calculatePayroll(sales=valSorted, modified_sales=msales,
+                                            fee_days=salon_fee_days, guarantee=guarantee, booth=booth)
+                    payrollPkt[emp] = empObj.getPrintOut()
+                    break   # breaks out of this loop
         return True, payrollPkt
 
     def getSalonInfo(self):
@@ -458,7 +481,13 @@ class Salon(Bot.Bot):
                         tech = row[0]
                         totalSale = row[4]
                         tips = row[10]
-                        empDict[tech] = [totalSale, tips]
+                        if self.modFlag:
+                            empDict[tech] = {'sales': totalSale,
+                                             'tips': tips,
+                                             'commission': row[11]}
+                        else:
+                            empDict[tech] = {'sales': totalSale,
+                                                'tips': tips,}
                 except Exception as e:
                     print('[Salon.readSalesXltoJson] Cannot iterate to find tech')
 
@@ -466,9 +495,9 @@ class Salon(Bot.Bot):
         # has not reached a row with datetime
         tmpSales[day] = empDict.copy()
         if self.modFlag:
-            self.modifiedSalesDict[currentYr] = tmpSales.copy()
+            self.modifiedSalesDict[currentYr] = self.modifiedSalesDict.get(currentYr, {}) | tmpSales.copy()
         else:
-            self.salesDict[currentYr] = tmpSales.copy()
+            self.salesDict[currentYr] = self.salesDict.get(currentYr, {}) | tmpSales.copy()
         empDict.clear()
         tmpSales.clear()
         return True, False
@@ -512,6 +541,8 @@ class Salon(Bot.Bot):
                     json.dump(self.modifiedSalesDict[year], writer, indent=4, sort_keys=True)
                 else:
                     json.dump(self.salesDict[year], writer, indent=4, sort_keys=True)
+        if path == None:
+            return  # if no path given, this command was called by Ai to import and no need to delete file
 
         # now delete recently downloaded excel from website in tmp folder
         filename = max([f for f in os.listdir(path)],
