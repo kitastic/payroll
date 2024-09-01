@@ -24,6 +24,18 @@ class Bot:
     def __init__(self):
         self.driver = None
 
+    def delete_files_in_directory(self, directory):
+        """Deletes all files in the specified directory."""
+
+        for filename in os.listdir(directory):
+            file_path = os.path.join(directory, filename)
+            try:
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+                    print(f"Deleted: {file_path}")
+            except Exception as e:
+                print(f"Error deleting {file_path}: {e}")
+
     def dlEmpSales(self, salonName, uname, password, startDate, endDate):
         """
         Goes directly to employee sales reports on website and downloads excel file version.
@@ -40,8 +52,8 @@ class Bot:
 
         """
         dlDir = r'{}\{}\\'.format(os.getcwd(),salonName)
-        # make sure path exists
-        Path(dlDir).mkdir(parents=True, exist_ok=True)
+        Path(dlDir).mkdir(parents=True, exist_ok=True)  # make sure path exists
+        self.delete_files_in_directory(dlDir)           # delete everything in temporary download folder
         self.connect(dlDir, uname, password)
         startDate = startDate
         # saveAsName = salonName[0] + '.' + startDate.replace('/', '.') + '.xlsx'
@@ -123,7 +135,7 @@ class Bot:
         try:
             os.rename(os.path.join(dlDir,downloadedFileName),os.path.join(dlDir, newDownloadedFname))
         except FileExistsError:
-            os.remove(dlDir + salonName[0] + 'Sales.xlsx')
+            os.remove(dlDir + newDownloadedFname)
             os.rename(os.path.join(dlDir,downloadedFileName),os.path.join(dlDir,newDownloadedFname))
         return dlDir, newDownloadedFname  # returns path and filename
 

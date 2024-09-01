@@ -52,7 +52,11 @@ class Ai:
         self.allSalons[salonPkt['name']] = Salon.Salon(salonPkt)
 
     def exportPayroll(self, sName, sDate, eDate, format):
-        self.allSalons[sName].exportPayroll(sDate, eDate, format)
+        status, msg = self.allSalons[sName].exportPayroll(sDate, eDate, format)
+        if status:
+            return True, True
+        else:
+            return False, msg
 
     def getAllSalonNames(self):
         names = []
@@ -97,12 +101,27 @@ class Ai:
         displayResult = ''
         currentYr = datetime.datetime.now().year
         for i in salon:
+            if type == 'modified' and i == 'upscale':
+                pass
             file_name = f'../db/{i}Sales{currentYr}.json' if type == 'regular' \
                 else f'../db/{i}ModifiedSales{currentYr}.json'
             exists = os.path.isfile(file_name)
             if exists:
-                with open(file_name, 'r') as read:
+                file_size = os.path.getsize(file_name)
+                if file_size == 0:
+                    result.append('none')
+                    displayResult += f'{i}: none\n'
+                    continue
+                line = ''
+                with (open(file_name, 'r+') as read):
                     for line in reversed(list(read)):
+                        # if opened but no lines read or 'null' read
+                        if line == 'null':
+                            read.seek(0)
+                            read.truncate()
+                            result.append('none')
+                            displayResult += f'{i}: none\n'
+                            break
                         line.rstrip()
                         line_query = re.search(r'\d+/\d+/\d+', line)
                         if line_query:
@@ -347,9 +366,9 @@ class Ai:
                 self.allSalons[salon].deleteEmp(name=employee)
             else:
                 sg.Print('Warning: did not do anything because dont know command regarding Ai.modEmp()')
-            return True
+            return True, True
         except Exception as e:
-            return e
+            return False, e
 
 
     def populateEmpList(self, salon, show_active_only):
