@@ -271,7 +271,7 @@ class Employee:
         # then we use it to deduct from modified sale's data to find booth rent amount
         self.xlreport['check'] = (self.paySummary['paycheck'] + self.paySummary['tips']
                                   + self.checkbonus - self.checkfee)
-        self.xlreport['cash'] = (self.paySummary['cash'] - self.paySummary['fees']
+        self.xlreport['cash'] = (self.paySummary['paycash'] - self.paySummary['fees']
                                  - self.rent + self.cashbonus - self.cashfee)
 
         if self.boothcustomflag:
@@ -293,7 +293,7 @@ class Employee:
             self.boothrent = self.boothSummary['check'] - self.xlreport['check']
         # else self.manualBooth is still = 0
         self.xlreport['booth'] = self.boothrent
-        self.xlreport['bcheck'] = self.boothSummary['check']
+        self.xlreport['bcheck'] = self.xlreport['check'] + self.boothrent
         self.xlreport['bcash'] = self.xlreport['cash'] - self.boothrent
 
         out = ''
@@ -446,9 +446,9 @@ class EmployeeSpecial(Employee):
             cashdeal = float(self.xlreport["check"] * self.cashrate)
             out += f'{"Check Qua Tien Mat:":<25}{cashdeal:<10.2f}\n'
             out += f'{"Tien Mat:":<25}{self.xlreport["cash"]:<10.2f}\n'
-            self.xlreport["cash"] = math.ceil(self.xlreport["cash"] + cashdeal)
-            out += f'{"Ca hai cong loi:":<25}{self.xlreport["cash"]:<10}\n\n'
-            self.xlreport["check"] = 0
+            self.xlreport["bcash"] = math.ceil(self.xlreport["cash"] + cashdeal)
+            out += f'{"Ca hai cong loi:":<25}{self.xlreport["bcash"]:<10}\n\n'
+            self.xlreport["bcheck"] = 0
             self.payPrint += out
         return True, True
 
@@ -465,10 +465,10 @@ class EmployeeJanitor(Employee):
                 days_worked += 1
         current_week_pay = pay_per_day * days_worked
 
-        self.xlreport['check'] = math.ceil(current_week_pay * self.check)
-        self.xlreport['cash'] = math.ceil(current_week_pay - self.xlreport['check'])
+        self.xlreport['bcheck'] = math.ceil(current_week_pay * self.check)
+        self.xlreport['bcash'] = math.ceil(current_week_pay - self.xlreport['bcheck'])
 
-        if self.xlreport['cash'] == 0:
-            self.xlreport['check'] = self.xlreport['check'] - self.rent
-        self.payPrint = f'Check: {self.xlreport["check"]}    Cash: {self.xlreport["cash"]}'
+        if self.xlreport['bcash'] == 0:
+            self.xlreport['bcheck'] = self.xlreport['bcheck'] - self.rent
+        self.payPrint = f'Check: {self.xlreport["bcheck"]}    Cash: {self.xlreport["bcash"]}'
 

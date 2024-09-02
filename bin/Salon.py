@@ -143,11 +143,9 @@ class Salon(Bot.Bot):
                     <body>"""
         htmllogo = False
         if self.salonName.lower() == 'upscale' and os.path.isfile('images/ulogo.png'):
-            htmllogo = """&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                        <img src="ulogo.png" style="width:100px"><br>"""
+            htmllogo = """&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="ulogo.png" style="width:100px"><br>"""
         elif self.salonName.lower() == 'nails' and os.path.isfile('images/nlogo.png'):
-            htmllogo = """&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                        <img src="G:/My Drive/payrollAutomation/bin/images/nlogo.png" style="width:100px"><br>"""
+            htmllogo = """&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="nlogo.png" style="width:100px"><br>"""
         htmlpagebreak = """<div class="pagebreak"></div>"""
         htmlfooter = """
         </body>
@@ -289,7 +287,7 @@ class Salon(Bot.Bot):
                 kstr = datetime.datetime.strftime(k, '%m/%d/%Y')
                 wantedRange[k] = tmpSales[kstr]
 
-        if not wantedRange and type == 'regular':
+        if not wantedRange:
             # must at least have original sales data to continue
             return False, f'[Salon.getJsonRange] {self.salonName} {type} > No data within date range'
 
@@ -376,7 +374,10 @@ class Salon(Bot.Bot):
                     continue    # continues to next item in this loop
                 if emp.lower() == empSorted:
                     if status_mod:
-                        msales = sortedModified[empSorted]
+                        try:
+                            msales = sortedModified[empSorted]
+                        except KeyError:
+                            msales = None
                     else:
                         msales = None
                     status_pay, msg = empObj.calculatePayroll(sales=valSorted, modified_sales=msales,

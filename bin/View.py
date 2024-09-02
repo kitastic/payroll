@@ -13,9 +13,6 @@ import Ai
 matplotlib.use('TkAgg')
 
 
-
-
-
 class View:
     def __init__(self):
         self.gui = None
@@ -145,7 +142,7 @@ class View:
         # ------------------------------------------------------------------------------------------
         paygradeFrame = [[sg.T('Role'),
                           sg.OptionMenu(values=['Regular', 'Cash', 'Checkdeal', 'Janitor', 'Owner'],
-                                                      key='-eTab_om_role-', ),
+                                                key='-eTab_om_role-', ),
                           sg.Button(image_filename='../images/refresh-22.png', key='-eTab_btn_role-')],
                          [sg.HorizontalSeparator()],
                          [sg.T('Regular', font=('default', 12, 'italic'))],
@@ -253,27 +250,20 @@ class View:
                                              key='-main_cal_eDate-'),
                                    sg.Input('Enter End Date', key='-main_in_eDate-', size=15), ],
                                   ], size=(150, 75))
-
-        mTab_r1c1 = sg.Column([
-            [sg.T('Export \nw/ Web')], [sg.ButtonMenu('', [bm1, bm2],
-                                                      tooltip='Download sales reports, calculate payroll, and export',
-                                                      image_filename='../images/web-50.png',
-                                                      key='-mTab_btn_export_w_web-')]
-        ])
         mTab_r1c2 = sg.Column([
-            [sg.T("Export \nw/o web")],
-            [sg.ButtonMenu('', [bm1, bm2], tooltip='Export payroll without webscrape',
-                           image_filename='../images/web-none-50.png', key='-mTab_btn_export_wo_web-',
-                           button_color=self.btnColor)]
+                              [sg.T("Export \nw/o web")],
+                              [sg.ButtonMenu('', [bm1, bm2], tooltip='Export payroll without webscrape',
+                               image_filename='../images/web-none-50.png', key='-mTab_btn_export_wo_web-',
+                               button_color=self.btnColor)]
         ])
         mTab_r1c3 = sg.Column([[sg.T('View\nPayroll')],
                                [sg.Button('', image_filename='../images/money-transfer-45.png',
                                           key='-mTab_btn_payroll-')],
                                ])
-        mTab_r1c4 = sg.Column([
-            [sg.T('View\nStatus')], [sg.Button(image_filename='../images/in-progress-45.png', key='-mTab_btn_status-',
-                                               tooltip='Current week income status for employees')]
-        ])
+        mTab_r1c4 = sg.Column([[sg.T('View\nStatus')],
+                               [sg.Button(image_filename='../images/in-progress-45.png', key='-mTab_btn_status-',
+                                          tooltip='Current week income status for employees')]
+                               ])
         mTab_r1c5 = sg.Column([[menuIconDates]])
         mTab_r1c6 = sg.Column([[sg.Checkbox('This Week', default=False, key='-mTab_cb_thisweek-', enable_events=True)],
                                [sg.Checkbox('Gurantee', default=False, key='-guarantee-')],
