@@ -11,8 +11,6 @@ import time
 import os
 
 
-
-
 def parseDate(date):
     """
     This function will splice the given string and extract the month,
@@ -29,6 +27,7 @@ def parseDate(date):
     day = int(re.search('/\d+/', date).group(0).replace('/',''))
     year = int(re.search('\d+$', date).group(0))  # two digit format of year
     return [month, day, year]
+
 
 def enterDate(date, default, element):
     """
@@ -59,18 +58,20 @@ def enterDate(date, default, element):
     element.send_keys(Keys.ARROW_LEFT)
     element.send_keys(Keys.ARROW_LEFT)
     element.send_keys(Keys.ARROW_LEFT)
-
+    time.sleep(.5)
     # if wanted month is 01 and default month is 12, monDif = -11
     if monDif <= -1:
         # use absolute of negative int
         for i in range(0, abs(monDif)):
             # from 12 press down 11 times to get to 01
             element.send_keys(Keys.ARROW_DOWN)
+            time.sleep(.01)
     # if wanted month is 12 and default is 1, monDif = 11
     if monDif >= 1:
         for i in range(0, monDif):
             # from 1 press up 11 times to get to 12
             element.send_keys(Keys.ARROW_UP)
+            time.sleep(.01)
     '''
     0 is left out of the two if tests because if there is no difference,
     we just move to the next area by pressing right
@@ -81,17 +82,21 @@ def enterDate(date, default, element):
     if dayDif <= -1:
         for i in range(0, abs(dayDif)):
             element.send_keys(Keys.ARROW_DOWN)
+            time.sleep(.01)
     if dayDif >= 1:
         for i in range(0, dayDif):
             element.send_keys(Keys.ARROW_UP)
+            time.sleep(.01)
 
     element.send_keys(Keys.ARROW_RIGHT)
     if yearDif <= -1:
         for i in range(0, abs(yearDif)):
             element.send_keys(Keys.ARROW_DOWN)
+            time.sleep(.01)
     if yearDif >= 1:
         for i in range(0, yearDif):
             element.send_keys(Keys.ARROW_UP)
+            time.sleep(.01)
 
 def waitLoadingClick(xpath, sec, elementName, driver):
     """
@@ -110,6 +115,7 @@ def waitLoadingClick(xpath, sec, elementName, driver):
         element = WebDriverWait(driver, sec).until(EC.element_to_be_clickable((By.XPATH, xpath)))
     except TimeoutError:
         print('time out waiting for' + elementName + ' to be clickable')
+
 
 def waitLoadingPresence(class_name, sec, driver):
     """

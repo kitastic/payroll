@@ -1,17 +1,12 @@
 import os.path
 from urllib.request import urlopen
 from zipfile import ZipFile
-
-import PySimpleGUI as sg
 from selenium import webdriver
-# no longer need to download browser drivers
-# import chromedriver_autoinstaller_fix
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.chrome.service import Service
 import time
-
 from pathlib import Path
 
 
@@ -36,13 +31,14 @@ class Bot:
             except Exception as e:
                 print(f"Error deleting {file_path}: {e}")
 
-    def dlEmpSales(self, salonName, uname, password, startDate, endDate):
+    def dlEmpSales(self, salonName, uname, password, startDate, endDate, activeEmployees):
         """
         Goes directly to employee sales reports on website and downloads excel file version.
         Automatic downloaded path was specified when creating chromedriver using
         linux (or windows, not sure but for sure tricky) syntax.
         After download finishes, the file gets renamed
         Args:
+            activeEmployees:
             startDate: (str) 'mm/dd/yyyy'
             endDate: (str) 'mm/dd/yyyy'
 
@@ -97,10 +93,9 @@ class Bot:
             if counter == 60:
                 print('WARNING: {}s out of 10s - Cannot find link even after refreshing'.format(counter))
                 self.driver.quit()
-                return False, False
+                return False, False, False
         time_counter = 0
         time_to_wait = 8
-        downloadedFileName = ''
         while True:
             time.sleep(1)
             time_counter += 1
@@ -108,13 +103,68 @@ class Bot:
                 try:
                     # max() called on empty (in this case folder) will return error
                     downloadedFileName = max([f for f in os.listdir(dlDir)],
-                                   key=lambda xa: os.path.getctime(os.path.join(dlDir,xa)))
+                                             key=lambda xa: os.path.getctime(os.path.join(dlDir,xa)))
                     break
                 except ValueError as e:
                     print('{}: waiting {} sec more'.format(e, time_counter))
             if time_counter == time_to_wait:
                 self.driver.quit()
-                return False, '[Bot.dlEmpSales] file never found'
+                return False, '[Bot.dlEmpSales] file never found', False
+
+        # then we switch over to view zota's version of payroll
+        # load payroll page
+        # zotaRawData = []
+        # self.driver.get("https://pos2.zota.us/#/payroll")
+        #
+        # # wait for startdate element to be clickable
+        #
+        # s = '//div/div/div[2]/div/main/div/div/div/div[3]/div[1]/div/div[1]/div/div/div/div[2]/span/span/span/span/input'
+        # helper.waitLoadingClick(s, 5, 'By.XPATH', self.driver)
+        #
+        # # select start date
+        # startDate = self.driver.find_element(By.NAME, 'startDate')
+        # defaultstart = helper.parseDate(startDate.get_attribute('value'))
+        # start = helper.parseDate(startDate)
+        # helper.enterDate(start, defaultstart, startDate)
+        # time.sleep(.5)
+        #
+        # # select and change end date
+        # endDate = self.driver.find_element(By.NAME, 'endDate')
+        # defaultend = helper.parseDate(endDate.get_attribute('value'))
+        # end = helper.parseDate(endDate)
+        # helper.enterDate(end, defaultend, endDate)
+        # time.sleep(1)
+        #
+        # # manually clicking menu to select employee from list
+        # e = self.driver.find_element(By.CLASS_NAME, 'k-dropdown-wrap')
+        # for empName in activeEmployees:
+        #     e.click()
+        #     end = False
+        #     eZota = ""
+        #     while (not end):
+        #         # while zota employee list not ended and not matched
+        #         e.send_keys(Keys.ARROW_DOWN)
+        #         etemp = e.text
+        #         if eZota == etemp or empName in e.text:
+        #             end = True
+        #         eZota = etemp
+        #
+        #     load = self.driver.find_element(By.XPATH,
+        #                                     '//*[@id="root"]/div/div[2]/div/main/div/div/div/div[3]/div[1]/div/div[4]/button')
+        #     load.click()  # click load payroll button
+        #     reportBtn = '//div/div/div[2]/div/main/div/div/div/div[3]/div[2]/div/div/div/div/div/div/div[2]/div/div/div[1]/div[2]/button'
+        #     helper.waitLoadingClick(reportBtn, 8, "By.XPATH",
+        #                             self.driver)  # wait for report to load before selecting type of report
+        #     reportBtn = self.driver.find_element(By.XPATH, reportBtn)
+        #     reportBtn.click()
+        #     r = self.driver.find_element(By.XPATH,
+        #                                  '//div/div/div[2]/div/main/div/div/div/div[3]/div[2]/div/div/div/div/div/div/div[1]/div/div/div/pre')
+        #     '''
+        #     Report format is multiple lines of strings. Each line will now be split at \n character
+        #     and then added to a list for each employee. Then the full employee list will be added
+        #     to a bigger list containing per employee.
+        #     '''
+        #     zotaRawData.append(list(r.text.split('\n')))  # report is multiple lines of strings
 
         self.driver.quit()
         time.sleep(2)
@@ -125,19 +175,142 @@ class Bot:
             time.sleep(1)
             time_counter += 1
             if time_counter > time_to_wait:
-                return False, '[Bot.dlEmpSales] Waited too long for file to download'
+                return False, '[Bot.dlEmpSales] Waited too long for file to download', False
 
         downloadedFileName = max([f for f in os.listdir(dlDir)],
                        key=lambda xa: os.path.getctime(os.path.join(dlDir,xa)))
 
         newDownloadedFname = f'{salonName[0]}Sales{endDate[-4:]}.xlsx'
 
+        # parsedData = self.parseZotaPayroll(zotaRawData)
+        parsedData = ''
         try:
             os.rename(os.path.join(dlDir,downloadedFileName),os.path.join(dlDir, newDownloadedFname))
         except FileExistsError:
             os.remove(dlDir + newDownloadedFname)
             os.rename(os.path.join(dlDir,downloadedFileName),os.path.join(dlDir,newDownloadedFname))
-        return dlDir, newDownloadedFname  # returns path and filename
+        return dlDir, newDownloadedFname, parsedData  # returns path and filename
+
+    def parseZotaPayroll(self, rawData):
+        parsedData = []
+        income = []
+        for i in rawData:
+            # each i is for each employee ticket for the whole week
+            # out of the 26 lines of raw data, we will only extract what we need
+            dates = re.findall('\d+/\d+/\d+', i[1])
+            rDate = dates[0]
+            tempParsed = []
+            tempIncome = []
+            tempParsed.append(['======', '======', '======', '======'])
+            tempParsed.append(['Date', '', dates[0], dates[1]])
+            tempParsed.append(['Name', '', '', re.search('\w+$', i[2]).group(0)])
+            tempParsed.append(['Pay', '-----', '-----', '-----'])
+            tempParsed.append(['Total Sale', '', '', helper.getFloat(i[6])])
+            tempParsed.append(['', '', '', '', ])
+            tempParsed.append(['Commission', '', '', helper.getFloat(i[8])])
+            tempParsed.append(['Tips', '', '', helper.getFloat(i[9])])
+            tempParsed.append(['', '', '', '-------'])
+            tempParsed.append(['Total Pay', '', '', helper.getFloat(i[11])])
+            tempParsed.append(['Check', '', '', helper.getFloat(i[12])])
+            tempParsed.append(['Cash', '', '', helper.getFloat(i[13])])
+            tempParsed.append(['Daily:', '-------', '-------', '-------'])
+            tempParsed.append(['Day', 'Total', 'Comm', 'Tips'])
+            day, values = helper.getDay(i[17])
+            tempParsed.append([day, values[0], values[1], values[2]])
+            dateObj, dWord = helper.dayToDate(day, rDate)
+            tempIncome.append([dateObj, dWord, values[0], values[1], values[2]])
+            day, values = helper.getDay(i[18])
+            tempParsed.append([day, values[0], values[1], values[2]])
+            dateObj, dWord = helper.dayToDate(day, rDate)
+            tempIncome.append([dateObj, dWord, values[0], values[1], values[2]])
+            day, values = helper.getDay(i[19])
+            tempParsed.append([day, values[0], values[1], values[2]])
+            dateObj, dWord = helper.dayToDate(day, rDate)
+            tempIncome.append([dateObj, dWord, values[0], values[1], values[2]])
+            day, values = helper.getDay(i[20])
+            tempParsed.append([day, values[0], values[1], values[2]])
+            dateObj, dWord = helper.dayToDate(day, rDate)
+            tempIncome.append([dateObj, dWord, values[0], values[1], values[2]])
+            day, values = helper.getDay(i[21])
+            tempParsed.append([day, values[0], values[1], values[2]])
+            dateObj, dWord = helper.dayToDate(day, rDate)
+            tempIncome.append([dateObj, dWord, values[0], values[1], values[2]])
+            day, values = helper.getDay(i[22])
+            tempParsed.append([day, values[0], values[1], values[2]])
+            dateObj, dWord = helper.dayToDate(day, rDate)
+            tempIncome.append([dateObj, dWord, values[0], values[1], values[2]])
+            day, values = helper.getDay(i[23])
+            tempParsed.append([day, values[0], values[1], values[2]])
+            dateObj, dWord = helper.dayToDate(day, rDate)
+            tempIncome.append([dateObj, dWord, values[0], values[1], values[2]])
+            tempParsed.append(['     ', '-------', '-------', '-------'])
+            values = helper.getDay(i[25])
+            tempParsed.append(['', values[0], values[1], values[2]])
+            parsedData.append(tempParsed.copy())
+            income.append(tempIncome.copy())
+            tempParsed.clear()
+            tempIncome.clear()
+
+    def parseGalaxyPayroll(self, rawData):
+        parsedData = []
+        income = []
+        for i, j in zip(rawData, rawData[1:]):
+            # each i is for each employee ticket for the whole week
+            # j is next element of i or i+1
+            # out of the 26 lines of raw data, we will only extract what we need
+            dates = re.findall('\d+/\d+/\d+', i[1])
+            rDate = dates[0]
+            tempParsed = []
+            tempIncome = []
+            tempParsed.append(['======', '======', '======', '======'])
+            tempParsed.append(['Date', '', dates[0], dates[1]])
+            tempParsed.append(['Name', '', '', re.search('\w+$', i[2]).group(0)])
+            tempParsed.append(['Pay', '-----', '-----', '-----'])
+            tempParsed.append(['Total Sale', '', '', helper.getFloat(i[6])])
+            tempParsed.append(['', '', '', '', ])
+            tempParsed.append(['Commission', '', '', helper.getFloat(i[8])])
+            tempParsed.append(['Tips', '', '', helper.getFloat(i[9])])
+            tempParsed.append(['', '', '', '-------'])
+            tempParsed.append(['Total Pay', '', '', helper.getFloat(i[11])])
+            tempParsed.append(['Check', '', '', helper.getFloat(i[12])])
+            tempParsed.append(['Cash', '', '', helper.getFloat(i[13])])
+            tempParsed.append(['Daily:', '-------', '-------', '-------'])
+            tempParsed.append(['Day', 'Total', 'Comm', 'Tips'])
+            day, values = helper.getDay(i[17])
+            tempParsed.append([day, values[0], values[1], values[2]])
+            dateObj, dWord = helper.dayToDate(day, rDate)
+            tempIncome.append([dateObj, dWord, values[0], values[1], values[2]])
+            day, values = helper.getDay(i[18])
+            tempParsed.append([day, values[0], values[1], values[2]])
+            dateObj, dWord = helper.dayToDate(day, rDate)
+            tempIncome.append([dateObj, dWord, values[0], values[1], values[2]])
+            day, values = helper.getDay(i[19])
+            tempParsed.append([day, values[0], values[1], values[2]])
+            dateObj, dWord = helper.dayToDate(day, rDate)
+            tempIncome.append([dateObj, dWord, values[0], values[1], values[2]])
+            day, values = helper.getDay(i[20])
+            tempParsed.append([day, values[0], values[1], values[2]])
+            dateObj, dWord = helper.dayToDate(day, rDate)
+            tempIncome.append([dateObj, dWord, values[0], values[1], values[2]])
+            day, values = helper.getDay(i[21])
+            tempParsed.append([day, values[0], values[1], values[2]])
+            dateObj, dWord = helper.dayToDate(day, rDate)
+            tempIncome.append([dateObj, dWord, values[0], values[1], values[2]])
+            day, values = helper.getDay(i[22])
+            tempParsed.append([day, values[0], values[1], values[2]])
+            dateObj, dWord = helper.dayToDate(day, rDate)
+            tempIncome.append([dateObj, dWord, values[0], values[1], values[2]])
+            day, values = helper.getDay(i[23])
+            tempParsed.append([day, values[0], values[1], values[2]])
+            dateObj, dWord = helper.dayToDate(day, rDate)
+            tempIncome.append([dateObj, dWord, values[0], values[1], values[2]])
+            tempParsed.append(['     ', '-------', '-------', '-------'])
+            values = helper.getDay(i[25])
+            tempParsed.append(['', values[0], values[1], values[2]])
+            parsedData.append(tempParsed.copy())
+            income.append(tempIncome.copy())
+            tempParsed.clear()
+            tempIncome.clear()
 
     def connect(self, dlDir, uName, password):
         """

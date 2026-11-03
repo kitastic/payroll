@@ -91,7 +91,7 @@ class Salon(Bot.Bot):
             name: {'active': True,
                    'name': name, 'checkName': '', 'salonName': self.salonName,
                    'pay6': 0, 'pay7': 0, 'fees': 0, 'rent': 0,
-                   'boothcustom': 0, 'boothcustomflag': False, 'printchecks': True,
+                   'boothcustom': 0, 'boothcustomflag': True, 'printchecks': True,
                    'type': {'role': 'Regular',
                             'regular': {'commission': 0.6, 'check': 0.6, 'boothrent': 0},
                             'special': {'commissionspecial': 0, 'checkdeal': 0,
@@ -105,7 +105,8 @@ class Salon(Bot.Bot):
                                 "tue": False,
                                 "wed": False
                                 },
-                   }}
+            }
+        }
         self.Emps[name] = Employee.Employee(newEmp[name])
 
     def deleteEmp(self, name):
@@ -115,7 +116,13 @@ class Salon(Bot.Bot):
     def exportPayroll(self, sDate, eDate, format):
         empdata = {}
         xldict = dict()
+        # remove non active employees
+        parsedEmps = {}
         for name, obj in self.Emps.items():
+            if obj.active and (obj.role == 'Janitor' or obj.paySummary['commission'] != 0):
+                parsedEmps[name] = obj
+
+        for name, obj in parsedEmps.items():
             printableData = ''
             try:
                 printableData = obj.getPrintOut()
@@ -143,9 +150,9 @@ class Salon(Bot.Bot):
                     <body>"""
         htmllogo = False
         if self.salonName.lower() == 'upscale' and os.path.isfile('images/ulogo.png'):
-            htmllogo = """&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="ulogo.png" style="width:100px"><br>"""
+            htmllogo = """&nbsp;&nbsp;&nbsp;<img src="ulogo.png" style="width:100px"><br>"""
         elif self.salonName.lower() == 'nails' and os.path.isfile('images/nlogo.png'):
-            htmllogo = """&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="nlogo.png" style="width:100px"><br>"""
+            htmllogo = """&nbsp;&nbsp;&nbsp;<img src="nlogo.png" style="width:100px"><br>"""
         htmlpagebreak = """<div class="pagebreak"></div>"""
         htmlfooter = """
         </body>
@@ -170,7 +177,7 @@ class Salon(Bot.Bot):
         path = f'../payroll/{sDate[-4:]}.xlsx'
         sheet = f'{self.salonName[0].lower()}.salary'
         data = []
-        for emp, obj in self.Emps.items():
+        for emp, obj in parsedEmps.items():
             if obj.printchecks or obj.role == 'Cash':
                 # cash employee must be explicitly included because there is no check to print
                 xldict = xldict | {emp: {}}
@@ -352,6 +359,7 @@ class Salon(Bot.Bot):
                     print(f'INFO: skipping payroll calculations for {employee}.')
         # now tell all employees to calculate
         payrollPkt = {}
+        payrollDetailPkt = {}
         salon_fee_days = {
             'mon': False,
             'tue': False,
@@ -385,8 +393,10 @@ class Salon(Bot.Bot):
                     if not status_pay:
                         return False, msg
                     payrollPkt[emp] = empObj.getPrintOut()
+                    if status_mod:
+                        payrollDetailPkt[emp] = empObj.getDetailPrint()
                     break   # breaks out of this loop
-        return True, payrollPkt
+        return True, payrollPkt, payrollDetailPkt
 
     def getSalonInfo(self):
         """
@@ -529,15 +539,16 @@ class Salon(Bot.Bot):
                 size = os.path.getsize(self.path + fname)
                 if size > 10:
                     with open(self.path + fname, 'r') as reader:
-                        new_data = json.load(reader)
+                        old_data = json.load(reader)
 
                     # find what day ended in file and append dates greater than that
                     # or another way, just jump and do a '|' (straight line up not slash)
                     # to add or up update with the right side taking priority to replace left side
+                    # With the old data read from existing database, we update with current self.sales
                     if self.modFlag:
-                        self.modifiedSalesDict[year] = self.modifiedSalesDict[year] | new_data
+                        self.modifiedSalesDict[year] = old_data | currentDict[year]
                     else:
-                        self.salesDict[year] = self.salesDict[year] | new_data
+                        self.salesDict[year] = old_data | currentDict[year]
             with open(self.path + fname, 'w+') as writer:
                 if self.modFlag:
                     json.dump(self.modifiedSalesDict[year], writer, indent=4, sort_keys=True)
@@ -551,7 +562,7 @@ class Salon(Bot.Bot):
             self.delete_files_in_directory(path)
 
     def updateSalon(self, salonPkt):
-        self.salonName = salonPkt['sname']
+        self.salonName = salonPkt['name']
         self.zotaUname = salonPkt['login']['username']
         self.zotaPass = salonPkt['login']['password']
         self.active = salonPkt['active']

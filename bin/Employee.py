@@ -39,7 +39,7 @@ class Employee:
                                     'sat': bool,
                                     'sun': bool
                                  }
-                      }}}
+                      }}
         """
         # dict.get(key, valueifkeyerror) If dict is nested attach additional .get() for each level
         self.name = data.get('name', '')
@@ -76,7 +76,7 @@ class Employee:
         self.modifiedSales = {}
         self.sDate = ''                             # m.d.y for saving text purpose
         self.boothrent = 0                          # universal booth rent, whether salon set, custom personal, etc
-        self.boothSummary = {                       # all values are copied from zota especially commission
+        self.modSummary = {                       # all values are copied from zota especially commission
                              'total': 0,
                              'tips': 0,
                              'commission': 0,
@@ -104,7 +104,8 @@ class Employee:
                          'bcheck': 0,               # based off of modified sales
                          'bcash': 0                 # based off of modified sales
                          }
-        self.payPrint = ''
+        self.payPrint = ''                          # regular sales for employee payroll printing
+        self.modSales = ''                          # this will have both regular sales and modified sales
 
     def calculatePayroll(self, sales, modified_sales, fee_days, guarantee, booth):
         """
@@ -137,9 +138,9 @@ class Employee:
         Returns:
         """
         tips, commissionSales, totalSales, daysWorked, personal_fees = [0 for i in range(1, 6)]
-        boothSales = 0
-        boothTips = 0
-        boothCommission = 0
+        modSales = 0
+        modTips = 0
+        modCommission = 0
         tmpCommissionForOutput = 0
         if self.role.capitalize() in ['Regular', 'Owner']:
             tmpCommissionForOutput = self.commission
@@ -147,10 +148,13 @@ class Employee:
             tmpCommissionForOutput = self.commissionspecial
 
         # this part is the text of the daily summaries based off of regular ticket printout
-        out = f'{"  " + string.capwords(self.salonName) + "  ":=^48}\n'
-        out += f'{self.name:<48}\n'
-        out += f'{" Daily ":-^48}\n'
-        out += f'{"Day":<17}{"Tips":>10}{"Sales":>10}\n'
+        out = f'{"  " + string.capwords(self.salonName) + "  ":=^30}\n'
+        out += f'{self.name:<40}\n'
+        out += f'{" Daily ":-^30}\n'
+        out += f'{"Day":<12}{"Sales":>8}{"Tips":>8}\n'
+        outMSales = f'{"  " + string.capwords(self.salonName) + "  ":=^60}\n'
+        outMSales += f'{self.name:<60}\n'
+        outMSales += f'{"Day":<17}{"Sales":>10}{"Tips":>10}{" | "}{"MSales":>10}{"MTips":>10}\n'
 
         for day, amt in self.sales.items():
             dayName = day.isoweekday()  # monday = 1
@@ -170,39 +174,50 @@ class Employee:
             elif dayName == 7 and fee_days['sun']:
                 personal_fees += self.fees
 
-            bDailySales = 0
-            bDailyTip = 0
+            modDailySales = 0
+            modDailyTip = 0
             # instead of multiplying by self.commissionbooth, get value directly from zota because of
             # percentage rounding discrepancies
-            bDailyCommission = 0
+            modDailyCommission = 0
             if self.modifiedSales:
-                bDailySales = self.modifiedSales.get(day, {}).get('sales', 0)
-                bDailyTip = self.modifiedSales.get(day, {}).get('tips', 0)
-                bDailyCommission = self.modifiedSales.get(day, {}).get('commission', 0)
+                modDailySales = self.modifiedSales.get(day, {}).get('sales', 0)
+                modDailyTip = self.modifiedSales.get(day, {}).get('tips', 0)
+                modDailyCommission = self.modifiedSales.get(day, {}).get('commission', 0)
 
-            tipForDay = amt['tips']
+            dailyTip = amt['tips']
             tips += amt['tips']
             commissionSales += (amt['sales'] * tmpCommissionForOutput)  # no need
-            boothCommission += bDailyCommission
+            modCommission += modDailyCommission
             totalSales += amt['sales']
-            boothSales += bDailySales
-            boothTips += bDailyTip
+            modSales += modDailySales
+            modTips += modDailyTip
             if amt['sales'] > 0:
                 daysWorked += 1
             d = datetime.datetime.strftime(day, '%m/%d:%a')
-            out += f'{d:<17}{tipForDay:>10.2f}{amt["sales"]:>10.2f}\n'
+            out += f'{d:<12}{amt["sales"]:>8.2f}{dailyTip:>8.2f}\n'
+            outMSales += f'{d:<17}{amt["sales"]:>10.2f}{dailyTip:>10.2f}{" | "}{modDailySales:>10.2f}{modDailyTip:>10.2f}\n'
 
-        out += f'{" ":17}{"-":->20}\n'
-        out += f'{" ":17}{tips:>10.2f}{totalSales:>10.2f}\n\n\n'
-        out += f'{"":*^48}\n'
-        out += f'{" Summary ":-^48}\n'
+        out += f'{" ":12}{"-":->16}\n'
+        out += f'{" ":12}{totalSales:>8.2f}{tips:>8.2f}\n\n'
+        out += f'{" Summary ":-^30}\n'
         out += f'{"Total Sale":<10}{" ":5}{totalSales:>10.2f}\n'
         out += f'{"Commission":<10}{" ":5}{commissionSales:>10.2f}\n'
         out += f'{"Tips":<10}{" ":5}{tips:>10.2f}\n'
         out += f'{" ":15}{"-":->10}\n'
         out += f'{"Sales Pay":<10}{" ":5}{commissionSales + tips:>10.2f}\n'
-        out += f'{"=":=^48}\n\n\n'
+        out += f'{"=":=^30}\n\n'
+        outMSales += f'{" ":12}{"-":->20}{" | "}{" ":->20}\n'
+        outMSales += f'{" ":12}{totalSales:>10.2f}{tips:>10.2f}{" | "}{modSales:>10.2f}{modTips:>10.2f}\n\n\n'
+        outMSales += f'{"":*^60}\n'
+        outMSales += f'{" Summary ":-^60}\n'
+        outMSales += f'{"Total Sale":<15}{totalSales:>10.2f}{" | "}{"M Sale":<15}{modSales:>10.2f}\n'
+        outMSales += f'{"Commission":<15}{commissionSales:>10.2f}{" | "}{"M Commission":<15}{modCommission:>10.2f}\n'
+        outMSales += f'{"Tips":<15}{tips:>10.2f}{" | "}{"M Tips":<15}{modTips:10.2f}\n'
+        outMSales += f'{" ":15}{"-":->10}{" | "}{" ":15}{"-":->10}\n'
+        outMSales += f'{"Sales Pay":<15}{commissionSales + tips:>10.2f}{" | "}{"M Sales Pay":<15}{modCommission + modTips:>10.2f}\n'
+        outMSales += f'{"=":=^60}\n\n\n'
         self.payPrint = out
+        self.modSales = outMSales
         if self.role.capitalize() in ['Regular', 'Owner']:
             check = (commissionSales * self.check)
             cash = commissionSales - check
@@ -252,10 +267,10 @@ class Employee:
         self.paySummary['fees'] = personal_fees
         self.paySummary['daysworked'] = daysWorked
         self.paySummary['metGoal'] = metgoal
-        self.boothSummary['total'] = boothSales
-        self.boothSummary['tips'] = boothTips
-        self.boothSummary['commission'] = boothCommission
-        self.boothSummary['check'] = boothCommission + boothTips
+        self.modSummary['total'] = modSales
+        self.modSummary['tips'] = modTips
+        self.modSummary['commission'] = modCommission
+        self.modSummary['check'] = modCommission + modTips
 
         # neu lam du ngay thi check coi can bao luong hay ko
         if (self.paySummary['daysworked'] >= 6) | guarantee:
@@ -290,36 +305,37 @@ class Employee:
                 self.boothrent = 0
         elif self.modifiedSales:
             # if not manual booth rent was set but there is available modified sales
-            self.boothrent = self.boothSummary['check'] - self.xlreport['check']
+            self.boothrent = self.modSummary['check'] - self.xlreport['check']
         # else self.manualBooth is still = 0
         self.xlreport['booth'] = self.boothrent
         self.xlreport['bcheck'] = self.xlreport['check'] + self.boothrent
         self.xlreport['bcash'] = self.xlreport['cash'] - self.boothrent
 
         out = ''
-        out += f'{"Opt1":<15}    {self.paySummary["paycheck"]:>10.2f}\n'
-        out += f'{"Tips":<15}  + {self.paySummary["tips"]:>10.2f}\n'
+        out += f'{"OptionA":<12}    {self.paySummary["paycheck"]:>10.2f}\n'
+        out += f'{"Tips":<12}  + {self.paySummary["tips"]:>10.2f}\n'
         if self.checkbonus:
-            out += f'{"Bonus":<15}  + {self.checkbonus:>10.2f}\n'
+            out += f'{"Bonus":<12}  + {self.checkbonus:>10.2f}\n'
         if self.checkfee:
-            out += f'{"Fee":<15}  - {self.checkfee:>10.2f}\n'
-        out += f'{" ":<15}  {"":-^12}\n'
-        out += f'{" ":<15}    {self.xlreport["check"]:>10.2f}\n'
-        out += f'{"MS":<15}  + {self.boothrent:>10.2f}\n'
-        out += f'{" ":<15}  {"":=^12}\n'
-        out += f'{"Opt1 Total":<15}    {math.ceil(self.xlreport["check"] + self.boothrent):>10.2f}\n\n'
-        out += f'{"Opt2":<15}    {self.paySummary["paycash"]:>10.2f}\n'
-        out += f'{"Fees":<15}  - {self.paySummary["fees"] + self.rent:>10.2f}\n'
+            out += f'{"Fee":<12}  - {self.checkfee:>10.2f}\n'
+        out += f'{" ":<12}  {"":-^12}\n'
+        out += f'{" ":<12}    {self.xlreport["check"]:>10.2f}\n'
+        out += f'{"MS":<12}  + {self.boothrent:>10.2f}\n'
+        out += f'{" ":<12}  {"":=^12}\n'
+        out += f'{"OptA Total":<12}    {math.ceil(self.xlreport["check"] + self.boothrent):>10.2f}\n\n\n'
+        out += f'{"OptionB":<12}    {self.paySummary["paycash"]:>10.2f}\n'
+        out += f'{"Fees":<12}  - {self.paySummary["fees"] + self.rent:>10.2f}\n'
         if self.cashbonus:
-            out += f'{"Bonus":<15}  + {self.cashbonus:>10.2f}\n'
+            out += f'{"Bonus":<12}  + {self.cashbonus:>10.2f}\n'
         if self.cashfee:
-            out += f'{"Fee2":<15}  - {self.cashfee:>10.2f}\n'
-        out += f'{" ":<15}  {"":-^12}\n'
-        out += f'{" ":<15}    {self.xlreport["cash"]:>10.2f}\n'
-        out += f'{"MS":<15}  - {self.boothrent:>10.2f}\n'
-        out += f'{" ":<15}  {"":=^12}\n'
-        out += f'{"Opt2 Total":<15}    {math.ceil(self.xlreport["bcash"]):>10.2f}\n\n'
+            out += f'{"Fee2":<12}  - {self.cashfee:>10.2f}\n'
+        out += f'{" ":<12}  {"":-^12}\n'
+        out += f'{" ":<12}    {self.xlreport["cash"]:>10.2f}\n'
+        out += f'{"MS":<12}  - {self.boothrent:>10.2f}\n'
+        out += f'{" ":<12}  {"":=^12}\n'
+        out += f'{"OptB Total":<12}    {math.ceil(self.xlreport["bcash"]):>10.2f}\n\n'
         self.payPrint += out
+        self.modSales += out
         return True, True
 
     def getPayrollSummary(self):
@@ -327,6 +343,9 @@ class Employee:
 
     def getPrintOut(self):
         return self.payPrint
+
+    def getDetailPrint(self):
+        return self.modSales
 
     def getStatus(self):
         """
@@ -398,49 +417,50 @@ class EmployeeSpecial(Employee):
         '''
 
         self.sales = sales.copy()
-        boothFlag = False
-        if booth:
-            try:
-                self.manualBooth = int(booth)
-                boothFlag = True
-            except ValueError:
-                self.manualBooth = 0
         if modified_sales:
             self.modifiedSales = modified_sales.copy()
+
         self.genericCalculate(fee_days, guarantee, booth)
-        out = f'{"*":*^40}\n'
+        out = f'{"*":*^30}\n'
         if self.role.lower() == 'checkdeal':
             totalpay = self.paySummary['paycheck'] + self.paySummary['paycash']
             paycheckdeal = totalpay * self.checkdeal
             paycashdeal = totalpay - paycheckdeal
-            self.xlreport['checkdeal'] = (paycheckdeal + self.paySummary['tips']
+            self.xlreport['checkdeal'] = (paycheckdeal + self.paySummary['tips'] + self.xlreport['booth']
                                           + self.checkbonus - self.checkfee)
-            self.xlreport['bcheck'] = self.xlreport['checkdeal'] + self.xlreport['booth']
+            self.xlreport['bcheck'] = self.xlreport['check'] + self.xlreport['booth']
             self.xlreport['bcash'] = (paycashdeal - self.paySummary['fees'] - self.rent
-                                     + self.cashbonus - self.cashfee - self.boothrent)
+                                      + self.cashbonus - self.cashfee - self.boothrent)
             out += f'{"Check Deal":<15}    {paycheckdeal:>10.2f}\n'
             out += f'{"Tips":<15}  + {self.paySummary["tips"]:>10.2f}\n'
+            paycheckdeal = paycheckdeal + self.paySummary['tips']
             if self.checkbonus:
                 out += f'{"Bonus":<15}  + {self.checkbonus:>10.2f}\n'
+                paycheckdeal = paycheckdeal + self.checkbonus
             if self.checkfee:
                 out += f'{"Fee":<15}  - {self.checkfee:>10.2f}\n'
+                paycheckdeal = paycheckdeal - self.checkfee
             out += f'{" ":<15}  {"":-^12}\n'
-            out += f'{" ":<15}    {self.xlreport["checkdeal"]:>10.2f}\n'
+            out += f'{" ":<15}    {paycheckdeal:>10.2f}\n'
             out += f'{"MS":<15}  + {self.boothrent:>10.2f}\n'
             out += f'{" ":<15}  {"":=^12}\n'
-            out += f'{"Opt1 Total":<15}    {math.ceil(self.xlreport["bcheck"]):>10.2f}\n\n'
-            out += f'{"Opt2":<15}    {paycashdeal:>10.2f}\n'
+            out += f'{"OptA Total":<15}    {math.ceil(self.xlreport["checkdeal"]):>10.2f}\n\n'
+            out += f'{"OptB":<15}    {paycashdeal:>10.2f}\n'
             out += f'{"Fees":<15}  - {self.paySummary["fees"] + self.rent:>10.2f}\n'
+            paycashdeal = paycashdeal - (self.paySummary["fees"] + self.rent)
             if self.cashbonus:
                 out += f'{"Bonus":<15}  + {self.cashbonus:>10.2f}\n'
+                paycashdeal = paycashdeal + self.cashbonus
             if self.cashfee:
                 out += f'{"Fee2":<15}  - {self.cashfee:>10.2f}\n'
+                paycashdeal = paycashdeal - self.cashfee
             out += f'{" ":<15}  {"":-^12}\n'
-            out += f'{" ":<15}    {self.xlreport["bcash"] - self.boothrent:>10.2f}\n'
+            out += f'{" ":<15}    {paycashdeal:>10.2f}\n'
             out += f'{"MS":<15}  - {self.boothrent:>10.2f}\n'
             out += f'{" ":<15}  {"":=^12}\n'
-            out += f'{"Opt2 Total":<15}    {math.ceil(self.xlreport["bcash"]):>10.2f}\n\n'
+            out += f'{"OptB Total":<15}    {math.ceil(self.xlreport["bcash"]):>10.2f}\n\n'
             self.payPrint += out
+            self.modSales += out
 
         elif self.role.lower() == 'cash':
             cashdeal = float(self.xlreport["check"] * self.cashrate)
@@ -450,6 +470,7 @@ class EmployeeSpecial(Employee):
             out += f'{"Ca hai cong loi:":<25}{self.xlreport["bcash"]:<10}\n\n'
             self.xlreport["bcheck"] = 0
             self.payPrint += out
+            self.modSales += out
         return True, True
 
 
@@ -470,5 +491,6 @@ class EmployeeJanitor(Employee):
 
         if self.xlreport['bcash'] == 0:
             self.xlreport['bcheck'] = self.xlreport['bcheck'] - self.rent
+        else:
+            self.xlreport['bcash'] = self.xlreport['bcash'] - self.rent
         self.payPrint = f'Check: {self.xlreport["bcheck"]}    Cash: {self.xlreport["bcash"]}'
-

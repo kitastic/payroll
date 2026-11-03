@@ -148,11 +148,11 @@ class Ai:
         Returns:
             boolean, data: dictionary of employee key and their payroll values
         """
-        result, data = self.allSalons[sname].getPayroll(sdate, edate, guarantee, booth)
+        result, data, detailData = self.allSalons[sname].getPayroll(sdate, edate, guarantee, booth)
         if result:
-            return True, data
+            return True, data, detailData
         else:
-            return False, data
+            return False, data, detailData
 
     def getSalonInfo(self, salonName):
         """
@@ -434,7 +434,7 @@ class Ai:
         Returns:
             N/A
         """
-        self.allSalons[salonPkt['sname']].updateSalon(salonPkt)
+        self.allSalons[salonPkt['name']].updateSalon(salonPkt)
 
     def webscrapeSales(self, salon, sDate, eDate, type):
         """
@@ -449,20 +449,24 @@ class Ai:
             status, msg: boolean of status and msg if failure
         """
         salonObj = self.allSalons[salon]
+        activeEmployees = []
+        for name, employeeObj in salonObj.Emps.items():
+            if employeeObj.active:
+                activeEmployees.append(name)
         # salon is using inherited method dlEmpSales from Bot
         try:
             print(f'STATUS: [Ai.webscrapeSales]: beginning to retrieve sales for {salon} date range {sDate} - {eDate}')
-            path, fname = salonObj.dlEmpSales(salon, salonObj.zotaUname, salonObj.zotaPass,
-                                              startDate=sDate, endDate=eDate)
+            path, fname, parsedZotaPayroll = salonObj.dlEmpSales(salon, salonObj.zotaUname, salonObj.zotaPass,
+                                              startDate=sDate, endDate=eDate, activeEmployees=activeEmployees)
             if not path:
                 msg = f'ERROR: [Ai.webscrapeSales]{salon} unable to download file range {sDate} - {eDate}\n' \
                       f'{fname}'
                 return False, msg
-            sucess, msg = salonObj.readSalesXltoJson(path + fname, type=type)
-            if not sucess:
+            success, msg = salonObj.readSalesXltoJson(path + fname, type=type)
+            if not success:
                 return False, msg
             salonObj.updateJsonFileDelXl(path, type=type)
-            return True, False
+            return True, True
         except Exception:
             return False, 'ERROR: [Ai.webscrapeSales] Failed to get sales.\nPossible problems:\n' \
                           '-date range too long and browser took too long to load\n-maybe there is no sales data ' \

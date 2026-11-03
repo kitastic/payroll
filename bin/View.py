@@ -36,24 +36,25 @@ class View:
             compact=True,
             sort_dicts=False,
         )
+        self.menu_def = []
         self.__setup__()
         self.openApp()
 
     def __setup__(self):
         sg.theme('darkgrey9')
-        menu_def = [['File', ['Load Settings', '-------------', 'Exit']],
-                    # ['Payroll', ['Print Payroll', ['All::printpayroll'],
-                    #              'Print Payroll Skip Webscrape', ['All::printpayrollskipwebscrape']]],
-                    ['Payroll', ['Export Payroll Skip Webscrape', ['All::printpayrollskipwebscrape']]],
-                    ['Import', ['Excel Sales::importExcel', 'Excel Modified Sales::importModifiedExcel']],
-                    ['Reporting']
-                    ]
+        self.menu_def = [['File', ['Load Settings', '-------------', 'Exit']],
+                         # ['Payroll', ['Print Payroll', ['All::printpayroll'],
+                         #              'Print Payroll Skip Webscrape', ['All::printpayrollskipwebscrape']]],
+                         ['Payroll', ['Export Payroll Skip Webscrape', ['All::printpayrollskipwebscrape']]],
+                         ['Import', ['Excel Sales::importExcel', 'Excel Modified Sales::importModifiedExcel']],
+                         ['Reporting']
+                         ]
         self.activeSalonNames = self.ai.getActiveSalonNames()
         self.allSalonNames = self.ai.getAllSalonNames()
         for s in self.activeSalonNames:
             salon = s.capitalize()
             # menu_def[1][1][1].append(salon + '::printpayroll')
-            menu_def[1][1][1].append(salon + '::printpayrollskipwebscrape')
+            self.menu_def[1][1][1].append(salon + '::printpayrollskipwebscrape')
 
         logTab = [[sg.Multiline(font='Courier 10', expand_x=True, expand_y=True, write_only=True,
                                 reroute_stdout=True, reroute_stderr=True, echo_stdout_stderr=True, autoscroll=True,
@@ -65,14 +66,14 @@ class View:
         rtabSalons.insert(0, 'all')
         rTab_r1 = sg.Frame('', [
             [sg.Column([
-                [sg.Image('../images/shop-30.png', expand_x=True)],
+                [sg.Image('images/shop-30.png', expand_x=True)],
                 [sg.OptionMenu(values=rtabSalons, default_value='all', size=10, key='-rTab_om_salon-')],
             ]),
                 sg.Column([
-                    [sg.Button('', image_filename='../images/calendar20.png', button_color='#40444b',
+                    [sg.Button('', image_filename='images/calendar20.png', button_color='#40444b',
                                key='-rTab_cal_sDate-'),
                      sg.Input('1/1/2021', key='-rTab_in_sDate-', size=15)],
-                    [sg.Button('', image_filename='../images/calendar20.png', button_color='#40444b',
+                    [sg.Button('', image_filename='images/calendar20.png', button_color='#40444b',
                                key='-rTab_cal_eDate-'),
                      sg.Input('12/31/2021', key='-rTab_in_eDate-', size=15)],
                 ]),
@@ -85,7 +86,7 @@ class View:
                     [sg.Checkbox('Self-comparison', default=False, key='-rTab_cb_selfcompare-')],
                 ]),
                 sg.Column([
-                    [sg.Button(image_filename='../images/refresh24.png', key='-rTab_btn_load-')],
+                    [sg.Button(image_filename='images/refresh24.png', key='-rTab_btn_load-')],
                 ])
             ]])
         rTab_r2 = sg.Frame('', [[sg.Canvas(key='-rTab_canvas-')]], expand_x=True, expand_y=True)
@@ -96,34 +97,34 @@ class View:
         # ---------------------------------------------------------------------
         sTabLeftFrame = sg.Frame('', [
             [sg.T('Current Salons:'), sg.Combo(values=self.allSalonNames, key='-sTab_c_salon-', expand_x=True),
-             sg.Button(image_filename='../images/refresh24.png', key='-sTab_btn_load-')],
+             sg.Button(image_filename='images/refresh24.png', key='-sTab_btn_load-')],
             [sg.T('')],
             [sg.HorizontalSeparator()],
-            [sg.Image(filename='../images/password-40.png', )],
-            [sg.T('Salon Name:'), sg.Input('', key='-sTab_in_name-')],
-            [sg.T('Username:'), sg.Input('', key='-sTab_in_uname-')],
-            [sg.T('Password:'), sg.Input('', key='-sTab_in_pass-')],
+            [sg.T('', expand_x=True), sg.Image(filename='../images/password-40.png', ), sg.T('', expand_x=True)],
+            [sg.T(f'{"Salon Name:":<16}'), sg.Input('', key='-sTab_in_name-')],
+            [sg.T(f'{"Username:":<16}'), sg.Input('', key='-sTab_in_uname-')],
+            [sg.T(f'{"Password:":<16}'), sg.Input('', key='-sTab_in_pass-')],
             [sg.Checkbox('Active', key='-sTab_cb_active-')],
             [sg.T('')],
             [sg.Frame('', [
                 [sg.Column([
-                    [sg.T('Save')],
-                    [sg.Button(image_filename='../images/add-fingerprint-40.png', tooltip='Save salon',
-                               key='-sTab_btn_save-')]
+                    [sg.T('Add')],
+                    [sg.Button(image_filename='images/add-fingerprint-40.png', tooltip='Save salon',
+                               key='-sTab_btn_add-')]
                 ]),
                     sg.Column([
                         [sg.T('Update')],
-                        [sg.Button(image_filename='../images/save-as-40.png',
+                        [sg.Button(image_filename='images/save-as-40.png',
                                    key='-sTab_btn_update-', tooltip='Update Salon')],
                     ]),
                     sg.Column([
                         [sg.T('Clear')],
-                        [sg.Button(image_filename='../images/erase-40.png', key='-sTab_btn_clear-',
+                        [sg.Button(image_filename='images/erase-40.png', key='-sTab_btn_clear-',
                                    tooltip='Clear form')]
                     ]),
                     sg.Column([
                         [sg.T('Remove')],
-                        [sg.Button(image_filename='../images/remove-fingerprint-40.png', key='-sTab_btn_remove-',
+                        [sg.Button(image_filename='images/remove-fingerprint-40.png', key='-sTab_btn_remove-',
                                    tooltip='Remove salon')],
                     ])
                 ]
@@ -132,7 +133,6 @@ class View:
         sTab = [
             [sTabLeftFrame,
              sg.Frame('', [
-                 [sg.Image(filename='../images/shop-40.png', expand_x=True)],
                  [sg.Multiline('', key='-sTab_in_display-', horizontal_scroll=True, autoscroll=True, auto_refresh=True,
                                expand_x=True, expand_y=True)]], expand_x=True, expand_y=True)]
         ]
@@ -142,8 +142,8 @@ class View:
         # ------------------------------------------------------------------------------------------
         paygradeFrame = [[sg.T('Role'),
                           sg.OptionMenu(values=['Regular', 'Cash', 'Checkdeal', 'Janitor', 'Owner'],
-                                                key='-eTab_om_role-', ),
-                          sg.Button(image_filename='../images/refresh-22.png', key='-eTab_btn_role-')],
+                                        key='-eTab_om_role-', ),
+                          sg.Button(image_filename='images/refresh-22.png', key='-eTab_btn_role-')],
                          [sg.HorizontalSeparator()],
                          [sg.T('Regular', font=('default', 12, 'italic'))],
                          [sg.Text('Commission:'.ljust(20)),
@@ -190,7 +190,7 @@ class View:
             [sg.Text('Cash Bonus:'.ljust(15)), sg.Input(key='-eTab_in_cashbonus-', size=10),
              sg.Text('Cash Fee:'.ljust(15)), sg.Input(key='-eTab_in_cashfee-', size=10)],
             [sg.Checkbox('Custom Booth', key='-eTab_cb_booth-'), sg.Input(key='-eTab_in_boothcustom-')],
-            [sg.Frame('Pay Type', paygradeFrame, font=('bold'),expand_x=True)],
+            [sg.Frame('Pay Type', paygradeFrame, font='bold', expand_x=True)],
             [sg.T('Work Days (if Janitor)')],
             [sg.Checkbox('M', key='-eTab_janitor_mon-', default=True),
              sg.Checkbox('T', key='-eTab_janitor_tue-', default=True),
@@ -202,17 +202,17 @@ class View:
             [sg.Frame('', [
                 [sg.Column([
                     [sg.T('Save New')],
-                    [sg.Button(image_filename='../images/add-40.png', tooltip='Save New Employee',
+                    [sg.Button(image_filename='images/add-40.png', tooltip='Save New Employee',
                                key='-eTab_btn_save-')]
                 ]),
                     sg.Column([
                         [sg.T('Clear Form')],
-                        [sg.Button(image_filename='../images/erase-40.png', key='-eTab_btn_clear-',
+                        [sg.Button(image_filename='images/erase-40.png', key='-eTab_btn_clear-',
                                    tooltip='Clear Form')]
                     ]),
                     sg.Column([
                         [sg.T('Update Existing')],
-                        [sg.Button(image_filename='../images/save-as-40.png',
+                        [sg.Button(image_filename='images/save-as-40.png',
                                    key='-eTab_btn_update-', tooltip='Update Employee')],
                     ])
                 ]
@@ -222,12 +222,12 @@ class View:
         empTabRightCol = sg.Frame('', [
             [sg.T('Choose Salon '),
              sg.OptionMenu(values=self.activeSalonNames, key='-eTab_om_salon-'),
-             sg.Button(image_filename='../images/refresh24.png', key='-eTab_btn_load-'),
+             sg.Button(image_filename='images/refresh24.png', key='-eTab_btn_load-'),
              sg.Checkbox('Show Active Only', key='-eTab_c_status-', default=True)],
-            [sg.Image('../images/staff50.png', expand_x=True, )],
+            [sg.Image('images/people-50.png', expand_x=True, )],
             [sg.Listbox(values=[], select_mode='extended', size=(50, 22), key='-eTab_lb-', enable_events=True,
                         expand_y=True)],
-            [sg.Column([[sg.Button(key='-eTab_btn_remove-', image_filename='../images/trash-40.png',
+            [sg.Column([[sg.Button(key='-eTab_btn_remove-', image_filename='images/trash-40.png',
                                    tooltip='Delete employee')]], justification='r')]
         ], expand_x=True, expand_y=True)
 
@@ -243,25 +243,29 @@ class View:
         bm2.insert(0, 'All')
 
         menuIconDates = sg.Frame('Payroll Date Range',
-                                 [[sg.Button('', image_filename='../images/calendar20.png', button_color='#40444b',
+                                 [[sg.Button('', image_filename='images/calendar20.png', button_color='#40444b',
                                              key='-main_cal_sDate-'),
                                    sg.Input('Enter Start Date', key='-main_in_sDate-', size=15)],
-                                  [sg.Button('', image_filename='../images/calendar20.png', button_color='#40444b',
+                                  [sg.Button('', image_filename='images/calendar20.png', button_color='#40444b',
                                              key='-main_cal_eDate-'),
                                    sg.Input('Enter End Date', key='-main_in_eDate-', size=15), ],
                                   ], size=(150, 75))
-        mTab_r1c2 = sg.Column([
-                              [sg.T("Export \nw/o web")],
-                              [sg.ButtonMenu('', [bm1, bm2], tooltip='Export payroll without webscrape',
-                               image_filename='../images/web-none-50.png', key='-mTab_btn_export_wo_web-',
-                               button_color=self.btnColor)]
+        mTab_r1c1 = sg.Column([
+            [sg.T("Export \nw/o web")],
+            [sg.ButtonMenu('', [bm1, bm2], tooltip='Export payroll without webscrape',
+                           image_filename='images/web-none-50.png', key='-mTab_btn_export_wo_web-',
+                           button_color=self.btnColor)]
         ])
-        mTab_r1c3 = sg.Column([[sg.T('View\nPayroll')],
-                               [sg.Button('', image_filename='../images/money-transfer-45.png',
-                                          key='-mTab_btn_payroll-')],
+        mTab_r1c2 = sg.Column([[sg.T('View\nPayroll')],
+                               [sg.Button('', image_filename='images/money-transfer-45.png',
+                                          key='-mTab_btn_printout-')],
+                               ])
+        mTab_r1c3 = sg.Column([[sg.T('View\nDetails')],
+                               [sg.Button('', image_filename='images/accounting-45.png',
+                                          key='-mTab_btn_details-')],
                                ])
         mTab_r1c4 = sg.Column([[sg.T('View\nStatus')],
-                               [sg.Button(image_filename='../images/in-progress-45.png', key='-mTab_btn_status-',
+                               [sg.Button(image_filename='images/in-progress-45.png', key='-mTab_btn_status-',
                                           tooltip='Current week income status for employees')]
                                ])
         mTab_r1c5 = sg.Column([[menuIconDates]])
@@ -271,16 +275,16 @@ class View:
                                 sg.Input('', size=(8, 1), tooltip='Enter dollar amount', key='-mTab_in_booth-')],
                                ])
 
-        mainTab = [[mTab_r1c2, mTab_r1c3, mTab_r1c4, mTab_r1c5, mTab_r1c6],
+        mainTab = [[mTab_r1c1, mTab_r1c2, mTab_r1c3, mTab_r1c4, mTab_r1c5, mTab_r1c6],
                    [sg.Frame('', [[sg.T('Salon: '), sg.Combo(values=self.activeSalonNames, size=12,
                                                              key='-mTab_c_salon-', enable_events=True,
                                                              default_value='upscale'),
-                                   sg.Button(image_filename='../images/refresh24.png', key='-mTab_btn_load-')],
+                                   sg.Button(image_filename='images/refresh24.png', key='-mTab_btn_load-')],
                                   [sg.Push(), sg.T('Employees'), sg.Push()],
                                   [sg.Listbox(values=[], select_mode='extended', key='-mTab_lb-', expand_y=True,
                                               expand_x=True, enable_events=True)]], expand_y=True, size=(250, 550)),
                     sg.Frame('', [[sg.Multiline('', key='-mTab_in_display-', expand_x=True, expand_y=True,
-                                                autoscroll=True, horizontal_scroll=True)]], expand_y=True,
+                                                autoscroll=False, horizontal_scroll=True, size=(100))]], expand_y=True,
                              expand_x=True)],
                    ]
 
@@ -288,31 +292,31 @@ class View:
         # menu button bar (located beneath main menu bar)
         # ------------------------------------------------------------------------------------------
         dbIconDates = sg.Frame('Database Date Range',
-                                 [[sg.Button('', image_filename='../images/calendar20.png', button_color='#40444b',
-                                             key='-db_cal_sDate-'),
-                                   sg.Input('Enter Start Date', key='-db_in_sDate-', size=15)],
-                                  [sg.Button('', image_filename='../images/calendar20.png', button_color='#40444b',
-                                             key='-db_cal_eDate-'),
-                                   sg.Input('Enter End Date', key='-db_in_eDate-', size=15), ],
-                                  ], size=(150, 75))
-        self.layout = [[sg.Menubar(menu_def)],
-                       [sg.Column([[sg.Image('../images/kp_w40.png')]]),
+                               [[sg.Button('', image_filename='images/calendar20.png', button_color='#40444b',
+                                           key='-db_cal_sDate-'),
+                                 sg.Input('Enter Start Date', key='-db_in_sDate-', size=15)],
+                                [sg.Button('', image_filename='images/calendar20.png', button_color='#40444b',
+                                           key='-db_cal_eDate-'),
+                                 sg.Input('Enter End Date', key='-db_in_eDate-', size=15), ],
+                                ], size=(150, 75))
+        self.layout = [[sg.Menubar(self.menu_def, key='menubar')],
+                       [sg.Column([[sg.Image('images/kp.png')]]),
                         dbIconDates,
                         sg.Column([[sg.T("Sales\n", justification='center')],
                                    [sg.ButtonMenu('', [bm1, bm2], tooltip='Download sales',
-                                                  image_filename='../images/database-50.png', key='getSales',
+                                                  image_filename='images/database-50.png', key='getSales',
                                                   button_color=self.btnColor)]]),
                         sg.Column([[sg.T('Last Date', )], [sg.T('', key='jsonInfo')]]),
                         sg.Column([[sg.T('Modified\nSales')],
                                    [sg.ButtonMenu('', [bm1, bm2], tooltip='Download modified sales',
-                                                  image_filename='../images/database-updated-50.png',
+                                                  image_filename='images/database-updated-50.png',
                                                   key='getModifiedSales',
                                                   button_color=self.btnColor)]]),
                         sg.Column([[sg.T('Last Date', )], [sg.T('', key='jsonModifiedInfo')]]),
                         sg.Column([[sg.T("", expand_x=True)]], expand_x=True),
-                        sg.Column([[sg.Button(image_filename='../images/save-50.png', button_color='#40444b',
+                        sg.Column([[sg.Button(image_filename='images/save-50.png', button_color='#40444b',
                                               key='-Save-'),
-                                    sg.Button(image_filename='../images/shutdown-50.png', button_color='#40444b',
+                                    sg.Button(image_filename='images/shutdown-50.png', button_color='#40444b',
                                               key='Exit')
                                     ]]),
                         ], ]
@@ -367,7 +371,7 @@ class View:
         mTab = ['-main_cal_sDate-', '-main_in_sDate-', '-main_cal_eDate-', '-main_in_eDate-',
                 '-db_cal_sDate-', '-db_in_sDate-', '-db_cal_eDate-', '-db_in_eDate-',
                 '-mTab_c_salon-', '-mTab_btn_load-', '-mTab_cb_thisweek-', '-mTab_btn_sales-',
-                '-mTab_btn_payroll-', '-mTab_c_salon-', '-mTab_btn_export_wo_web-', '-mTab_btn_export_w_web-',
+                '-mTab_btn_printout-', '-mTab_btn_details-', '-mTab_c_salon-', '-mTab_btn_export_wo_web-',
                 '-mTab_btn_status-', '-mTab_lb-']
 
         eTab = ['-eTab_btn_role-', '-eTab_btn_status-', '-eTab_btn_save-',
@@ -375,7 +379,7 @@ class View:
                 '-eTab_lb-', '-eTab_om_salon-', '-eTab_om_salon2-']
 
         sTab = ['-sTab_c_salon-', '-sTab_btn_load-',
-                '-sTab_btn_save-', '-sTab_btn_update-', '-sTab_btn_clear-', '-sTab_btn_remove-',
+                '-sTab_btn_add-', '-sTab_btn_update-', '-sTab_btn_clear-', '-sTab_btn_remove-',
                 '-sTab_in_display-', ]
 
         rTab = ['-rTab_cal_sDate-', '-rTab_in_sDate-', '-rTab_cal_eDate-', '-rTab_in_sDate-', '-rTab_om_salon-',
@@ -454,25 +458,19 @@ class View:
 
         elif '::printpayroll' in self.event:
             self.status('WORKING: print payroll...')
-            webscrape = False if 'skipwebscrape' in self.event else True
-            # last_modified_dates = self.ai.getJsonLatestDates('webscrape', 'modified')
             last_dates = self.ai.getJsonLatestDates('webscrape', 'regular')
-            # today = datetime.datetime.today().strftime('%m/%d/%Y')
             salon_name = re.search(r'^\w+', self.event).group(0).lower()
             salon_marker = self.getMarker(salon_name)
             self.verifyDates()
             if not self.dates:
                 self.status(f'[View.listenMBar] {salon_name} salon cannot determine dates')
                 pass
-
             for wanted_salon, sname, start_date in zip(salon_marker, self.activeSalonNames, last_dates):
-                status = False
-                msg = False
                 if not wanted_salon:
                     continue
-                result, data = self.ai.getPayrollFromSalon(sname, self.startDate, self.endDate,
-                                                           self.values['-guarantee-'],
-                                                           self.values['-mTab_in_booth-'])
+                result, data, detailData = self.ai.getPayrollFromSalon(sname, self.startDate, self.endDate,
+                                                                       self.values['-guarantee-'],
+                                                                       self.values['-mTab_in_booth-'])
                 if result:
                     status_export, msg = self.ai.exportPayroll(sname, self.startDate, self.endDate, 'html')
                     if not status_export:
@@ -481,16 +479,16 @@ class View:
                 else:
                     self.status(f'ERROR: [View.listenMBar]>unable to get payroll from salon. [Salon.getPayroll]>{data}')
                     return
-
             self.gui['jsonInfo'].update(self.ai.getJsonLatestDates('display', 'regular'))
             self.status(f'SUCCESS: completed exporting files')
 
         elif self.event in ['Excel Sales::importExcel', 'Excel Modified Sales::importModifiedExcel']:
+            salestype = 'regular' if self.event == 'Excel Sales::importExcel' else 'modified'
             layout = [[sg.T('Salon'), sg.Combo(values=self.activeSalonNames, key='sname')],
                       [sg.Input('', key='-salespfname-'),
                        sg.FileBrowse(target='-salespfname-', initial_folder=os.getcwd())],
                       [sg.Button('Submit'), sg.Button('Cancel')]]
-            win = sg.Window('Choose excel sales file to import', layout, finalize=True)
+            win = sg.Window(f'Choose excel {salestype} sales file to import', layout, finalize=True)
             win.read()
             pfname = ''
             salon_name = ''
@@ -537,15 +535,14 @@ class View:
         elif self.event == '-mTab_cb_thisweek-':
             self.verifyDates()
 
-        elif self.event in ['-mTab_btn_export_wo_web-', '-mTab_btn_export_w_web-']:
+        elif self.event in ['-mTab_btn_export_wo_web-']:
             self.status('WORKING: exporting payroll...')
-            salon_name = self.values['-mTab_btn_export_wo_web-'].lower() if self.event == '-mTab_btn_export_wo_web-' \
-                else self.values['-mTab_btn_export_w_web-'].lower()
+            salon_name = self.values['-mTab_btn_export_wo_web-'].lower()
             self.verifyDates()
             if self.dates:
-                result, data = self.ai.getPayrollFromSalon(salon_name, self.startDate, self.endDate,
-                                                           self.values['-guarantee-'],
-                                                           self.values['-mTab_in_booth-'])
+                result, data, detailData = self.ai.getPayrollFromSalon(salon_name, self.startDate, self.endDate,
+                                                                       self.values['-guarantee-'],
+                                                                       self.values['-mTab_in_booth-'])
                 if result:
                     status_export, msg = self.ai.exportPayroll(salon_name, self.startDate, self.endDate, 'html')
                     if not status_export:
@@ -557,7 +554,7 @@ class View:
             else:
                 self.status(f'ERROR: [{self.event}] {salon_name} salon cannot determine dates')
 
-        elif self.event in ('-mTab_btn_payroll-', '-mTab_btn_status-', '-mTab_btn_load-'):
+        elif self.event in ('-mTab_btn_printout-', '-mTab_btn_details-', '-mTab_btn_status-', '-mTab_btn_load-'):
             self.verifyDates()
             sname = self.values['-mTab_c_salon-'].lower()
             if not self.dates and self.event != '-mTab_c_salon-':
@@ -565,14 +562,10 @@ class View:
                 return
             # it is better to perform payroll everytime any request is made because there may be other income
             # updates since last payroll command. ie such as updating json sales after performing payroll
-            result, data = self.ai.getPayrollFromSalon(sname, self.startDate, self.endDate,
-                                                       self.values['-guarantee-'],
-                                                       self.values['-mTab_in_booth-'])
-            if result:
-                self.mTab_lb_Emps[sname] = data
-                # this step performs '-mTab_btn_load-' event
-                self.gui['-mTab_lb-'].update(data.keys())
-            else:
+            result, data, detailData = self.ai.getPayrollFromSalon(sname, self.startDate, self.endDate,
+                                                                   self.values['-guarantee-'],
+                                                                   self.values['-mTab_in_booth-'])
+            if not result:
                 self.status(f'ERROR: [View.listenMTab]>unable to get payroll from salon. [Salon.getPayroll]>{data}')
                 return
 
@@ -582,6 +575,14 @@ class View:
                 for name, bundle in self.mTab_empStatus.items():
                     tmp += '{}:\n {}\n'.format(name, bundle)
                 self.gui['-mTab_in_display-'].update(tmp)
+            elif self.event == '-mTab_btn_printout-':
+                self.mTab_lb_Emps[sname] = data
+                # this step performs '-mTab_btn_load-' event
+                self.gui['-mTab_lb-'].update(data.keys())
+            elif self.event == '-mTab_btn_details-':
+                self.mTab_lb_Emps[sname] = detailData
+                # this step performs '-mTab_btn_load-' event
+                self.gui['-mTab_lb-'].update(detailData.keys())
 
         elif self.event == '-mTab_lb-':
             try:
@@ -592,9 +593,6 @@ class View:
                 self.gui['-mTab_in_display-'].update(e)
             except KeyError:
                 pass
-        # sDate = self.values['-main_in_sDate-']
-        # eDate = self.values['-main_in_eDate-']
-        # self.verifyDates(sDate, eDate)
 
     def listenETab(self):
         salonName = self.values['-eTab_om_salon-'].lower()
@@ -645,7 +643,7 @@ class View:
             # this part changes the graphical button state
             self.gui[self.event].metadata.state = not self.gui[self.event].metadata.state
             self.gui[self.event].update(image_data=toggle_btn_on if self.gui[self.event].metadata.state else
-                                        toggle_btn_off, image_subsample=2)
+            toggle_btn_off, image_subsample=2)
             # updates employee actual status
             salon = self.values['-eTab_om_salon-'].lower()
             name = self.values['-eTab_lb-'][0]
@@ -671,7 +669,7 @@ class View:
             self.gui['-notice-'].update('[View.listenEtab]: Command not found in employee tab')
 
     def listenSTab(self):
-        if self.event == '-sTab_btn_save-':
+        if self.event == '-sTab_btn_add-':
             sname = self.values['-sTab_in_name-']
             uname = self.values['-sTab_in_uname-']
             password = self.values['-sTab_in_pass-']
@@ -685,8 +683,12 @@ class View:
                      'paymentsFnames': {},
                      'employees': {}}
             self.ai.createSalon(salon)
-            self.activeSalonNames.append(sname)
-            self.refreshSalonLists()
+            if active:
+                self.activeSalonNames.append(sname)
+                self.refreshSalonLists()
+            else:
+                if sname in self.activeSalonNames:
+                    self.activeSalonNames.remove(sname)
             self.gui['-notice-'].update(f'[View.listenSTab] save done')
 
         elif self.event == '-sTab_btn_update-':
@@ -697,8 +699,15 @@ class View:
             # create salon first and then import json so that the default
             # pfname of json is still default
             salon = {'name': sname,
-                     'login': {'username': uname, 'password': password}}
+                     'active': active,
+                     'login': {'username': uname, 'password': password},
+                     }
             self.ai.updateSalon(salon)
+            if active:
+                self.activeSalonNames.append(sname)
+            else:
+                if sname in self.activeSalonNames:
+                    self.activeSalonNames.remove(sname)
             self.refreshSalonLists()
             self.gui['-notice-'].update(f'[View.listenSTab] update done')
 
@@ -755,12 +764,12 @@ class View:
                 self.ai.graph(salon, sDate, eDate, frequency, self.gui['-rTab_canvas-'], fig, ax)
 
     def clearBtn(self):
-        inputs = ['-eTab_in_salon-', '-eTab_in_empName-',
+        inputs = ['-eTab_om_salon-', '-eTab_in_empName-',
                   '-eTab_in_empCheckName-', '-eTab_in_basePay6-', '-eTab_in_basePay7-',
                   '-eTab_in_fees-', '-eTab_in_rent-',
                   '-eTab_in_checkbonus-', '-eTab_in_checkfee-',
                   '-eTab_in_cashbonus-', '-eTab_in_cashfee-',
-                  '-eTab_in_booth-'
+                  '-eTab_in_booth-',
                   '-eTab_c_commission-', '-eTab_c_check-', '-eTab_c_commissionspecial-', '-eTab_c_checkdeal-',
                   '-eTab_c_checkoriginal-', '-eTab_om_role-'
                   ]
@@ -908,13 +917,13 @@ class View:
                                             'checkoriginal': checkoriginal, 'cashrate': cashrate}
                                 },
                        'workdays': {
-                                    'mon': self.values['-eTab_janitor_mon-'], 'tue': self.values['-eTab_janitor_tue-'],
-                                    'wed': self.values['-eTab_janitor_wed-'], 'thu': self.values['-eTab_janitor_thu-'],
-                                    'fri': self.values['-eTab_janitor_fri-'], 'sat': self.values['-eTab_janitor_sat-'],
-                                    'sun': self.values['-eTab_janitor_sun-']
-                                    }
+                           'mon': self.values['-eTab_janitor_mon-'], 'tue': self.values['-eTab_janitor_tue-'],
+                           'wed': self.values['-eTab_janitor_wed-'], 'thu': self.values['-eTab_janitor_thu-'],
+                           'fri': self.values['-eTab_janitor_fri-'], 'sat': self.values['-eTab_janitor_sat-'],
+                           'sun': self.values['-eTab_janitor_sun-']
                        }
-                      }
+                       }
+            }
             return newEmp
         else:
             failed = []
@@ -948,9 +957,18 @@ class View:
             self.gui['-mTab_lb-'].update(self.mTab_lb_Emps[salonName].keys())
 
     def refreshSalonLists(self):
-        salonLists = ['-mTab_c_salon-', '-eTab_om_salon-', '-sTab_c_salon-', ]
-        for l in salonLists:
-            self.gui[l].update(values=self.activeSalonNames)
+        salonLists = ['-mTab_c_salon-', '-eTab_om_salon-', '-eTab_om_salon2-', ]
+        for slist in salonLists:
+            self.gui[slist].update(values=self.activeSalonNames)
+        self.gui['-sTab_c_salon-'].update(values=self.ai.getAllSalonNames())
+        # button menu items based on salon names given and not hardcoded
+        bm1 = [i[0].lower() for i in self.activeSalonNames]
+        bm1.insert(0, 'a')
+        bm2 = [i for i in self.activeSalonNames]
+        bm2.insert(0, 'All')
+        salonLists = ['-mTab_btn_export_wo_web-', 'getSales', 'getModifiedSales']
+        for slist in salonLists:
+            self.gui[slist].update([bm1, bm2])
 
     def splitRange(self, sDate, eDate):
         """
@@ -1079,6 +1097,7 @@ class View:
                 return False
         else:
             return False
+
 
 class BtnInfo:
     def __init__(self, state=True):
